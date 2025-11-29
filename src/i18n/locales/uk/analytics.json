@@ -1,0 +1,34 @@
+{
+  "title": "Аналітика",
+  "tabs": {
+    "muscles": "М'язи",
+    "duration": "Тривалість",
+    "volume": "Об'єм",
+    "exercises": "Вправи"
+  },
+  "charts": {
+    "workoutVolume": "Об'єм тренувань",
+    "muscleDistribution": "Розподіл м'язів",
+    "exerciseProgress": "Прогрес вправ",
+    "workoutDuration": "Тривалість тренувань"
+  },
+  "stats": {
+    "totalVolume": "Загальний об'єм",
+    "avgDuration": "Середня тривалість",
+    "totalWorkouts": "Всього тренувань",
+    "mostTrained": "Найбільш тренована група"
+  },
+  "periods": {
+    "week": "Тиждень",
+    "2weeks": "2 тижні",
+    "month": "Місяць",
+    "quarter": "Квартал",
+    "year": "Рік"
+  },
+  "empty": {
+    "title": "Немає даних для аналізу",
+    "description": "Почніть тренуватися, щоб побачити вашу аналітику",
+    "action": "Почати тренування"
+  },
+  "comingSoon": "Аналітика та графіки незабаром..."
+}

@@ -1,0 +1,35 @@
+{
+  "general": "Щось пішло не так",
+  "noWorkout": "Немає активного тренування",
+  "saveFailed": "Не вдалося зберегти",
+  "loadFailed": "Не вдалося завантажити дані",
+  "networkError": "Проблема з підключенням до інтернету",
+  "authRequired": "Потрібна авторизація",
+  "invalidInput": "Некоректні дані",
+  "tryAgain": "Спробуйте ще раз",
+  "titles": {
+    "error": "Помилка",
+    "warning": "Увага",
+    "info": "Інформація"
+  },
+  "auth": {
+    "required": "Потрібна авторизація",
+    "invalidCredentials": "Невірний email або пароль",
+    "emailNotVerified": "Підтвердіть email адресу",
+    "sessionExpired": "Сесія закінчилась, увійдіть знову"
+  },
+  "workout": {
+    "noActive": "Немає активного тренування",
+    "saveFailed": "Не вдалося зберегти тренування",
+    "loadFailed": "Не вдалося завантажити тренування"
+  },
+  "settings": {
+    "saveFailed": "Не вдалося зберегти налаштування",
+    "syncFailed": "Помилка синхронізації налаштувань"
+  },
+  "validation": {
+    "invalidInput": "Некоректні дані",
+    "weightOutOfRange": "Вага повинна бути від {min} до {max} {unit}",
+    "repsOutOfRange": "Повтори повинні бути від {min} до {max}"
+  }
+}

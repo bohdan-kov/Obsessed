@@ -17,6 +17,7 @@ export const CONFIG = {
     MOBILE_BREAKPOINT: 640, // sm
     TABLET_BREAKPOINT: 768, // md
     DESKTOP_BREAKPOINT: 1024, // lg
+    SIDEBAR_EXPAND_BREAKPOINT: 1224, // xl-custom - where sidebar auto-expands
   },
 
   // Workout Configuration

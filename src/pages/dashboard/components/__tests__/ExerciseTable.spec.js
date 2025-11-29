@@ -366,7 +366,7 @@ describe('ExerciseTable', () => {
     it('should show empty state when no active workout', () => {
       const wrapper = createWrapper({ activeWorkout: null })
 
-      expect(wrapper.text()).toContain('No active exercises')
+      expect(wrapper.text()).toContain('workout.exerciseTable.noActiveExercises')
     })
 
     it('should show empty state when active workout has no exercises', () => {
@@ -378,7 +378,7 @@ describe('ExerciseTable', () => {
         },
       })
 
-      expect(wrapper.text()).toContain('No active exercises')
+      expect(wrapper.text()).toContain('workout.exerciseTable.noActiveExercises')
     })
 
     it('should display exercise type badge', () => {
@@ -643,7 +643,7 @@ describe('ExerciseTable', () => {
 
       const wrapper = createWrapper({ activeWorkout })
 
-      expect(wrapper.text()).toContain('Edit')
+      expect(wrapper.text()).toContain('workout.exerciseTable.edit')
     })
 
     it('should render duplicate option', () => {
@@ -661,7 +661,7 @@ describe('ExerciseTable', () => {
 
       const wrapper = createWrapper({ activeWorkout })
 
-      expect(wrapper.text()).toContain('Duplicate')
+      expect(wrapper.text()).toContain('workout.exerciseTable.duplicate')
     })
 
     it('should render delete option', () => {
@@ -679,7 +679,7 @@ describe('ExerciseTable', () => {
 
       const wrapper = createWrapper({ activeWorkout })
 
-      expect(wrapper.text()).toContain('Delete')
+      expect(wrapper.text()).toContain('workout.exerciseTable.delete')
     })
 
     it('should have accessible aria-label on action button', () => {

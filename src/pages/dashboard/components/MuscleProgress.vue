@@ -1,6 +1,8 @@
 <script setup>
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { useUnits } from '@/composables/useUnits'
 import {
   Card,
   CardContent,
@@ -10,6 +12,8 @@ import {
 } from '@/components/ui/card'
 import { Heart, Scale } from 'lucide-vue-next'
 
+const { t } = useI18n()
+const { unitLabel } = useUnits()
 const analyticsStore = useAnalyticsStore()
 const { muscleProgress, quickStats } = storeToRefs(analyticsStore)
 </script>
@@ -17,9 +21,9 @@ const { muscleProgress, quickStats } = storeToRefs(analyticsStore)
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Фокус м'язів</CardTitle>
+      <CardTitle>{{ t('dashboard.muscleProgress.title') }}</CardTitle>
       <CardDescription>
-        Розподіл обсягу тренувань за тиждень
+        {{ t('dashboard.muscleProgress.description') }}
       </CardDescription>
     </CardHeader>
     <CardContent class="space-y-6">
@@ -70,8 +74,8 @@ const { muscleProgress, quickStats } = storeToRefs(analyticsStore)
             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
           />
         </svg>
-        <p class="text-sm">Немає даних про м'язові групи</p>
-        <p class="text-xs mt-1">Почніть тренування для відстеження прогресу</p>
+        <p class="text-sm">{{ t('dashboard.muscleProgress.noMuscleData') }}</p>
+        <p class="text-xs mt-1">{{ t('dashboard.muscleProgress.startTraining') }}</p>
       </div>
 
       <!-- Quick stats -->
@@ -82,7 +86,7 @@ const { muscleProgress, quickStats } = storeToRefs(analyticsStore)
             <Heart class="w-4 h-4 text-red-500" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-xs text-muted-foreground">Avg BPM</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.muscleProgress.avgBpm') }}</p>
             <p class="text-lg font-bold font-mono">
               {{ quickStats.avgBpm || '--' }}
             </p>
@@ -95,9 +99,9 @@ const { muscleProgress, quickStats } = storeToRefs(analyticsStore)
             <Scale class="w-4 h-4 text-blue-500" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-xs text-muted-foreground">Вага</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.muscleProgress.weight') }}</p>
             <p class="text-lg font-bold font-mono">
-              {{ quickStats.weight || '--' }} кг
+              {{ quickStats.weight || '--' }} {{ unitLabel }}
             </p>
           </div>
         </div>

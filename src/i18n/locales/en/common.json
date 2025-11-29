@@ -1,0 +1,55 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "submit": "Submit",
+    "retry": "Retry"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "syncing": "Syncing...",
+    "synced": "Synced",
+    "offline": "Offline",
+    "error": "Error",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "scheduled": "Scheduled"
+  },
+  "units": {
+    "kg": "kg",
+    "lbs": "lbs",
+    "minutes": "min",
+    "hours": "hrs",
+    "seconds": "s",
+    "sets": "sets",
+    "reps": "reps",
+    "days": "days"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email format",
+    "minLength": "Minimum {min} characters",
+    "maxLength": "Maximum {max} characters"
+  },
+  "success": {
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "updated": "Updated",
+    "created": "Created",
+    "setLogged": "Set logged"
+  }
+}

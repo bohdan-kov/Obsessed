@@ -1,0 +1,25 @@
+{
+  "title": "Settings",
+  "description": "Customize your app experience",
+  "appearance": {
+    "title": "Appearance",
+    "description": "Customize language and theme",
+    "language": "Interface Language",
+    "theme": "Theme"
+  },
+  "units": {
+    "title": "Units",
+    "description": "Choose your preferred weight units",
+    "weight": "Weight Units"
+  },
+  "account": {
+    "title": "Account",
+    "noName": "No name"
+  },
+  "syncStatus": {
+    "synced": "Settings synced",
+    "pending": "Syncing...",
+    "error": "Sync error",
+    "offline": "Offline mode"
+  }
+}

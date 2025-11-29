@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   Sheet,
   SheetContent,
@@ -22,7 +23,11 @@ import {
 import { ChevronLeft, Check, Loader2 } from 'lucide-vue-next'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useExerciseStore } from '@/stores/exerciseStore'
+import { useUnits } from '@/composables/useUnits'
 import { storeToRefs } from 'pinia'
+
+const { t } = useI18n()
+const { weightUnit, unitLabel, toStorageUnit } = useUnits()
 
 const props = defineProps({
   open: Boolean,
@@ -85,9 +90,10 @@ async function handleSubmit() {
       })
     }
 
-    // Add set
+    // Add set (convert weight to storage unit - kg)
+    const weightInKg = toStorageUnit(parseFloat(weight.value))
     await workoutStore.addSet(selectedExercise.value.id, {
-      weight: parseFloat(weight.value),
+      weight: weightInKg,
       reps: parseInt(reps.value),
       rpe: rpe.value ? parseInt(rpe.value) : null,
       completedAt: new Date(),
@@ -136,13 +142,13 @@ function handleClose(open) {
           </Button>
           <div>
             <SheetTitle>
-              {{ step === 'exercise' ? 'Log Set' : selectedExercise?.name }}
+              {{ step === 'exercise' ? t('workout.quickLog.title') : selectedExercise?.name }}
             </SheetTitle>
             <SheetDescription>
               {{
                 step === 'exercise'
-                  ? 'Select an exercise'
-                  : 'Enter set details'
+                  ? t('workout.quickLog.selectExercise')
+                  : t('workout.quickLog.enterDetails')
               }}
             </SheetDescription>
           </div>
@@ -152,11 +158,11 @@ function handleClose(open) {
       <!-- Step 1: Exercise Selection -->
       <div v-if="step === 'exercise'" class="py-4 flex-1 overflow-hidden">
         <Command class="rounded-lg border">
-          <CommandInput placeholder="Search exercises..." />
+          <CommandInput :placeholder="t('workout.quickLog.searchPlaceholder')" />
           <CommandList class="max-h-[50vh]">
-            <CommandEmpty>No exercises found.</CommandEmpty>
+            <CommandEmpty>{{ t('workout.quickLog.noExercisesFound') }}</CommandEmpty>
 
-            <CommandGroup v-if="recentExercises.length" heading="Recent">
+            <CommandGroup v-if="recentExercises.length" :heading="t('workout.quickLog.recent')">
               <CommandItem
                 v-for="exercise in recentExercises"
                 :key="exercise.id"
@@ -171,7 +177,7 @@ function handleClose(open) {
               </CommandItem>
             </CommandGroup>
 
-            <CommandGroup heading="All Exercises">
+            <CommandGroup :heading="t('workout.quickLog.allExercises')">
               <CommandItem
                 v-for="exercise in allExercises"
                 :key="exercise.id"
@@ -193,7 +199,7 @@ function handleClose(open) {
       <div v-else class="py-6 space-y-6">
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
-            <Label for="weight" class="text-base">Weight (kg)</Label>
+            <Label for="weight" class="text-base">{{ t('workout.quickLog.weight') }} ({{ unitLabel }})</Label>
             <Input
               id="weight"
               v-model="weight"
@@ -204,7 +210,7 @@ function handleClose(open) {
             />
           </div>
           <div class="space-y-2">
-            <Label for="reps" class="text-base">Reps</Label>
+            <Label for="reps" class="text-base">{{ t('workout.quickLog.reps') }}</Label>
             <Input
               id="reps"
               v-model="reps"
@@ -217,7 +223,7 @@ function handleClose(open) {
         </div>
 
         <div class="space-y-2">
-          <Label for="rpe" class="text-base">RPE (optional)</Label>
+          <Label for="rpe" class="text-base">{{ t('workout.quickLog.rpe') }}</Label>
           <Input
             id="rpe"
             v-model="rpe"
@@ -239,7 +245,7 @@ function handleClose(open) {
         >
           <Loader2 v-if="saving" class="w-5 h-5 mr-2 animate-spin" />
           <Check v-else class="w-5 h-5 mr-2" />
-          Log Set
+          {{ t('workout.quickLog.submit') }}
         </Button>
       </SheetFooter>
     </SheetContent>

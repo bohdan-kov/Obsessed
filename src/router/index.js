@@ -68,6 +68,7 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   // Wait for auth to initialize
+  // CRITICAL: This prevents race condition on page refresh
   if (authStore.initializing) {
     // Wait for auth state to be determined
     await new Promise((resolve) => {
@@ -78,7 +79,8 @@ router.beforeEach(async (to, from, next) => {
             unwatch()
             resolve()
           }
-        }
+        },
+        { immediate: true } // Check current value immediately
       )
     })
   }

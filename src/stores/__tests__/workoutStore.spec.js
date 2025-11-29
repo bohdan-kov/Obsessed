@@ -435,6 +435,7 @@ describe('workoutStore', () => {
     })
 
     it('should handle workout start error', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const authStore = useAuthStore()
 
       const store = useWorkoutStore()
@@ -445,6 +446,7 @@ describe('workoutStore', () => {
       await expect(store.startWorkout()).rejects.toThrow(errorMessage)
       expect(store.error).toBe(errorMessage)
       expect(store.loading).toBe(false)
+      consoleErrorSpy.mockRestore()
     })
 
     it('should subscribe to active workout after starting', async () => {
@@ -537,6 +539,7 @@ describe('workoutStore', () => {
     })
 
     it('should handle exercise add error', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const authStore = useAuthStore()
 
       const store = useWorkoutStore()
@@ -561,6 +564,7 @@ describe('workoutStore', () => {
       ).rejects.toThrow(errorMessage)
 
       expect(store.error).toBe(errorMessage)
+      consoleErrorSpy.mockRestore()
     })
   })
 
@@ -650,6 +654,7 @@ describe('workoutStore', () => {
     })
 
     it('should throw error when exercise not found', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const authStore = useAuthStore()
 
       const store = useWorkoutStore()
@@ -675,6 +680,7 @@ describe('workoutStore', () => {
       await expect(
         store.addSet('nonexistent-exercise', { weight: 100, reps: 10 })
       ).rejects.toThrow('Exercise not found in current workout')
+      consoleErrorSpy.mockRestore()
     })
   })
 
@@ -820,6 +826,7 @@ describe('workoutStore', () => {
 
   describe('clearError', () => {
     it('should clear error message', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const store = useWorkoutStore()
 
       // Set an error first
@@ -835,6 +842,7 @@ describe('workoutStore', () => {
       store.clearError()
 
       expect(store.error).toBeNull()
+      consoleErrorSpy.mockRestore()
     })
   })
 })

@@ -1,23 +1,24 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
+import { useUnits } from '@/composables/useUnits'
 import StatCard from './components/StatCard.vue'
 import ChartSection from './components/ChartSection.vue'
 import ExerciseTable from './components/ExerciseTable.vue'
 import MuscleProgress from './components/MuscleProgress.vue'
 import { Activity, TrendingUp, Calendar, Award } from 'lucide-vue-next'
-import { STRINGS } from '@/constants/strings'
 
+const { t } = useI18n()
 const { displayName } = useAuth()
 const analyticsStore = useAnalyticsStore()
 const workoutStore = useWorkoutStore()
 const { handleError } = useErrorHandler()
-
-const t = STRINGS.dashboard
+const { formatWeight } = useUnits()
 
 const {
   totalWorkouts,
@@ -28,38 +29,38 @@ const {
 } = storeToRefs(analyticsStore)
 
 // Stat cards configuration
-const stats = [
+const stats = computed(() => [
   {
-    title: 'Total Workouts',
-    value: totalWorkouts,
-    description: 'All time',
+    title: t('dashboard.stats.totalWorkouts'),
+    value: totalWorkouts.value,
+    description: t('dashboard.stats.allTime'),
     icon: Activity,
     trend: weekComparison.value.change.workouts,
-    trendLabel: 'vs last week',
+    trendLabel: t('dashboard.stats.vsLastWeek'),
   },
   {
-    title: 'Volume Load',
-    value: `${volumeLoad.value.toLocaleString()} kg`,
-    description: 'Total lifted',
+    title: t('dashboard.stats.volumeLoad'),
+    value: formatWeight(volumeLoad.value),
+    description: t('dashboard.stats.totalLifted'),
     icon: TrendingUp,
     trend: weekComparison.value.change.volumePercentage,
-    trendLabel: 'vs last week',
+    trendLabel: t('dashboard.stats.vsLastWeek'),
   },
   {
-    title: 'Rest Days',
-    value: restDays,
-    description: 'This period',
+    title: t('dashboard.stats.restDays'),
+    value: restDays.value,
+    description: t('dashboard.stats.thisPeriod'),
     icon: Calendar,
     trend: null,
   },
   {
-    title: 'Current Streak',
-    value: `${currentStreak.value} days`,
-    description: 'Keep it up!',
+    title: t('dashboard.stats.currentStreak'),
+    value: `${currentStreak.value} ${t('dashboard.stats.days')}`,
+    description: t('dashboard.stats.keepItUp'),
     icon: Award,
     trend: null,
   },
-]
+])
 
 // Subscription cleanup function
 let unsubscribeWorkouts = null
@@ -73,7 +74,7 @@ onMounted(async () => {
     // Subscribe to real-time updates and store unsubscribe function
     unsubscribeWorkouts = workoutStore.subscribeToWorkouts('month')
   } catch (error) {
-    handleError(error, 'Не вдалося завантажити дані дашборду', {
+    handleError(error, t('dashboard.errors.loadFailed'), {
       context: 'DashboardView.onMounted',
     })
   }
@@ -91,13 +92,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="container max-w-7xl mx-auto py-6 px-4 sm:py-8 space-y-6 sm:space-y-8">
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold">Analytics Dashboard</h1>
+        <h1 class="text-3xl font-bold">{{ t('dashboard.title') }}</h1>
         <p class="text-muted-foreground mt-1">
-          Welcome back, {{ displayName || 'User' }}! 👋
+          {{ t('dashboard.welcomeBack') }}, {{ displayName || 'User' }}! 👋
         </p>
       </div>
     </div>

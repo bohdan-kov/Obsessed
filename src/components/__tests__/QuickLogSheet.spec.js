@@ -226,8 +226,8 @@ describe('QuickLogSheet', () => {
 
     it('should start on exercise selection step', () => {
       const wrapper = createWrapper()
-      expect(wrapper.find('.sheet-title').text()).toBe('Log Set')
-      expect(wrapper.find('.sheet-description').text()).toBe('Select an exercise')
+      expect(wrapper.find('.sheet-title').text()).toBe('workout.quickLog.title')
+      expect(wrapper.find('.sheet-description').text()).toBe('workout.quickLog.selectExercise')
     })
 
     it('should render search input for exercises', () => {
@@ -244,13 +244,13 @@ describe('QuickLogSheet', () => {
   describe('recent exercises display', () => {
     it('should display recent exercises group when available', () => {
       const wrapper = createWrapper()
-      const recentGroup = wrapper.find('[data-heading="Recent"]')
+      const recentGroup = wrapper.find('[data-heading="workout.quickLog.recent"]')
       expect(recentGroup.exists()).toBe(true)
     })
 
     it('should display all exercises group', () => {
       const wrapper = createWrapper()
-      const allGroup = wrapper.find('[data-heading="All Exercises"]')
+      const allGroup = wrapper.find('[data-heading="workout.quickLog.allExercises"]')
       expect(allGroup.exists()).toBe(true)
     })
 
@@ -269,7 +269,7 @@ describe('QuickLogSheet', () => {
       await exerciseItem.trigger('click')
       await nextTick()
 
-      expect(wrapper.find('.sheet-description').text()).toBe('Enter set details')
+      expect(wrapper.find('.sheet-description').text()).toBe('workout.quickLog.enterDetails')
     })
 
     it('should show selected exercise name in title when on details step', async () => {
@@ -306,7 +306,7 @@ describe('QuickLogSheet', () => {
       await nextTick()
 
       // Should be back on exercise step
-      expect(wrapper.find('.sheet-title').text()).toBe('Log Set')
+      expect(wrapper.find('.sheet-title').text()).toBe('workout.quickLog.title')
     })
   })
 
@@ -485,6 +485,15 @@ describe('QuickLogSheet', () => {
     }
 
     it('should call workoutStore.startWorkout if no active workout', async () => {
+      // Mock startWorkout to set activeWorkout after being called
+      mockWorkoutStore.startWorkout = vi.fn().mockImplementation(async () => {
+        mockWorkoutStore.activeWorkout = {
+          id: 'new-workout-id',
+          exercises: [],
+        }
+        return 'new-workout-id'
+      })
+
       const wrapper = createWrapper()
 
       await setupForSubmit(wrapper)

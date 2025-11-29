@@ -1,0 +1,52 @@
+{
+  "title": "Analytics Dashboard",
+  "welcomeBack": "Welcome back",
+  "errors": {
+    "loadFailed": "Failed to load dashboard data"
+  },
+  "stats": {
+    "totalWorkouts": "Total Workouts",
+    "volumeLoad": "Volume Load",
+    "restDays": "Rest Days",
+    "currentStreak": "Current Streak",
+    "allTime": "All time",
+    "totalLifted": "Total lifted",
+    "thisPeriod": "This period",
+    "keepItUp": "Keep it up!",
+    "vsLastWeek": "vs last week",
+    "days": "days"
+  },
+  "tabs": {
+    "volume": "Volume",
+    "muscles": "Muscles",
+    "frequency": "Frequency",
+    "progress": "Progress"
+  },
+  "charts": {
+    "volumeTitle": "Volume Load",
+    "volumeDescription": "Total volume (kg) over the last 14 days",
+    "muscleTitle": "Muscle Distribution",
+    "muscleDescription": "Top 8 muscle groups by set count",
+    "frequencyTitle": "Training Frequency",
+    "frequencyDescription": "When you typically train (day of week and time)",
+    "comparisonTitle": "Weekly Progress",
+    "comparisonDescription": "Comparison of current and previous week",
+    "noData": "No data to display",
+    "noDataSubtitle": "Start training to view statistics",
+    "totalSets": "Total sets",
+    "legend": "Legend",
+    "currentWeek": "Current week",
+    "previousWeek": "Previous week",
+    "intensity": "Intensity",
+    "less": "Less",
+    "more": "More"
+  },
+  "muscleProgress": {
+    "title": "Muscle Focus",
+    "description": "Training volume distribution for the week",
+    "noMuscleData": "No muscle group data",
+    "startTraining": "Start training to track progress",
+    "avgBpm": "Avg BPM",
+    "weight": "Weight"
+  }
+}
