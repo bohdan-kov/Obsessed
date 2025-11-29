@@ -7,6 +7,17 @@
     "language": "Мова інтерфейсу",
     "theme": "Тема"
   },
+  "theme": {
+    "title": "Тема",
+    "description": "Оберіть вигляд додатку",
+    "light": "Світла",
+    "lightDescription": "Завжди світла тема",
+    "dark": "Темна",
+    "darkDescription": "Завжди темна тема",
+    "system": "Системна",
+    "systemDescription": "Слідує за налаштуваннями пристрою",
+    "currentHint": "Зараз: {theme}"
+  },
   "units": {
     "title": "Одиниці виміру",
     "description": "Оберіть зручні одиниці для відображення ваги",

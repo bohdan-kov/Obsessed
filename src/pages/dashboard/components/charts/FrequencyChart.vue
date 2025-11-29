@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import {
   Card,
@@ -16,11 +17,20 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
+const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { frequencyHeatmap } = storeToRefs(analyticsStore)
 
 // Days of week labels
-const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+const daysOfWeek = computed(() => [
+  t('dashboard.charts.daysOfWeek.mon'),
+  t('dashboard.charts.daysOfWeek.tue'),
+  t('dashboard.charts.daysOfWeek.wed'),
+  t('dashboard.charts.daysOfWeek.thu'),
+  t('dashboard.charts.daysOfWeek.fri'),
+  t('dashboard.charts.daysOfWeek.sat'),
+  t('dashboard.charts.daysOfWeek.sun'),
+])
 
 // Convert heatmap object to array format for rendering
 const heatmapData = computed(() => {
@@ -34,12 +44,12 @@ const heatmapData = computed(() => {
 
   return days.map((day, dayIndex) => ({
     day,
-    dayLabel: daysOfWeek[dayIndex] || day.slice(0, 2),
+    dayLabel: daysOfWeek.value[dayIndex] || day.slice(0, 2),
     hours: frequencyHeatmap.value[day].map((count, hour) => ({
       hour,
       count,
       level: getLevel(count, maxValue),
-      tooltip: `${day} ${hour}:00 - ${count} тренувань`,
+      tooltip: `${day} ${hour}:00 - ${count} ${count === 1 ? t('dashboard.charts.workout') : t('dashboard.charts.workouts')}`,
     })),
   }))
 })
@@ -78,9 +88,9 @@ const displayHours = [6, 9, 12, 15, 18, 21]
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Частота тренувань</CardTitle>
+      <CardTitle>{{ t('dashboard.charts.frequencyTitle') }}</CardTitle>
       <CardDescription>
-        Коли ви зазвичай тренуєтесь (день тижня та час)
+        {{ t('dashboard.charts.frequencyDescription') }}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -121,7 +131,7 @@ const displayHours = [6, 9, 12, 15, 18, 21]
                     </p>
                     <p class="text-xs text-muted-foreground">
                       {{ hourData.count }}
-                      {{ hourData.count === 1 ? 'тренування' : 'тренувань' }}
+                      {{ hourData.count === 1 ? t('dashboard.charts.workout') : t('dashboard.charts.workouts') }}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -142,9 +152,9 @@ const displayHours = [6, 9, 12, 15, 18, 21]
 
         <!-- Legend -->
         <div class="flex items-center justify-between pt-4 border-t">
-          <span class="text-xs text-muted-foreground">Інтенсивність</span>
+          <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.intensity') }}</span>
           <div class="flex items-center gap-2">
-            <span class="text-xs text-muted-foreground">Менше</span>
+            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.less') }}</span>
             <div class="flex gap-1">
               <div
                 v-for="level in 6"
@@ -152,7 +162,7 @@ const displayHours = [6, 9, 12, 15, 18, 21]
                 :class="['w-3 h-3 rounded-sm', getColor(level - 1)]"
               />
             </div>
-            <span class="text-xs text-muted-foreground">Більше</span>
+            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.more') }}</span>
           </div>
         </div>
       </div>
@@ -176,8 +186,8 @@ const displayHours = [6, 9, 12, 15, 18, 21]
             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg>
-        <p class="text-sm">Немає даних про частоту тренувань</p>
-        <p class="text-xs mt-1">Продовжуйте тренуватися для перегляду патернів</p>
+        <p class="text-sm">{{ t('dashboard.charts.noFrequencyData') }}</p>
+        <p class="text-xs mt-1">{{ t('dashboard.charts.noFrequencyDataSubtitle') }}</p>
       </div>
     </CardContent>
   </Card>

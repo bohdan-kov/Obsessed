@@ -132,11 +132,11 @@ function getStatusVariant(status) {
 function getStatusLabel(status) {
   switch (status) {
     case 'completed':
-      return 'Done'
+      return t('common.status.completed')
     case 'in-progress':
-      return 'In Progress'
+      return t('common.status.inProgress')
     case 'scheduled':
-      return 'Scheduled'
+      return t('common.status.scheduled')
     default:
       return status
   }
@@ -161,9 +161,9 @@ function formatDuration(seconds) {
   const remainingMins = mins % 60
 
   if (hrs > 0) {
-    return `${hrs}год ${remainingMins}хв`
+    return `${hrs}${t('workout.exerciseTable.hourShort')} ${remainingMins}${t('workout.exerciseTable.minuteShort')}`
   }
-  return `${mins}хв`
+  return `${mins}${t('workout.exerciseTable.minuteShort')}`
 }
 
 /**
@@ -248,7 +248,7 @@ function toggleExerciseComplete(exercise) {
 
       <div class="flex gap-2">
         <Button variant="outline" size="sm" @click="handleCustomize">
-          Налаштувати
+          {{ t('workout.exerciseTable.customize') }}
         </Button>
         <Button
           size="sm"
@@ -256,7 +256,7 @@ function toggleExerciseComplete(exercise) {
           @click="handleAddExercise"
         >
           <Plus class="w-4 h-4 mr-1" />
-          Додати вправу
+          {{ t('workout.exerciseTable.addExercise') }}
         </Button>
       </div>
     </CardHeader>
@@ -395,7 +395,7 @@ function toggleExerciseComplete(exercise) {
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p class="text-sm">Немає історії тренувань</p>
+          <p class="text-sm">{{ t('workout.exerciseTable.noWorkoutHistory') }}</p>
         </div>
       </div>
 
@@ -404,11 +404,11 @@ function toggleExerciseComplete(exercise) {
         <Table v-if="allExercises.length > 0">
           <TableHeader>
             <TableRow>
-              <TableHead>Вправа</TableHead>
-              <TableHead>Останнє виконання</TableHead>
-              <TableHead>Всього підходів</TableHead>
-              <TableHead>Загальний обсяг</TableHead>
-              <TableHead>Разів виконано</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.exercise') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.lastPerformed') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.totalSets') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.totalVolume') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.timesPerformed') }}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -445,7 +445,7 @@ function toggleExerciseComplete(exercise) {
               d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
             />
           </svg>
-          <p class="text-sm">Немає виконаних вправ</p>
+          <p class="text-sm">{{ t('workout.exerciseTable.noExercises') }}</p>
         </div>
       </div>
 
@@ -467,8 +467,8 @@ function toggleExerciseComplete(exercise) {
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
             />
           </svg>
-          <p class="text-sm">Планів ще немає</p>
-          <p class="text-xs mt-1">Створіть план тренувань</p>
+          <p class="text-sm">{{ t('workout.exerciseTable.noPlans') }}</p>
+          <p class="text-xs mt-1">{{ t('workout.exerciseTable.noPlansSubtitle') }}</p>
         </div>
       </div>
     </CardContent>

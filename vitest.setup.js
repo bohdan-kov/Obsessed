@@ -50,3 +50,33 @@ vi.mock('@/composables/useLocale', () => ({
     t: (key) => key,
   }),
 }))
+
+// Mock useTheme composable
+vi.mock('@/composables/useTheme', () => ({
+  useTheme: () => ({
+    themePreference: { value: 'system' },
+    effectiveTheme: { value: 'light' },
+    isDark: { value: false },
+    availableThemes: [
+      {
+        value: 'light',
+        labelKey: 'settings.theme.light',
+        descriptionKey: 'settings.theme.lightDescription',
+        icon: 'Sun',
+      },
+      {
+        value: 'dark',
+        labelKey: 'settings.theme.dark',
+        descriptionKey: 'settings.theme.darkDescription',
+        icon: 'Moon',
+      },
+      {
+        value: 'system',
+        labelKey: 'settings.theme.system',
+        descriptionKey: 'settings.theme.systemDescription',
+        icon: 'Monitor',
+      },
+    ],
+    changeTheme: vi.fn(),
+  }),
+}))

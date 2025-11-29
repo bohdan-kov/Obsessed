@@ -29,38 +29,45 @@ const {
 } = storeToRefs(analyticsStore)
 
 // Stat cards configuration
-const stats = computed(() => [
-  {
-    title: t('dashboard.stats.totalWorkouts'),
-    value: totalWorkouts.value,
-    description: t('dashboard.stats.allTime'),
-    icon: Activity,
-    trend: weekComparison.value.change.workouts,
-    trendLabel: t('dashboard.stats.vsLastWeek'),
-  },
-  {
-    title: t('dashboard.stats.volumeLoad'),
-    value: formatWeight(volumeLoad.value),
-    description: t('dashboard.stats.totalLifted'),
-    icon: TrendingUp,
-    trend: weekComparison.value.change.volumePercentage,
-    trendLabel: t('dashboard.stats.vsLastWeek'),
-  },
-  {
-    title: t('dashboard.stats.restDays'),
-    value: restDays.value,
-    description: t('dashboard.stats.thisPeriod'),
-    icon: Calendar,
-    trend: null,
-  },
-  {
-    title: t('dashboard.stats.currentStreak'),
-    value: `${currentStreak.value} ${t('dashboard.stats.days')}`,
-    description: t('dashboard.stats.keepItUp'),
-    icon: Award,
-    trend: null,
-  },
-])
+const stats = computed(() => {
+  const workoutChange = weekComparison.value.change.workouts
+  const volumeChange = weekComparison.value.change.volumePercentage
+
+  return [
+    {
+      title: t('dashboard.stats.totalWorkouts'),
+      value: totalWorkouts.value,
+      description: t('dashboard.stats.allTime'),
+      icon: Activity,
+      change: workoutChange > 0 ? `+${workoutChange}` : workoutChange < 0 ? `${workoutChange}` : null,
+      trend: workoutChange > 0 ? 'up' : workoutChange < 0 ? 'down' : null,
+      trendLabel: t('dashboard.stats.vsLastWeek'),
+    },
+    {
+      title: t('dashboard.stats.volumeLoad'),
+      value: formatWeight(volumeLoad.value),
+      description: t('dashboard.stats.totalLifted'),
+      icon: TrendingUp,
+      change: volumeChange > 0 ? `+${volumeChange}%` : volumeChange < 0 ? `${volumeChange}%` : null,
+      trend: volumeChange > 0 ? 'up' : volumeChange < 0 ? 'down' : null,
+      trendLabel: t('dashboard.stats.vsLastWeek'),
+    },
+    {
+      title: t('dashboard.stats.restDays'),
+      value: restDays.value,
+      description: t('dashboard.stats.thisPeriod'),
+      icon: Calendar,
+      trend: null,
+    },
+    {
+      title: t('dashboard.stats.currentStreak'),
+      value: `${currentStreak.value} ${t('dashboard.stats.days')}`,
+      description: t('dashboard.stats.keepItUp'),
+      icon: Award,
+      trend: null,
+    },
+  ]
+})
 
 // Subscription cleanup function
 let unsubscribeWorkouts = null

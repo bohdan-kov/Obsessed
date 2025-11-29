@@ -51,5 +51,40 @@
     "updated": "Оновлено",
     "created": "Створено",
     "setLogged": "Підхід записано"
+  },
+  "nav": {
+    "dashboard": {
+      "name": "Дашборд",
+      "description": "Огляд та статистика"
+    },
+    "workouts": {
+      "name": "Тренування",
+      "description": "Історія тренувань"
+    },
+    "analytics": {
+      "name": "Аналітика",
+      "description": "Графіки та інсайти"
+    },
+    "settings": {
+      "name": "Налаштування",
+      "description": "Параметри та вподобання"
+    },
+    "quickLog": "Швидкий запис",
+    "mobileMenu": {
+      "title": "Меню навігації",
+      "description": "Доступ до дашборду, тренувань, аналітики та налаштувань"
+    }
+  },
+  "sidebar": {
+    "expand": "Розгорнути бічну панель",
+    "collapse": "Згорнути бічну панель"
+  },
+  "user": {
+    "menu": {
+      "myAccount": "Мій акаунт",
+      "profile": "Профіль",
+      "signOut": "Вийти"
+    },
+    "defaultName": "Користувач"
   }
 }

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import {
   Card,
@@ -10,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
+const { t, locale } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { volumeByDay } = storeToRefs(analyticsStore)
 
@@ -25,7 +27,7 @@ const maxVolume = computed(() => {
 // Format date for display
 function formatDate(dateStr) {
   const date = new Date(dateStr)
-  return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+  return date.toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
 }
 
 // Get bar height percentage
@@ -36,16 +38,16 @@ function getBarHeight(volume) {
 
 // Format volume for tooltip
 function formatVolume(volume) {
-  return volume.toLocaleString('uk-UA') + ' кг'
+  return volume.toLocaleString(locale.value) + ' ' + t('common.units.kg')
 }
 </script>
 
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Обсяг навантаження</CardTitle>
+      <CardTitle>{{ t('dashboard.charts.volumeTitle') }}</CardTitle>
       <CardDescription>
-        Загальний обсяг (кг) за останні 14 днів
+        {{ t('dashboard.charts.volumeDescription') }}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -71,7 +73,7 @@ function formatVolume(volume) {
                   <div class="font-medium">{{ formatDate(day.date) }}</div>
                   <div class="text-muted-foreground">{{ formatVolume(day.volume) }}</div>
                   <div v-if="day.workouts > 0" class="text-xs text-muted-foreground">
-                    {{ day.workouts }} тренування
+                    {{ day.workouts }} {{ day.workouts === 1 ? t('dashboard.charts.workout') : t('dashboard.charts.workouts') }}
                   </div>
                 </div>
               </div>
@@ -103,17 +105,17 @@ function formatVolume(volume) {
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <p class="text-sm">Немає даних для відображення</p>
-          <p class="text-xs mt-1">Почніть тренуватися для перегляду статистики</p>
+          <p class="text-sm">{{ t('dashboard.charts.noData') }}</p>
+          <p class="text-xs mt-1">{{ t('dashboard.charts.noDataSubtitle') }}</p>
         </div>
       </div>
 
       <!-- Legend -->
       <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Останні 14 днів</span>
+        <span>{{ t('dashboard.charts.last14Days') }}</span>
         <div class="flex items-center gap-2">
           <div class="w-3 h-3 rounded bg-gradient-to-t from-primary to-primary/50" />
-          <span>Обсяг навантаження</span>
+          <span>{{ t('dashboard.charts.volumeLabel') }}</span>
         </div>
       </div>
     </CardContent>

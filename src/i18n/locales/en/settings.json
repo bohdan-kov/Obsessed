@@ -7,6 +7,17 @@
     "language": "Interface Language",
     "theme": "Theme"
   },
+  "theme": {
+    "title": "Theme",
+    "description": "Choose your app appearance",
+    "light": "Light",
+    "lightDescription": "Always light mode",
+    "dark": "Dark",
+    "darkDescription": "Always dark mode",
+    "system": "System",
+    "systemDescription": "Follows device settings",
+    "currentHint": "Currently: {theme}"
+  },
   "units": {
     "title": "Units",
     "description": "Choose your preferred weight units",

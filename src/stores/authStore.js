@@ -98,6 +98,8 @@ export const useAuthStore = defineStore('auth', () => {
     if (!profile) {
       // Create initial profile if it doesn't exist
       await createUserProfile(userId)
+    } else {
+      userProfile.value = profile
     }
 
     // Subscribe to real-time updates
@@ -115,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Create initial user profile in Firestore
+   * IMPORTANT: Keep settings structure in sync with userStore
    */
   async function createUserProfile(userId) {
     const profileData = {
@@ -122,14 +125,21 @@ export const useAuthStore = defineStore('auth', () => {
       email: user.value?.email || '',
       photoURL: user.value?.photoURL || '',
       settings: {
-        units: 'metric', // metric or imperial
-        theme: 'system', // light, dark, system
+        defaultRestTime: 90,
+        weightUnit: 'kg',
+        theme: 'system',
+        locale: 'uk',
         notifications: true,
+        autoStartTimer: true,
+        soundEnabled: true,
       },
       stats: {
         totalWorkouts: 0,
         totalSets: 0,
         totalVolume: 0,
+        totalDuration: 0,
+        currentStreak: 0,
+        longestStreak: 0,
       },
     }
 

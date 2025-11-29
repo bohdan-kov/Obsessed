@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import {
   Card,
@@ -10,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
+const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { muscleDistribution } = storeToRefs(analyticsStore)
 
@@ -119,9 +121,9 @@ const donutSegments = computed(() => {
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Розподіл по м'язах</CardTitle>
+      <CardTitle>{{ t('dashboard.charts.muscleTitle') }}</CardTitle>
       <CardDescription>
-        Кількість підходів по групах м'язів
+        {{ t('dashboard.charts.muscleDescription') }}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -141,7 +143,7 @@ const donutSegments = computed(() => {
                   :stroke="segment.color"
                   stroke-width="1"
                 >
-                  <title>{{ segment.muscle }}: {{ segment.sets }} підходів ({{ segment.percentage.toFixed(1) }}%)</title>
+                  <title>{{ segment.muscle }}: {{ segment.sets }} {{ t('dashboard.charts.sets') }} ({{ segment.percentage.toFixed(1) }}%)</title>
                 </path>
               </g>
             </svg>
@@ -151,7 +153,7 @@ const donutSegments = computed(() => {
               class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
             >
               <div class="text-3xl font-bold">{{ totalSets }}</div>
-              <div class="text-xs text-muted-foreground">підходів</div>
+              <div class="text-xs text-muted-foreground">{{ t('dashboard.charts.totalSets') }}</div>
             </div>
           </div>
 
@@ -180,7 +182,7 @@ const donutSegments = computed(() => {
                 d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
               />
             </svg>
-            <p class="text-sm text-center">Немає даних</p>
+            <p class="text-sm text-center">{{ t('dashboard.charts.noMuscleData') }}</p>
           </div>
         </div>
 
@@ -199,7 +201,7 @@ const donutSegments = computed(() => {
               <span class="font-medium">{{ muscle.muscle }}</span>
             </div>
             <div class="flex items-center gap-3 text-muted-foreground">
-              <span class="font-mono">{{ muscle.sets }} підх.</span>
+              <span class="font-mono">{{ muscle.sets }} {{ t('dashboard.charts.setsShort') }}</span>
               <span class="font-mono w-12 text-right">
                 {{ muscle.percentage.toFixed(1) }}%
               </span>
@@ -210,7 +212,7 @@ const donutSegments = computed(() => {
             v-if="chartData.length === 0"
             class="text-center text-sm text-muted-foreground py-4"
           >
-            Почніть тренуватися для перегляду розподілу
+            {{ t('dashboard.charts.noMuscleDataSubtitle') }}
           </div>
         </div>
       </div>
