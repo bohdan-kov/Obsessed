@@ -44,7 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
    * Call this in App.vue or main.js
    */
   function initAuth() {
-    return onAuthChange(async (firebaseUser) => {
+    const unsubscribe = onAuthChange(async (firebaseUser) => {
       loading.value = true
 
       if (firebaseUser) {
@@ -56,8 +56,15 @@ export const useAuthStore = defineStore('auth', () => {
           emailVerified: firebaseUser.emailVerified,
         }
 
-        // Subscribe to user profile from Firestore
-        await subscribeToUserProfile(firebaseUser.uid)
+        // CRITICAL FIX: Set initializing to false IMMEDIATELY after user is set
+        // Don't wait for Firestore profile loading - that can happen in background
+        loading.value = false
+        initializing.value = false
+
+        // Subscribe to user profile from Firestore (in background, don't block)
+        subscribeToUserProfile(firebaseUser.uid).catch((err) => {
+          console.error('Error subscribing to user profile:', err)
+        })
       } else {
         user.value = null
         userProfile.value = null
@@ -67,11 +74,13 @@ export const useAuthStore = defineStore('auth', () => {
           unsubscribeProfile()
           unsubscribeProfile = null
         }
-      }
 
-      loading.value = false
-      initializing.value = false
+        loading.value = false
+        initializing.value = false
+      }
     })
+
+    return unsubscribe
   }
 
   /**
@@ -276,12 +285,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    // State
-    user: computed(() => user.value),
-    userProfile: computed(() => userProfile.value),
-    loading: computed(() => loading.value),
-    error: computed(() => error.value),
-    initializing: computed(() => initializing.value),
+    // State (return refs directly, not wrapped in computed)
+    user,
+    userProfile,
+    loading,
+    error,
+    initializing,
 
     // Getters
     isAuthenticated,

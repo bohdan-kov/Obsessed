@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { Button } from '@/components/ui/button'
@@ -33,13 +33,24 @@ import {
 } from 'lucide-vue-next'
 import QuickLogSheet from '@/components/QuickLogSheet.vue'
 
+// Props - allow parent to force collapse state (for responsive behavior)
+const props = defineProps({
+  forceCollapsed: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const router = useRouter()
 const route = useRoute()
 const { displayName, email, photoURL, logout } = useAuth()
 
 const STORAGE_KEY = 'obsessed_sidebar_collapsed'
-const collapsed = ref(false)
+const userCollapsed = ref(false) // User's manual preference
 const quickLogOpen = ref(false)
+
+// Actual collapsed state: forced (tablet) or user preference
+const collapsed = computed(() => props.forceCollapsed || userCollapsed.value)
 
 // Navigation items
 const navItems = [
@@ -60,12 +71,6 @@ const navItems = [
     route: 'Analytics',
     icon: BarChart3,
     description: 'Charts & insights',
-  },
-  {
-    name: 'Goals',
-    route: 'Settings',
-    icon: Target,
-    description: 'Track your goals',
   },
 ]
 
@@ -90,10 +95,13 @@ function navigateTo(routeName) {
   router.push({ name: routeName })
 }
 
-// Toggle sidebar collapse
+// Toggle sidebar collapse (only affects user preference, not forced collapse)
 function toggleCollapse() {
-  collapsed.value = !collapsed.value
-  localStorage.setItem(STORAGE_KEY, collapsed.value.toString())
+  // Don't allow toggle if forced collapsed (tablet mode)
+  if (props.forceCollapsed) return
+
+  userCollapsed.value = !userCollapsed.value
+  localStorage.setItem(STORAGE_KEY, userCollapsed.value.toString())
 }
 
 // Quick log action
@@ -110,7 +118,18 @@ function openSettings() {
 onMounted(() => {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored !== null) {
-    collapsed.value = stored === 'true'
+    userCollapsed.value = stored === 'true'
+  }
+})
+
+// Watch forceCollapsed to save state when transitioning from forced to non-forced
+watch(() => props.forceCollapsed, (newVal, oldVal) => {
+  // When transitioning from tablet to desktop, restore user preference
+  if (oldVal === true && newVal === false) {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored !== null) {
+      userCollapsed.value = stored === 'true'
+    }
   }
 })
 </script>
@@ -258,10 +277,6 @@ onMounted(() => {
             <DropdownMenuItem @click="openSettings">
               <User class="w-4 h-4 mr-2" />
               Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="openSettings">
-              <Settings class="w-4 h-4 mr-2" />
-              Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="logout" class="text-destructive">

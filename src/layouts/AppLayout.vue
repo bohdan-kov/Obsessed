@@ -1,27 +1,43 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useWindowSize } from '@vueuse/core'
 import AppSidebar from './AppSidebar.vue'
 import MobileNav from './MobileNav.vue'
 
 const route = useRoute()
+const { width } = useWindowSize()
 
 // Get page title from route meta or name
 const pageTitle = computed(() => {
   return route.meta?.title || route.name || 'Obsessed'
 })
+
+// Responsive breakpoint logic
+// Mobile: < 768px - Only mobile nav
+// Tablet: 768px - 1223px - Sidebar collapsed
+// Desktop: >= 1224px - Sidebar expanded
+const isMobile = computed(() => width.value < 768)
+const isTablet = computed(() => width.value >= 768 && width.value < 1224)
+const isDesktop = computed(() => width.value >= 1224)
+
+// Control what shows where
+const showSidebar = computed(() => !isMobile.value) // Show sidebar on tablet and desktop
+const showMobileNav = computed(() => isMobile.value) // Show mobile nav only on mobile
+const sidebarCollapsed = computed(() => isTablet.value) // Auto-collapse on tablet
 </script>
 
 <template>
   <div class="flex h-screen overflow-hidden bg-background">
-    <!-- Desktop Sidebar -->
-    <AppSidebar class="hidden lg:flex" />
+    <!-- Desktop/Tablet Sidebar - Hidden on mobile, visible on tablet (collapsed) and desktop (expanded) -->
+    <AppSidebar v-if="showSidebar" :force-collapsed="sidebarCollapsed" class="hidden md:flex" />
 
     <!-- Main Content Area -->
     <div class="flex flex-col flex-1 overflow-hidden">
-      <!-- Mobile Header -->
+      <!-- Mobile Header - Only visible on mobile -->
       <header
-        class="flex items-center justify-between h-16 px-4 border-b border-border lg:hidden"
+        v-if="showMobileNav"
+        class="flex items-center justify-between h-16 px-4 border-b border-border md:hidden"
       >
         <div class="flex items-center gap-2">
           <MobileNav />

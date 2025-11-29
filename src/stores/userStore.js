@@ -14,6 +14,7 @@ import { COLLECTIONS } from '@/firebase/firestore'
  * @property {number} defaultRestTime - Default rest time in seconds
  * @property {'kg'|'lbs'} weightUnit - Weight unit preference
  * @property {'light'|'dark'|'system'} theme - Theme preference
+ * @property {'uk'|'en'} locale - UI language preference
  * @property {boolean} notifications - Enable notifications
  * @property {boolean} autoStartTimer - Auto-start rest timer
  * @property {boolean} soundEnabled - Enable sound effects
@@ -56,6 +57,7 @@ export const useUserStore = defineStore('user', () => {
     defaultRestTime: 90,
     weightUnit: 'kg',
     theme: 'system',
+    locale: 'uk',
     notifications: true,
     autoStartTimer: true,
     soundEnabled: true,
@@ -183,6 +185,7 @@ export const useUserStore = defineStore('user', () => {
           defaultRestTime: 90,
           weightUnit: 'kg',
           theme: 'system',
+          locale: 'uk',
           notifications: true,
           autoStartTimer: true,
           soundEnabled: true,

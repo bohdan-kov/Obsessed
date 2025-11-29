@@ -1,0 +1,53 @@
+{
+  "quickLog": {
+    "title": "Записати підхід",
+    "selectExercise": "Оберіть вправу",
+    "enterDetails": "Введіть деталі підходу",
+    "weight": "Вага (кг)",
+    "reps": "Повтори",
+    "rpe": "RPE (опціонально)",
+    "submit": "Записати підхід",
+    "recent": "Останні",
+    "allExercises": "Всі вправи",
+    "noExercisesFound": "Вправ не знайдено.",
+    "searchPlaceholder": "Пошук вправ..."
+  },
+  "exerciseTable": {
+    "overview": "Огляд",
+    "history": "Історія",
+    "exercises": "Вправи",
+    "plans": "Плани",
+    "exercise": "Вправа",
+    "type": "Тип",
+    "status": "Статус",
+    "sets": "Підходи",
+    "reps": "Повтори",
+    "weight": "Вага",
+    "date": "Дата",
+    "duration": "Тривалість",
+    "volume": "Обсяг",
+    "lastPerformed": "Останнє виконання",
+    "totalSets": "Всього підходів",
+    "totalVolume": "Загальний обсяг",
+    "timesPerformed": "Разів виконано",
+    "noActiveExercises": "Немає активних вправ",
+    "noActiveExercisesSubtitle": "Додайте вправу для початку тренування",
+    "noWorkoutHistory": "Немає історії тренувань",
+    "noExercises": "Немає виконаних вправ",
+    "noPlans": "Планів ще немає",
+    "noPlansSubtitle": "Створіть план тренувань",
+    "addExercise": "Додати вправу",
+    "customize": "Налаштувати",
+    "edit": "Редагувати",
+    "duplicate": "Дублювати",
+    "delete": "Видалити"
+  },
+  "muscleProgress": {
+    "title": "Фокус м'язів",
+    "description": "Розподіл обсягу тренувань за тиждень",
+    "avgBpm": "Avg BPM",
+    "weight": "Вага",
+    "noData": "Немає даних про м'язові групи",
+    "noDataSubtitle": "Почніть тренування для відстеження прогресу"
+  }
+}

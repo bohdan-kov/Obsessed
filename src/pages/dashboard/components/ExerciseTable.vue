@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useWorkoutStore } from '@/stores/workoutStore'
+import { useUnits } from '@/composables/useUnits'
 import {
   Card,
   CardContent,
@@ -32,13 +34,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Plus } from 'lucide-vue-next'
 import { CONFIG } from '@/constants/config'
-import { STRINGS } from '@/constants/strings'
 
+const { t } = useI18n()
+const { formatWeight } = useUnits()
 const workoutStore = useWorkoutStore()
 const { recentWorkouts, activeWorkout } = storeToRefs(workoutStore)
 
 const activeTab = ref('overview')
-const t = STRINGS.exerciseTable
 
 // Get today's exercises from active workout
 const todaysExercises = computed(() => {
@@ -56,13 +58,12 @@ const todaysExercises = computed(() => {
             exercise.sets.length
         )
       : 0,
+    // Store average weight in kg (storage unit)
     weight:
       exercise.sets.length > 0
-        ? `${Math.round(
-            exercise.sets.reduce((sum, set) => sum + set.weight, 0) /
-              exercise.sets.length
-          )} kg`
-        : '-',
+        ? exercise.sets.reduce((sum, set) => sum + set.weight, 0) /
+            exercise.sets.length
+        : null,
   }))
 })
 
@@ -228,20 +229,20 @@ function toggleExerciseComplete(exercise) {
     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-4">
       <Tabs v-model="activeTab" class="w-auto">
         <TabsList>
-          <TabsTrigger value="overview">Огляд</TabsTrigger>
+          <TabsTrigger value="overview">{{ t('workout.exerciseTable.overview') }}</TabsTrigger>
           <TabsTrigger value="history" class="gap-2">
-            Історія
+            {{ t('workout.exerciseTable.history') }}
             <Badge variant="secondary" class="h-5 px-1.5">
               {{ workoutHistory.length }}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="exercises" class="gap-2">
-            Вправи
+            {{ t('workout.exerciseTable.exercises') }}
             <Badge variant="secondary" class="h-5 px-1.5">
               {{ allExercises.length }}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="plans">Плани</TabsTrigger>
+          <TabsTrigger value="plans">{{ t('workout.exerciseTable.plans') }}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -267,12 +268,12 @@ function toggleExerciseComplete(exercise) {
           <TableHeader>
             <TableRow>
               <TableHead class="w-12" aria-label="Completion status" />
-              <TableHead>{{ t.exercise }}</TableHead>
-              <TableHead>{{ t.type }}</TableHead>
-              <TableHead>{{ t.status }}</TableHead>
-              <TableHead class="text-center">{{ t.sets }}</TableHead>
-              <TableHead class="text-center">{{ t.reps }}</TableHead>
-              <TableHead>{{ t.weight }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.exercise') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.type') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.status') }}</TableHead>
+              <TableHead class="text-center">{{ t('workout.exerciseTable.sets') }}</TableHead>
+              <TableHead class="text-center">{{ t('workout.exerciseTable.reps') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.weight') }}</TableHead>
               <TableHead class="w-12" aria-label="Actions" />
             </TableRow>
           </TableHeader>
@@ -300,7 +301,9 @@ function toggleExerciseComplete(exercise) {
               <TableCell class="text-center font-mono">
                 {{ exercise.reps }}
               </TableCell>
-              <TableCell class="font-mono">{{ exercise.weight }}</TableCell>
+              <TableCell class="font-mono">
+                {{ exercise.weight !== null ? formatWeight(exercise.weight, { from: 'kg' }) : '-' }}
+              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger as-child>
@@ -315,16 +318,16 @@ function toggleExerciseComplete(exercise) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem @click="handleEdit(exercise)">
-                      {{ t.edit }}
+                      {{ t('workout.exerciseTable.edit') }}
                     </DropdownMenuItem>
                     <DropdownMenuItem @click="handleDuplicate(exercise)">
-                      {{ t.duplicate }}
+                      {{ t('workout.exerciseTable.duplicate') }}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       class="text-destructive"
                       @click="handleDelete(exercise)"
                     >
-                      {{ t.delete }}
+                      {{ t('workout.exerciseTable.delete') }}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -339,8 +342,8 @@ function toggleExerciseComplete(exercise) {
           role="status"
         >
           <Plus class="w-12 h-12 mb-4 opacity-50" aria-hidden="true" />
-          <p class="text-sm">{{ t.noActiveExercises }}</p>
-          <p class="text-xs mt-1">{{ t.noActiveExercisesSubtitle }}</p>
+          <p class="text-sm">{{ t('workout.exerciseTable.noActiveExercises') }}</p>
+          <p class="text-xs mt-1">{{ t('workout.exerciseTable.noActiveExercisesSubtitle') }}</p>
         </div>
       </div>
 
@@ -349,11 +352,11 @@ function toggleExerciseComplete(exercise) {
         <Table v-if="workoutHistory.length > 0" aria-label="Workout history">
           <TableHeader>
             <TableRow>
-              <TableHead>{{ t.date }}</TableHead>
-              <TableHead>{{ t.exercises }}</TableHead>
-              <TableHead>{{ t.duration }}</TableHead>
-              <TableHead>{{ t.volume }}</TableHead>
-              <TableHead>{{ t.status }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.date') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.exercises') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.duration') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.volume') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.status') }}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -364,7 +367,7 @@ function toggleExerciseComplete(exercise) {
               <TableCell>{{ workout.exercises }}</TableCell>
               <TableCell>{{ formatDuration(workout.duration) }}</TableCell>
               <TableCell class="font-mono">
-                {{ workout.volume.toLocaleString() }} кг
+                {{ formatWeight(workout.volume, { from: 'kg', showUnit: true }) }}
               </TableCell>
               <TableCell>
                 <Badge :variant="getStatusVariant(workout.status)">
@@ -416,7 +419,7 @@ function toggleExerciseComplete(exercise) {
               </TableCell>
               <TableCell class="font-mono">{{ exercise.totalSets }}</TableCell>
               <TableCell class="font-mono">
-                {{ exercise.totalVolume.toLocaleString() }} кг
+                {{ formatWeight(exercise.totalVolume, { from: 'kg', showUnit: true }) }}
               </TableCell>
               <TableCell class="font-mono">
                 {{ exercise.timesPerformed }}

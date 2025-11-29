@@ -1,14 +1,24 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { Toaster } from '@/components/ui/toast'
 
 const authStore = useAuthStore()
 
+// Store unsubscribe function for cleanup
+let unsubscribeAuth = null
+
 // Initialize auth on app mount
 onMounted(() => {
-  authStore.initAuth()
+  unsubscribeAuth = authStore.initAuth()
+})
+
+// CRITICAL: Cleanup Firebase listener on unmount
+onUnmounted(() => {
+  if (unsubscribeAuth) {
+    unsubscribeAuth()
+  }
 })
 </script>
 

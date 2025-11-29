@@ -1,0 +1,52 @@
+{
+  "title": "Аналітична панель",
+  "welcomeBack": "З поверненням",
+  "errors": {
+    "loadFailed": "Не вдалося завантажити дані дашборду"
+  },
+  "stats": {
+    "totalWorkouts": "Всього тренувань",
+    "volumeLoad": "Обсяг навантаження",
+    "restDays": "Дні відпочинку",
+    "currentStreak": "Поточна серія",
+    "allTime": "За весь час",
+    "totalLifted": "Підняли загалом",
+    "thisPeriod": "За цей період",
+    "keepItUp": "Так тримати!",
+    "vsLastWeek": "vs минулий тиждень",
+    "days": "днів"
+  },
+  "tabs": {
+    "volume": "Обсяг",
+    "muscles": "М'язи",
+    "frequency": "Частота",
+    "progress": "Прогрес"
+  },
+  "charts": {
+    "volumeTitle": "Обсяг навантаження",
+    "volumeDescription": "Загальний обсяг (кг) за останні 14 днів",
+    "muscleTitle": "Розподіл по м'язах",
+    "muscleDescription": "Топ 8 м'язових груп за кількістю підходів",
+    "frequencyTitle": "Частота тренувань",
+    "frequencyDescription": "Коли ви зазвичай тренуєтесь (день тижня та час)",
+    "comparisonTitle": "Тижневий прогрес",
+    "comparisonDescription": "Порівняння поточного та минулого тижня",
+    "noData": "Немає даних для відображення",
+    "noDataSubtitle": "Почніть тренуватися для перегляду статистики",
+    "totalSets": "Всього підходів",
+    "legend": "Легенда",
+    "currentWeek": "Поточний тиждень",
+    "previousWeek": "Минулий тиждень",
+    "intensity": "Інтенсивність",
+    "less": "Менше",
+    "more": "Більше"
+  },
+  "muscleProgress": {
+    "title": "Фокус м'язів",
+    "description": "Розподіл обсягу тренувань за тиждень",
+    "noMuscleData": "Немає даних про м'язові групи",
+    "startTraining": "Почніть тренування для відстеження прогресу",
+    "avgBpm": "Середній пульс",
+    "weight": "Вага"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Analytics",
+  "tabs": {
+    "muscles": "Muscles",
+    "duration": "Duration",
+    "volume": "Volume",
+    "exercises": "Exercises"
+  },
+  "charts": {
+    "workoutVolume": "Workout Volume",
+    "muscleDistribution": "Muscle Distribution",
+    "exerciseProgress": "Exercise Progress",
+    "workoutDuration": "Workout Duration"
+  },
+  "stats": {
+    "totalVolume": "Total Volume",
+    "avgDuration": "Average Duration",
+    "totalWorkouts": "Total Workouts",
+    "mostTrained": "Most Trained Group"
+  },
+  "periods": {
+    "week": "Week",
+    "2weeks": "2 Weeks",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year"
+  },
+  "empty": {
+    "title": "No data to analyze",
+    "description": "Start working out to see your analytics",
+    "action": "Start Workout"
+  },
+  "comingSoon": "Analytics and charts coming soon..."
+}

@@ -1,0 +1,55 @@
+{
+  "actions": {
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "add": "Додати",
+    "back": "Назад",
+    "close": "Закрити",
+    "confirm": "Підтвердити",
+    "submit": "Надіслати",
+    "retry": "Спробувати ще"
+  },
+  "status": {
+    "loading": "Завантаження...",
+    "saving": "Збереження...",
+    "syncing": "Синхронізація...",
+    "synced": "Синхронізовано",
+    "offline": "Офлайн",
+    "error": "Помилка",
+    "completed": "Виконано",
+    "inProgress": "В процесі",
+    "scheduled": "Заплановано"
+  },
+  "units": {
+    "kg": "кг",
+    "lbs": "lbs",
+    "minutes": "хв",
+    "hours": "год",
+    "seconds": "с",
+    "sets": "підходи",
+    "reps": "повтори",
+    "days": "дні"
+  },
+  "time": {
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "thisWeek": "Цей тиждень",
+    "lastWeek": "Минулий тиждень",
+    "thisMonth": "Цей місяць"
+  },
+  "validation": {
+    "required": "Обов'язкове поле",
+    "invalidEmail": "Невірний формат email",
+    "minLength": "Мінімум {min} символів",
+    "maxLength": "Максимум {max} символів"
+  },
+  "success": {
+    "saved": "Збережено",
+    "deleted": "Видалено",
+    "updated": "Оновлено",
+    "created": "Створено",
+    "setLogged": "Підхід записано"
+  }
+}

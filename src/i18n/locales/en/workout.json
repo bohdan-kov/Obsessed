@@ -1,0 +1,53 @@
+{
+  "quickLog": {
+    "title": "Log Set",
+    "selectExercise": "Select an exercise",
+    "enterDetails": "Enter set details",
+    "weight": "Weight (kg)",
+    "reps": "Reps",
+    "rpe": "RPE (optional)",
+    "submit": "Log Set",
+    "recent": "Recent",
+    "allExercises": "All Exercises",
+    "noExercisesFound": "No exercises found.",
+    "searchPlaceholder": "Search exercises..."
+  },
+  "exerciseTable": {
+    "overview": "Overview",
+    "history": "History",
+    "exercises": "Exercises",
+    "plans": "Plans",
+    "exercise": "Exercise",
+    "type": "Type",
+    "status": "Status",
+    "sets": "Sets",
+    "reps": "Reps",
+    "weight": "Weight",
+    "date": "Date",
+    "duration": "Duration",
+    "volume": "Volume",
+    "lastPerformed": "Last performed",
+    "totalSets": "Total sets",
+    "totalVolume": "Total volume",
+    "timesPerformed": "Times performed",
+    "noActiveExercises": "No active exercises",
+    "noActiveExercisesSubtitle": "Add an exercise to start training",
+    "noWorkoutHistory": "No workout history",
+    "noExercises": "No exercises performed",
+    "noPlans": "No plans yet",
+    "noPlansSubtitle": "Create a training plan",
+    "addExercise": "Add exercise",
+    "customize": "Customize",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "delete": "Delete"
+  },
+  "muscleProgress": {
+    "title": "Muscle Focus",
+    "description": "Training volume distribution over the week",
+    "avgBpm": "Avg BPM",
+    "weight": "Weight",
+    "noData": "No muscle group data",
+    "noDataSubtitle": "Start training to track progress"
+  }
+}

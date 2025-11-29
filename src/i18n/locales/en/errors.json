@@ -1,0 +1,35 @@
+{
+  "general": "Something went wrong",
+  "noWorkout": "No active workout",
+  "saveFailed": "Failed to save",
+  "loadFailed": "Failed to load data",
+  "networkError": "Network connection problem",
+  "authRequired": "Authentication required",
+  "invalidInput": "Invalid data",
+  "tryAgain": "Please try again",
+  "titles": {
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "auth": {
+    "required": "Authentication required",
+    "invalidCredentials": "Invalid email or password",
+    "emailNotVerified": "Please verify your email address",
+    "sessionExpired": "Session expired, please log in again"
+  },
+  "workout": {
+    "noActive": "No active workout",
+    "saveFailed": "Failed to save workout",
+    "loadFailed": "Failed to load workout"
+  },
+  "settings": {
+    "saveFailed": "Failed to save settings",
+    "syncFailed": "Settings sync error"
+  },
+  "validation": {
+    "invalidInput": "Invalid data",
+    "weightOutOfRange": "Weight must be between {min} and {max} {unit}",
+    "repsOutOfRange": "Reps must be between {min} and {max}"
+  }
+}
