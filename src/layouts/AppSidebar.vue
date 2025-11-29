@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -24,7 +25,6 @@ import {
   LayoutDashboard,
   Activity,
   BarChart3,
-  Target,
   Settings,
   PanelLeft,
   LogOut,
@@ -43,6 +43,7 @@ const props = defineProps({
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const { displayName, email, photoURL, logout } = useAuth()
 
 const STORAGE_KEY = 'obsessed_sidebar_collapsed'
@@ -52,27 +53,27 @@ const quickLogOpen = ref(false)
 // Actual collapsed state: forced (tablet) or user preference
 const collapsed = computed(() => props.forceCollapsed || userCollapsed.value)
 
-// Navigation items
-const navItems = [
+// Navigation items - computed for reactive i18n
+const navItems = computed(() => [
   {
-    name: 'Dashboard',
+    name: t('common.nav.dashboard.name'),
     route: 'Dashboard',
     icon: LayoutDashboard,
-    description: 'Overview & stats',
+    description: t('common.nav.dashboard.description'),
   },
   {
-    name: 'Workouts',
+    name: t('common.nav.workouts.name'),
     route: 'Workouts',
     icon: Activity,
-    description: 'Workout history',
+    description: t('common.nav.workouts.description'),
   },
   {
-    name: 'Analytics',
+    name: t('common.nav.analytics.name'),
     route: 'Analytics',
     icon: BarChart3,
-    description: 'Charts & insights',
+    description: t('common.nav.analytics.description'),
   },
-]
+])
 
 // Get user initials for avatar fallback
 const userInitials = computed(() => {
@@ -163,7 +164,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
-            {{ collapsed ? 'Expand sidebar' : 'Collapse sidebar' }}
+            {{ collapsed ? t('common.sidebar.expand') : t('common.sidebar.collapse') }}
           </TooltipContent>
         </Tooltip>
       </div>
@@ -181,11 +182,11 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                 ]"
               >
                 <Zap class="w-5 h-5 shrink-0" />
-                <span v-if="!collapsed" class="font-semibold">Quick Log</span>
+                <span v-if="!collapsed" class="font-semibold">{{ t('common.nav.quickLog') }}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent v-if="collapsed" side="right">
-              Quick Log
+              {{ t('common.nav.quickLog') }}
             </TooltipContent>
           </Tooltip>
 
@@ -234,11 +235,11 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                 ]"
               >
                 <Settings class="w-5 h-5 shrink-0" />
-                <span v-if="!collapsed">Settings</span>
+                <span v-if="!collapsed">{{ t('common.nav.settings.name') }}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent v-if="collapsed" side="right">
-              Settings
+              {{ t('common.nav.settings.name') }}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -262,7 +263,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
 
               <div v-if="!collapsed" class="flex-1 text-left overflow-hidden">
                 <div class="text-sm font-medium truncate">
-                  {{ displayName || 'User' }}
+                  {{ displayName || t('common.user.defaultName') }}
                 </div>
                 <div class="text-xs text-muted-foreground truncate">
                   {{ email }}
@@ -272,16 +273,16 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" class="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{{ t('common.user.menu.myAccount') }}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="openSettings">
               <User class="w-4 h-4 mr-2" />
-              Profile
+              {{ t('common.user.menu.profile') }}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="logout" class="text-destructive">
               <LogOut class="w-4 h-4 mr-2" />
-              Sign out
+              {{ t('common.user.menu.signOut') }}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -40,7 +40,9 @@
     "customize": "Customize",
     "edit": "Edit",
     "duplicate": "Duplicate",
-    "delete": "Delete"
+    "delete": "Delete",
+    "hourShort": "h",
+    "minuteShort": "min"
   },
   "muscleProgress": {
     "title": "Muscle Focus",

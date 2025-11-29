@@ -40,7 +40,9 @@
     "customize": "Налаштувати",
     "edit": "Редагувати",
     "duplicate": "Дублювати",
-    "delete": "Видалити"
+    "delete": "Видалити",
+    "hourShort": "год",
+    "minuteShort": "хв"
   },
   "muscleProgress": {
     "title": "Фокус м'язів",

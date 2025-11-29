@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import {
   Card,
@@ -10,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
+const { t, locale } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { weekComparison } = storeToRefs(analyticsStore)
 
@@ -25,15 +27,15 @@ const comparisonData = computed(() => {
 
   return [
     {
-      label: 'Обсяг (кг)',
+      label: t('dashboard.charts.volumeKg'),
       current: current.volume,
       previous: previous.volume,
       max: maxVolume,
       change: change.volumePercentage,
-      format: (val) => val.toLocaleString('uk-UA'),
+      format: (val) => val.toLocaleString(locale.value),
     },
     {
-      label: 'Тренувань',
+      label: t('dashboard.charts.workoutsCount'),
       current: current.workouts,
       previous: previous.workouts,
       max: maxWorkouts,
@@ -41,7 +43,7 @@ const comparisonData = computed(() => {
       format: (val) => val.toString(),
     },
     {
-      label: 'Середній обсяг',
+      label: t('dashboard.charts.avgVolume'),
       current: current.avgVolume,
       previous: previous.avgVolume,
       max: Math.max(current.avgVolume, previous.avgVolume),
@@ -52,7 +54,7 @@ const comparisonData = computed(() => {
                 100
             )
           : 0,
-      format: (val) => val.toLocaleString('uk-UA') + ' кг',
+      format: (val) => val.toLocaleString(locale.value) + ' ' + t('common.units.kg'),
     },
   ]
 })
@@ -61,9 +63,9 @@ const comparisonData = computed(() => {
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Тижневий прогрес</CardTitle>
+      <CardTitle>{{ t('dashboard.charts.comparisonTitle') }}</CardTitle>
       <CardDescription>
-        Порівняння поточного та минулого тижня
+        {{ t('dashboard.charts.comparisonDescription') }}
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -125,25 +127,25 @@ const comparisonData = computed(() => {
         <div class="flex gap-6 pt-4 border-t">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded bg-muted" />
-            <span class="text-xs text-muted-foreground">Минулий тиждень</span>
+            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.previousWeek') }}</span>
           </div>
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded bg-gradient-to-r from-primary to-primary/70" />
-            <span class="text-xs text-muted-foreground">Поточний тиждень</span>
+            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.currentWeek') }}</span>
           </div>
         </div>
 
         <!-- Summary cards -->
         <div class="grid grid-cols-2 gap-4 pt-4">
           <div class="p-4 rounded-lg bg-muted/20 space-y-1">
-            <p class="text-xs text-muted-foreground">Поточний тиждень</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.currentWeek') }}</p>
             <p class="text-2xl font-bold">
               {{ weekComparison.currentWeek.workouts }}
             </p>
-            <p class="text-xs text-muted-foreground">тренувань</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.workouts') }}</p>
           </div>
           <div class="p-4 rounded-lg bg-muted/20 space-y-1">
-            <p class="text-xs text-muted-foreground">Зміна обсягу</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.volumeChange') }}</p>
             <p
               :class="[
                 'text-2xl font-bold',
@@ -154,7 +156,7 @@ const comparisonData = computed(() => {
             >
               {{ weekComparison.change.volumePercentage >= 0 ? '+' : '' }}{{ weekComparison.change.volumePercentage }}%
             </p>
-            <p class="text-xs text-muted-foreground">відносно минулого</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.vsLastWeek') }}</p>
           </div>
         </div>
       </div>

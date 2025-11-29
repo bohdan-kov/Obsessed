@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/authStore'
 import { useLocale } from '@/composables/useLocale'
 import { useUnits } from '@/composables/useUnits'
+import { useTheme } from '@/composables/useTheme'
 
 import {
   Card,
@@ -32,6 +33,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { currentLocale, availableLocales, changeLocale } = useLocale()
 const { weightUnit, availableWeightUnits, changeWeightUnit } = useUnits()
+const { themePreference, effectiveTheme, availableThemes, changeTheme } =
+  useTheme()
 
 async function handleSignOut() {
   await authStore.signOut()
@@ -93,6 +96,49 @@ const userInitials = computed(() => {
               </Label>
             </div>
           </RadioGroup>
+        </div>
+
+        <Separator />
+
+        <!-- Theme -->
+        <div class="space-y-3">
+          <Label class="text-base">
+            {{ t('settings.theme.title') }}
+          </Label>
+          <RadioGroup
+            :model-value="themePreference"
+            @update:model-value="changeTheme"
+            class="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          >
+            <div v-for="theme in availableThemes" :key="theme.value">
+              <RadioGroupItem
+                :value="theme.value"
+                :id="`theme-${theme.value}`"
+                class="peer sr-only"
+              />
+              <Label
+                :for="`theme-${theme.value}`"
+                class="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer transition-colors min-h-[100px]"
+              >
+                <component
+                  :is="theme.icon"
+                  class="h-6 w-6 mb-2"
+                />
+                <span class="font-medium">{{ t(theme.labelKey) }}</span>
+                <span class="text-xs text-muted-foreground text-center mt-1">
+                  {{ t(theme.descriptionKey) }}
+                </span>
+              </Label>
+            </div>
+          </RadioGroup>
+
+          <!-- System theme hint -->
+          <p
+            v-if="themePreference === 'system'"
+            class="text-sm text-muted-foreground text-center"
+          >
+            {{ t('settings.theme.currentHint', { theme: t(`settings.theme.${effectiveTheme}`) }) }}
+          </p>
         </div>
       </CardContent>
     </Card>

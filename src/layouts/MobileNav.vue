@@ -1,16 +1,23 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { VisuallyHidden } from 'reka-ui'
 import {
   LayoutDashboard,
   Activity,
   BarChart3,
-  Target,
   Settings,
   LogOut,
   Menu,
@@ -19,18 +26,18 @@ import {
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const { displayName, email, photoURL, logout } = useAuth()
 
 const isOpen = ref(false)
 
-// Navigation items
-const navItems = [
-  { name: 'Dashboard', route: 'Dashboard', icon: LayoutDashboard },
-  { name: 'Workouts', route: 'Workouts', icon: Activity },
-  { name: 'Analytics', route: 'Analytics', icon: BarChart3 },
-  { name: 'Goals', route: 'Settings', icon: Target },
-  { name: 'Settings', route: 'Settings', icon: Settings },
-]
+// Navigation items - computed for reactive i18n
+const navItems = computed(() => [
+  { name: t('common.nav.dashboard.name'), route: 'Dashboard', icon: LayoutDashboard },
+  { name: t('common.nav.workouts.name'), route: 'Workouts', icon: Activity },
+  { name: t('common.nav.analytics.name'), route: 'Analytics', icon: BarChart3 },
+  { name: t('common.nav.settings.name'), route: 'Settings', icon: Settings },
+])
 
 // Get user initials
 const userInitials = displayName.value
@@ -76,6 +83,11 @@ async function handleLogout() {
       </SheetTrigger>
 
       <SheetContent side="left" class="w-64 p-0">
+        <VisuallyHidden>
+          <SheetTitle>{{ t('common.nav.mobileMenu.title') }}</SheetTitle>
+          <SheetDescription>{{ t('common.nav.mobileMenu.description') }}</SheetDescription>
+        </VisuallyHidden>
+
         <div class="flex flex-col h-full">
           <!-- Header -->
           <div class="flex items-center h-16 px-4 border-b border-border">
@@ -97,7 +109,7 @@ async function handleLogout() {
               class="w-full justify-start gap-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg"
             >
               <Zap class="w-5 h-5" />
-              <span class="font-semibold">Quick Log</span>
+              <span class="font-semibold">{{ t('common.nav.quickLog') }}</span>
             </Button>
 
             <Separator class="my-4" />
@@ -127,7 +139,7 @@ async function handleLogout() {
 
               <div class="flex-1 overflow-hidden">
                 <div class="text-sm font-medium truncate">
-                  {{ displayName || 'User' }}
+                  {{ displayName || t('common.user.defaultName') }}
                 </div>
                 <div class="text-xs text-muted-foreground truncate">
                   {{ email }}
@@ -141,7 +153,7 @@ async function handleLogout() {
               class="w-full justify-start gap-3 text-destructive hover:text-destructive"
             >
               <LogOut class="w-5 h-5" />
-              <span>Sign out</span>
+              <span>{{ t('common.user.menu.signOut') }}</span>
             </Button>
           </div>
         </div>

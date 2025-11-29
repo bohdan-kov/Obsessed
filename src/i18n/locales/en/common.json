@@ -51,5 +51,40 @@
     "updated": "Updated",
     "created": "Created",
     "setLogged": "Set logged"
+  },
+  "nav": {
+    "dashboard": {
+      "name": "Dashboard",
+      "description": "Overview & stats"
+    },
+    "workouts": {
+      "name": "Workouts",
+      "description": "Workout history"
+    },
+    "analytics": {
+      "name": "Analytics",
+      "description": "Charts & insights"
+    },
+    "settings": {
+      "name": "Settings",
+      "description": "Preferences & settings"
+    },
+    "quickLog": "Quick Log",
+    "mobileMenu": {
+      "title": "Navigation Menu",
+      "description": "Access dashboard, workouts, analytics and settings"
+    }
+  },
+  "sidebar": {
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar"
+  },
+  "user": {
+    "menu": {
+      "myAccount": "My Account",
+      "profile": "Profile",
+      "signOut": "Sign out"
+    },
+    "defaultName": "User"
   }
 }

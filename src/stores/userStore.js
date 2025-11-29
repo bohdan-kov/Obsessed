@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuthStore } from './authStore'
 import {
@@ -8,6 +8,7 @@ import {
   subscribeToDocument,
 } from '@/firebase/firestore'
 import { COLLECTIONS } from '@/firebase/firestore'
+import { CONFIG } from '@/constants/config'
 
 /**
  * @typedef {Object} UserSettings
@@ -67,6 +68,7 @@ export const useUserStore = defineStore('user', () => {
 
   // Real-time listener cleanup
   let unsubscribeProfile = null
+  let mediaQueryCleanup = null
 
   // Getters
   /**
@@ -272,9 +274,11 @@ export const useUserStore = defineStore('user', () => {
         settings: updatedSettings,
       })
 
+      // Update local settings immediately for instant UI feedback
+      // The Firestore subscription will sync it back, ensuring consistency
       settings.value = updatedSettings
 
-      // Apply theme if changed
+      // Apply theme if changed (for immediate visual feedback)
       if (newSettings.theme) {
         applyTheme(newSettings.theme)
       }
@@ -391,23 +395,42 @@ export const useUserStore = defineStore('user', () => {
     } else {
       root.classList.toggle('dark', theme === 'dark')
     }
+
+    // Cache to localStorage to prevent flash on next page load
+    localStorage.setItem(CONFIG.storage.THEME, theme)
   }
 
   /**
    * Initialize theme on app load
+   * CRITICAL: Call this AFTER Firestore settings are loaded to avoid race condition
+   * Prioritizes: Firestore > localStorage > default
    */
   function initTheme() {
-    applyTheme(settings.value.theme)
+    // PRIORITY ORDER:
+    // 1. Firestore settings (if available)
+    // 2. localStorage cache (prevents flash)
+    // 3. Default 'system'
+    const firestoreTheme = settings.value?.theme
+    const cachedTheme = localStorage.getItem(CONFIG.storage.THEME)
+    const initialTheme = firestoreTheme || cachedTheme || 'system'
 
-    // Listen for system theme changes
-    if (settings.value.theme === 'system') {
-      window
-        .matchMedia('(prefers-color-scheme: dark)')
-        .addEventListener('change', (e) => {
-          if (settings.value.theme === 'system') {
-            document.documentElement.classList.toggle('dark', e.matches)
-          }
-        })
+    // Apply theme immediately
+    applyTheme(initialTheme)
+
+    // Setup media query listener (always attach, conditionally execute)
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleMediaChange = (e) => {
+      // Only apply if user has 'system' preference
+      if (settings.value.theme === 'system') {
+        document.documentElement.classList.toggle('dark', e.matches)
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleMediaChange)
+
+    // Store cleanup reference
+    mediaQueryCleanup = () => {
+      mediaQuery.removeEventListener('change', handleMediaChange)
     }
   }
 
@@ -419,6 +442,10 @@ export const useUserStore = defineStore('user', () => {
       unsubscribeProfile()
       unsubscribeProfile = null
     }
+    if (mediaQueryCleanup) {
+      mediaQueryCleanup()
+      mediaQueryCleanup = null
+    }
   }
 
   /**
@@ -428,8 +455,44 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
   }
 
-  // Initialize theme
-  initTheme()
+  // Track if theme has been initialized
+  let themeInitialized = false
+
+  // CRITICAL: Sync settings from authStore's userProfile (Firestore data)
+  // This connects userStore.settings to the real-time Firestore subscription in authStore
+  watch(
+    () => authStore.userProfile,
+    (newProfile) => {
+      if (newProfile?.settings) {
+        const oldTheme = settings.value.theme
+
+        // Update settings from Firestore
+        settings.value = {
+          ...settings.value,
+          ...newProfile.settings,
+        }
+
+        // Initialize theme ONCE after Firestore data loads (fixes race condition)
+        if (!themeInitialized) {
+          initTheme()
+          themeInitialized = true
+        } else if (newProfile.settings.theme && newProfile.settings.theme !== oldTheme) {
+          // On subsequent updates, only apply if theme actually changed
+          applyTheme(newProfile.settings.theme)
+        }
+      }
+    },
+    { immediate: true } // Run immediately to catch existing profile
+  )
+
+  // FALLBACK: If user is not authenticated or profile doesn't load,
+  // initialize theme from localStorage after a short delay
+  setTimeout(() => {
+    if (!themeInitialized) {
+      initTheme()
+      themeInitialized = true
+    }
+  }, 500)
 
   return {
     // State
