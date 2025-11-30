@@ -70,6 +70,7 @@
     "subtitle": "За останні {days} днів",
     "days": "{count} днів",
     "volume": "Обсяг (кг)",
+    "workouts": "Тренувань",
     "exercises": "Вправи",
     "period7Days": "7 днів",
     "period14Days": "14 днів",
@@ -79,7 +80,8 @@
     "noData": "Немає даних для відображення",
     "noDataSubtitle": "Почніть тренуватися для перегляду графіка",
     "tooltipVolume": "Обсяг",
-    "tooltipExercises": "Вправ"
+    "tooltipExercises": "Вправ",
+    "selectTimeRange": "Оберіть часовий діапазон для графіку об'єму"
   },
   "muscleProgress": {
     "title": "Фокус м'язів",

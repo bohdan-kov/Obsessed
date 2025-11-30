@@ -22,6 +22,11 @@ const props = defineProps({
 const chartConfig = inject('chartConfig', {})
 
 const legendItems = computed(() => {
+  // Ensure chartConfig is an object before iterating
+  if (!chartConfig || typeof chartConfig !== 'object') {
+    return []
+  }
+
   return Object.entries(chartConfig).map(([key, value]) => ({
     key,
     label: value.label || key,
@@ -41,16 +46,13 @@ const alignClass = computed(() => {
 const orientationClass = computed(() => {
   return props.orientation === 'vertical' ? 'flex-col' : 'flex-row'
 })
-
-const verticalAlignClass = computed(() => {
-  return props.verticalAlign === 'top' ? 'mt-4' : 'mb-4'
-})
 </script>
 
 <template>
   <div
-    class="chart-legend flex gap-4 flex-wrap"
-    :class="[alignClass, orientationClass, verticalAlignClass]"
+    v-if="legendItems.length > 0"
+    class="chart-legend flex gap-4 flex-wrap mt-6 pb-2"
+    :class="[alignClass, orientationClass]"
   >
     <div
       v-for="item in legendItems"

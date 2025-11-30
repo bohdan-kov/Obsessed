@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWindowSize } from '@vueuse/core'
+import { CONFIG } from '@/constants/config'
 import AppSidebar from './AppSidebar.vue'
 import MobileNav from './MobileNav.vue'
 
@@ -17,9 +18,12 @@ const pageTitle = computed(() => {
 // Mobile: < 768px - Only mobile nav
 // Tablet: 768px - 1223px - Sidebar collapsed
 // Desktop: >= 1224px - Sidebar expanded
-const isMobile = computed(() => width.value < 768)
-const isTablet = computed(() => width.value >= 768 && width.value < 1224)
-const isDesktop = computed(() => width.value >= 1224)
+const isMobile = computed(() => width.value < CONFIG.ui.TABLET_BREAKPOINT)
+const isTablet = computed(() =>
+  width.value >= CONFIG.ui.TABLET_BREAKPOINT &&
+  width.value < CONFIG.ui.SIDEBAR_EXPAND_BREAKPOINT
+)
+const isDesktop = computed(() => width.value >= CONFIG.ui.SIDEBAR_EXPAND_BREAKPOINT)
 
 // Control what shows where
 const showSidebar = computed(() => !isMobile.value) // Show sidebar on tablet and desktop

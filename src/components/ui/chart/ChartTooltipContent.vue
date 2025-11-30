@@ -20,7 +20,7 @@ const chartConfig = inject('chartConfig', {})
 </script>
 
 <template>
-  <div class="chart-tooltip-content rounded-lg border bg-background p-2 shadow-sm">
+  <div class="chart-tooltip-content rounded-lg border bg-popover text-popover-foreground p-2 shadow-sm">
     <slot :config="chartConfig" />
   </div>
 </template>

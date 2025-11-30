@@ -100,6 +100,9 @@ export const CONFIG = {
     CACHE_VERSION: '1.0',
     MAX_SECONDARY_MUSCLES: 3,
     EXERCISES_PER_PAGE: 20, // Pagination: exercises displayed per page
+    ITEM_HEIGHT: 180, // px - height of ExerciseListItem card
+    PAGINATION_MAX_ITEMS: 30, // Dynamic pagination max items
+    PAGE_HEADER_OFFSET: 240, // px - header + filters offset for pagination
   },
 
   // Performance Configuration

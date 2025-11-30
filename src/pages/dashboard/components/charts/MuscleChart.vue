@@ -2,7 +2,10 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { Donut } from '@unovis/ts'
+import { VisDonut, VisSingleContainer } from '@unovis/vue'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { MUSCLE_COLOR_MAP } from '@/constants/chartTheme'
 import {
   Card,
   CardContent,
@@ -10,213 +13,175 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartTooltip,
+} from '@/components/ui/chart'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { muscleDistribution } = storeToRefs(analyticsStore)
 
-// Chart colors for different muscle groups
-const muscleColors = [
-  'var(--chart-1, #ef4444)', // red
-  'var(--chart-2, #f97316)', // orange
-  'var(--chart-3, #eab308)', // yellow
-  'var(--chart-4, #22c55e)', // green
-  'var(--chart-5, #3b82f6)', // blue
-  'var(--chart-6, #8b5cf6)', // purple
-  'var(--chart-7, #ec4899)', // pink
-  'var(--chart-8, #06b6d4)', // cyan
-]
-
 // Top 8 muscles for donut chart with translated names
+// CRITICAL: Each item MUST have `fill: "var(--color-{muscle})"` property
 const chartData = computed(() => {
-  return muscleDistribution.value.slice(0, 8).map((muscle, index) => ({
-    ...muscle,
+  return muscleDistribution.value.slice(0, 8).map((muscle) => ({
+    muscle: muscle.muscle,
     muscleName: t(`exercises.muscleGroups.${muscle.muscle}`),
-    color: muscleColors[index % muscleColors.length],
+    sets: muscle.sets,
+    percentage: muscle.percentage,
+    fill: `var(--color-${muscle.muscle})`, // CRITICAL: reference to CSS variable
   }))
 })
 
-// Calculate donut segments
+// Chart configuration - maps muscle groups to colors
+// CRITICAL: color values must be "hsl(var(--chart-X))" format
+const chartConfig = computed(() => {
+  const config = {
+    sets: {
+      label: t('dashboard.charts.sets'),
+      color: undefined,
+    },
+  }
+
+  // Add each muscle group to config using centralized color map
+  chartData.value.forEach((muscle) => {
+    config[muscle.muscle] = {
+      label: muscle.muscleName,
+      color: MUSCLE_COLOR_MAP[muscle.muscle] || MUSCLE_COLOR_MAP.back,
+    }
+  })
+
+  return config
+})
+
+// Total sets
 const totalSets = computed(() => {
   return chartData.value.reduce((sum, muscle) => sum + muscle.sets, 0)
 })
 
-// Generate SVG path for donut segment
-function describeArc(x, y, radius, startAngle, endAngle) {
-  const start = polarToCartesian(x, y, radius, endAngle)
-  const end = polarToCartesian(x, y, radius, startAngle)
-  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1'
+// Tooltip formatter function
+// CRITICAL: Tooltip is rendered in a portal outside .dark scope, so CSS variables don't work
+// Use hardcoded OKLCH values for dark mode (matching design tokens in globals.css)
+// CRITICAL: Unovis wraps chartData in d.data, not directly in d
+const getTooltipContent = (d) => {
+  // Extract actual data from Unovis wrapper
+  const data = d.data
+  const percentage = ((data.sets / totalSets.value) * 100).toFixed(1)
 
-  return [
-    'M',
-    start.x,
-    start.y,
-    'A',
-    radius,
-    radius,
-    0,
-    largeArcFlag,
-    0,
-    end.x,
-    end.y,
-  ].join(' ')
+  // Dark mode colors (hardcoded from globals.css design tokens)
+  // Using OKLCH color space as defined in theme
+  const backgroundColor = 'oklch(0.35 0 0)' // --popover in dark mode (slightly lighter than background for better contrast)
+  const foreground = 'oklch(0.985 0 0)' // --foreground in dark mode
+  const border = 'oklch(0.269 0 0)' // --border in dark mode
+  const mutedForeground = 'oklch(0.708 0 0)' // --muted-foreground in dark mode
+
+  return `
+    <div style="background: ${backgroundColor}; color: ${foreground}; border: 1px solid ${border}; border-radius: 0.5rem; padding: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); min-width: 180px;">
+      <div style="font-weight: 600; margin-bottom: 0.25rem; color: ${foreground};">${data.muscleName}</div>
+      <div style="font-size: 0.875rem; color: ${mutedForeground};">${data.sets} ${t('dashboard.charts.setsShort')} (${percentage}%)</div>
+    </div>
+  `
 }
-
-function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
-
-  return {
-    x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians),
-  }
-}
-
-// Generate donut segments
-const donutSegments = computed(() => {
-  if (chartData.value.length === 0) return []
-
-  const centerX = 100
-  const centerY = 100
-  const radius = 70
-  const innerRadius = 45
-
-  let currentAngle = 0
-  const segments = []
-
-  chartData.value.forEach((muscle) => {
-    const percentage = muscle.percentage
-    const angle = (percentage / 100) * 360
-    const endAngle = currentAngle + angle
-
-    // Outer arc
-    const outerStart = polarToCartesian(centerX, centerY, radius, currentAngle)
-    const outerEnd = polarToCartesian(centerX, centerY, radius, endAngle)
-
-    // Inner arc
-    const innerStart = polarToCartesian(centerX, centerY, innerRadius, currentAngle)
-    const innerEnd = polarToCartesian(centerX, centerY, innerRadius, endAngle)
-
-    const largeArcFlag = angle <= 180 ? '0' : '1'
-
-    const pathData = [
-      `M ${outerStart.x} ${outerStart.y}`,
-      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
-      `L ${innerEnd.x} ${innerEnd.y}`,
-      `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
-      'Z',
-    ].join(' ')
-
-    segments.push({
-      ...muscle,
-      path: pathData,
-      midAngle: currentAngle + angle / 2,
-    })
-
-    currentAngle = endAngle
-  })
-
-  return segments
-})
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
+  <Card class="flex flex-col">
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('dashboard.charts.muscleTitle') }}</CardTitle>
       <CardDescription>
         {{ t('dashboard.charts.muscleDescription') }}
       </CardDescription>
     </CardHeader>
-    <CardContent>
-      <div class="flex flex-col lg:flex-row gap-8 items-center">
-        <!-- Donut Chart -->
-        <div class="flex-shrink-0">
-          <div v-if="chartData.length > 0" class="relative w-[200px] h-[200px]">
-            <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
-              <g
-                v-for="(segment, index) in donutSegments"
-                :key="index"
-                class="transition-opacity hover:opacity-80 cursor-pointer"
-              >
-                <path
-                  :d="segment.path"
-                  :fill="segment.color"
-                  :stroke="segment.color"
-                  stroke-width="1"
-                >
-                  <title>{{ segment.muscleName }}: {{ segment.sets }} {{ t('dashboard.charts.sets') }} ({{ segment.percentage.toFixed(1) }}%)</title>
-                </path>
-              </g>
-            </svg>
 
-            <!-- Center text -->
-            <div
-              class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-            >
-              <div class="text-3xl font-bold">{{ totalSets }}</div>
-              <div class="text-xs text-muted-foreground">{{ t('dashboard.charts.totalSets') }}</div>
-            </div>
-          </div>
-
-          <!-- Empty state -->
-          <div
-            v-else
-            class="w-[200px] h-[200px] flex flex-col items-center justify-center text-muted-foreground"
+    <CardContent class="flex flex-col pb-6">
+      <div v-if="chartData.length > 0" class="flex flex-col md:flex-row gap-6">
+        <!-- Pie Chart -->
+        <div class="shrink-0 mx-auto md:mx-0">
+          <ChartContainer
+            :config="chartConfig"
+            class="aspect-square w-[200px] md:w-[250px]"
+            :style="{
+              '--vis-donut-central-label-font-size': 'var(--text-3xl)',
+              '--vis-donut-central-label-font-weight': 'var(--font-weight-bold)',
+              '--vis-donut-central-label-text-color': 'var(--foreground)',
+              '--vis-donut-central-sub-label-text-color': 'var(--muted-foreground)',
+            }"
           >
-            <svg
-              class="w-12 h-12 mb-2 opacity-50"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <VisSingleContainer
+              :data="chartData"
+              :margin="{ top: 30, bottom: 30 }"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+              <VisDonut
+                :value="(d) => d.sets"
+                :color="(d) => chartConfig[d.muscle].color"
+                :arc-width="30"
+                :central-label-offset-y="10"
+                :central-label="totalSets.toString()"
+                :central-sub-label="t('dashboard.charts.totalSets')"
               />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+              <ChartTooltip
+                :triggers="{
+                  [Donut.selectors.segment]: getTooltipContent,
+                }"
               />
-            </svg>
-            <p class="text-sm text-center">{{ t('dashboard.charts.noMuscleData') }}</p>
-          </div>
+            </VisSingleContainer>
+          </ChartContainer>
         </div>
 
-        <!-- Legend -->
+        <!-- Legend with data -->
         <div class="flex-1 space-y-2">
           <div
-            v-for="(muscle, index) in chartData"
-            :key="index"
-            class="flex items-center justify-between text-sm py-1 px-2 rounded hover:bg-muted/50 transition-colors cursor-pointer"
+            v-for="item in chartData"
+            :key="item.muscle"
+            class="flex items-center justify-between text-sm py-1 px-2 rounded hover:bg-muted/50 transition-colors"
           >
             <div class="flex items-center gap-2">
               <div
-                class="w-3 h-3 rounded-full flex-shrink-0"
-                :style="{ backgroundColor: muscle.color }"
+                class="h-3 w-3 rounded-full shrink-0"
+                :style="{ backgroundColor: chartConfig[item.muscle].color }"
               />
-              <span class="font-medium">{{ muscle.muscleName }}</span>
+              <span class="font-medium">{{ item.muscleName }}</span>
             </div>
             <div class="flex items-center gap-3 text-muted-foreground">
-              <span class="font-mono">{{ muscle.sets }} {{ t('dashboard.charts.setsShort') }}</span>
-              <span class="font-mono w-12 text-right">
-                {{ muscle.percentage.toFixed(1) }}%
-              </span>
+              <span class="font-mono">{{ item.sets }} {{ t('dashboard.charts.setsShort') }}</span>
+              <span class="font-mono w-12 text-right">{{ item.percentage.toFixed(1) }}%</span>
             </div>
           </div>
-
-          <div
-            v-if="chartData.length === 0"
-            class="text-center text-sm text-muted-foreground py-4"
-          >
-            {{ t('dashboard.charts.noMuscleDataSubtitle') }}
-          </div>
         </div>
+      </div>
+
+      <!-- Empty state -->
+      <div
+        v-else
+        class="flex flex-col items-center justify-center text-muted-foreground py-8"
+      >
+        <svg
+          class="w-12 h-12 mb-2 opacity-50"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+          />
+        </svg>
+        <p class="text-sm text-center">{{ t('dashboard.charts.noMuscleData') }}</p>
+        <p class="text-xs text-center mt-1">
+          {{ t('dashboard.charts.noMuscleDataSubtitle') }}
+        </p>
       </div>
     </CardContent>
   </Card>
 </template>
+

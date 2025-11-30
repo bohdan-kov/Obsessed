@@ -70,6 +70,7 @@
     "subtitle": "Last {days} days",
     "days": "{count} days",
     "volume": "Volume (kg)",
+    "workouts": "Workouts",
     "exercises": "Exercises",
     "period7Days": "7 days",
     "period14Days": "14 days",
@@ -79,7 +80,8 @@
     "noData": "No data to display",
     "noDataSubtitle": "Start training to view chart",
     "tooltipVolume": "Volume",
-    "tooltipExercises": "Exercises"
+    "tooltipExercises": "Exercises",
+    "selectTimeRange": "Select time range for volume chart"
   },
   "muscleProgress": {
     "title": "Muscle Focus",
