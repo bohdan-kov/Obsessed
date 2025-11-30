@@ -151,6 +151,7 @@ import { useExerciseStore } from '@/stores/exerciseStore'
 import { useExerciseLibraryStore } from '@/stores/exerciseLibraryStore'
 import { useDynamicPagination } from '@/composables/useDynamicPagination'
 import { useI18n } from 'vue-i18n'
+import { CONFIG } from '@/constants/config'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -159,11 +160,11 @@ const exerciseLibraryStore = useExerciseLibraryStore()
 
 // Dynamic pagination based on viewport height
 const { itemsPerPage: dynamicItemsPerPage } = useDynamicPagination({
-  itemHeight: 180, // Approximate height of ExerciseListItem with stats (card + spacing)
+  itemHeight: CONFIG.exercise.ITEM_HEIGHT,
   targetScreenRatio: 1.5, // Content should be ~1.5x screen height (scroll down 0.5x)
   minItems: 5,
-  maxItems: 30,
-  headerOffset: 240, // Header + search bar + filters/actions + spacing
+  maxItems: CONFIG.exercise.PAGINATION_MAX_ITEMS,
+  headerOffset: CONFIG.exercise.PAGE_HEADER_OFFSET,
 })
 
 // Watch dynamic items per page and update the store

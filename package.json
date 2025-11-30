@@ -14,7 +14,8 @@
     "format": "prettier --write --experimental-cli src/",
     "test": "NODE_OPTIONS='--no-webstorage' vitest",
     "test:run": "NODE_OPTIONS='--no-webstorage' vitest run",
-    "seed:exercises": "node scripts/seedExercises.js"
+    "seed:workouts": "node scripts/seedWorkouts.js --add",
+    "seed:workouts:remove": "node scripts/seedWorkouts.js --remove"
   },
   "dependencies": {
     "@unovis/ts": "^1.6.2",

@@ -8,6 +8,7 @@ import { useExerciseStore } from './exerciseStore'
  * @property {string} date - Date string
  * @property {number} volume - Total volume in kg
  * @property {number} workouts - Number of workouts
+ * @property {number} exercises - Number of exercises
  */
 
 /**
@@ -26,10 +27,18 @@ export const useAnalyticsStore = defineStore('analytics', () => {
 
   // Computed analytics from workout store
   /**
+   * Completed workouts (single source of truth)
+   * All other computed properties use this to avoid repeated filtering
+   */
+  const completedWorkouts = computed(() => {
+    return workoutStore.workouts.filter((w) => w.status === 'completed')
+  })
+
+  /**
    * Total number of workouts in selected period
    */
   const totalWorkouts = computed(() => {
-    return workoutStore.workouts.filter((w) => w.status === 'completed').length
+    return completedWorkouts.value.length
   })
 
   /**
@@ -64,9 +73,10 @@ export const useAnalyticsStore = defineStore('analytics', () => {
    * Total volume load (weight × reps × sets)
    */
   const volumeLoad = computed(() => {
-    return workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .reduce((total, workout) => total + calculateWorkoutVolume(workout), 0)
+    return completedWorkouts.value.reduce(
+      (total, workout) => total + calculateWorkoutVolume(workout),
+      0
+    )
   })
 
   /**
@@ -81,40 +91,49 @@ export const useAnalyticsStore = defineStore('analytics', () => {
    * Total number of sets completed
    */
   const totalSets = computed(() => {
-    return workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .reduce((total, workout) => {
-        return (
-          total +
-          workout.exercises.reduce((exTotal, exercise) => {
-            return exTotal + exercise.sets.length
-          }, 0)
-        )
-      }, 0)
+    return completedWorkouts.value.reduce((total, workout) => {
+      return (
+        total +
+        workout.exercises.reduce((exTotal, exercise) => {
+          return exTotal + exercise.sets.length
+        }, 0)
+      )
+    }, 0)
   })
 
   /**
-   * Calculate rest days (days without workouts)
+   * Calculate rest days (days since last workout)
+   * Returns 0 if worked out today, positive number for days since last workout
    */
   const restDays = computed(() => {
-    const completedWorkouts = workoutStore.workouts.filter(
-      (w) => w.status === 'completed'
-    )
+    if (completedWorkouts.value.length === 0) return 0
 
-    if (completedWorkouts.length === 0) return 0
-
-    const workoutDates = new Set()
-
-    completedWorkouts.forEach((workout) => {
-      const date = workout.completedAt?.toDate
-        ? workout.completedAt.toDate()
-        : new Date(workout.completedAt)
-      const dateStr = date.toISOString().split('T')[0]
-      workoutDates.add(dateStr)
+    // Find the most recent workout
+    const sortedWorkouts = [...completedWorkouts.value].sort((a, b) => {
+      const dateA = a.completedAt?.toDate
+        ? a.completedAt.toDate()
+        : new Date(a.completedAt)
+      const dateB = b.completedAt?.toDate
+        ? b.completedAt.toDate()
+        : new Date(b.completedAt)
+      return dateB - dateA // Most recent first
     })
 
-    const periodDays = getPeriodDays(period.value)
-    return periodDays - workoutDates.size
+    const lastWorkout = sortedWorkouts[0]
+    const lastWorkoutDate = lastWorkout.completedAt?.toDate
+      ? lastWorkout.completedAt.toDate()
+      : new Date(lastWorkout.completedAt)
+
+    // Calculate days difference from today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Start of today
+    const workoutDay = new Date(lastWorkoutDate)
+    workoutDay.setHours(0, 0, 0, 0) // Start of workout day
+
+    const diffTime = today - workoutDay
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+    return Math.max(0, diffDays) // Ensure non-negative
   })
 
   /**
@@ -142,23 +161,23 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       const date = new Date(now)
       date.setDate(date.getDate() - i)
       const dateStr = date.toISOString().split('T')[0]
-      dailyData[dateStr] = { volume: 0, workouts: 0 }
+      dailyData[dateStr] = { volume: 0, workouts: 0, exercises: 0 }
     }
 
-    const completedWorkouts = workoutStore.workouts.filter((w) => w.status === 'completed')
-
     // Fill in actual data
-    completedWorkouts.forEach((workout) => {
+    completedWorkouts.value.forEach((workout) => {
       const date = workout.completedAt?.toDate
         ? workout.completedAt.toDate()
         : new Date(workout.completedAt)
       const dateStr = date.toISOString().split('T')[0]
 
       const volume = calculateWorkoutVolume(workout)
+      const exerciseCount = workout.exercises?.length || 0
 
       if (dailyData[dateStr]) {
         dailyData[dateStr].volume += volume
         dailyData[dateStr].workouts += 1
+        dailyData[dateStr].exercises += exerciseCount
       }
     })
 
@@ -168,6 +187,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         date,
         volume: data.volume,
         workouts: data.workouts,
+        exercises: data.exercises,
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date))
   })
@@ -181,9 +201,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     const muscleData = {}
     let totalSetCount = 0
 
-    workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .forEach((workout) => {
+    completedWorkouts.value.forEach((workout) => {
         workout.exercises.forEach((exercise) => {
           // Resolve full exercise data from exercise library
           const exerciseData = exerciseStore.getExerciseById(exercise.exerciseId)
@@ -231,9 +249,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       heatmap[day] = Array(24).fill(0)
     })
 
-    workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .forEach((workout) => {
+    completedWorkouts.value.forEach((workout) => {
         const date = workout.startedAt?.toDate
           ? workout.startedAt.toDate()
           : new Date(workout.startedAt)
@@ -261,16 +277,14 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     const prevWeekStart = new Date(weekStart)
     prevWeekStart.setDate(weekStart.getDate() - 7)
 
-    const currentWeek = workoutStore.workouts.filter((w) => {
-      if (w.status !== 'completed') return false
+    const currentWeek = completedWorkouts.value.filter((w) => {
       const date = w.completedAt?.toDate
         ? w.completedAt.toDate()
         : new Date(w.completedAt)
       return date >= weekStart && date <= now
     })
 
-    const previousWeek = workoutStore.workouts.filter((w) => {
-      if (w.status !== 'completed') return false
+    const previousWeek = completedWorkouts.value.filter((w) => {
       const date = w.completedAt?.toDate
         ? w.completedAt.toDate()
         : new Date(w.completedAt)
@@ -320,9 +334,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
    * Workout streak (consecutive days with workouts)
    */
   const currentStreak = computed(() => {
-    const completedWorkouts = workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .sort((a, b) => {
+    const sortedCompletedWorkouts = [...completedWorkouts.value].sort((a, b) => {
         const dateA = a.completedAt?.toDate
           ? a.completedAt.toDate()
           : new Date(a.completedAt)
@@ -332,16 +344,16 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         return dateB - dateA
       })
 
-    if (completedWorkouts.length === 0) return 0
+    if (sortedCompletedWorkouts.length === 0) return 0
 
     let streak = 0
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    for (let i = 0; i < completedWorkouts.length; i++) {
-      const workoutDate = completedWorkouts[i].completedAt?.toDate
-        ? completedWorkouts[i].completedAt.toDate()
-        : new Date(completedWorkouts[i].completedAt)
+    for (let i = 0; i < sortedCompletedWorkouts.length; i++) {
+      const workoutDate = sortedCompletedWorkouts[i].completedAt?.toDate
+        ? sortedCompletedWorkouts[i].completedAt.toDate()
+        : new Date(sortedCompletedWorkouts[i].completedAt)
       workoutDate.setHours(0, 0, 0, 0)
 
       const expectedDate = new Date(today)
@@ -361,9 +373,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
    * Best workout (highest volume)
    */
   const bestWorkout = computed(() => {
-    return workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .reduce((best, current) => {
+    return completedWorkouts.value.reduce((best, current) => {
         const currentVol = calculateWorkoutVolume(current)
         const bestVol = best ? calculateWorkoutVolume(best) : 0
         if (!best || currentVol > bestVol) {
@@ -387,9 +397,8 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     const weekStart = new Date(now)
     weekStart.setDate(now.getDate() - 7)
 
-    workoutStore.workouts
+    completedWorkouts.value
       .filter((w) => {
-        if (w.status !== 'completed') return false
         const date = w.completedAt?.toDate
           ? w.completedAt.toDate()
           : new Date(w.completedAt)
