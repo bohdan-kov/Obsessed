@@ -96,7 +96,9 @@ export async function fetchDocument(collectionName, docId) {
 
     return null
   } catch (error) {
-    console.error(`Error fetching document ${collectionName}/${docId}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Error fetching document ${collectionName}/${docId}:`, error)
+    }
     throw new Error(`Failed to fetch document ${collectionName}/${docId}: ${error.message}`)
   }
 }
@@ -137,7 +139,9 @@ export async function fetchCollection(collectionName, options = {}) {
       ...doc.data(),
     }))
   } catch (error) {
-    console.error(`Error fetching collection ${collectionName}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Error fetching collection ${collectionName}:`, error)
+    }
     throw new Error(`Failed to fetch collection ${collectionName}: ${error.message}`)
   }
 }
@@ -158,7 +162,9 @@ export async function createDocument(collectionName, data) {
     })
     return docRef.id
   } catch (error) {
-    console.error(`Error creating document in ${collectionName}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Error creating document in ${collectionName}:`, error)
+    }
     throw new Error(`Failed to create document in ${collectionName}: ${error.message}`)
   }
 }
@@ -183,7 +189,9 @@ export async function setDocument(collectionName, docId, data, options = {}) {
       options
     )
   } catch (error) {
-    console.error(`Error setting document ${collectionName}/${docId}:`, error)
+    if (import.meta.env.DEV) {
+      console.error(`Error setting document ${collectionName}/${docId}:`, error)
+    }
     throw new Error(`Failed to set document ${collectionName}/${docId}: ${error.message}`)
   }
 }
@@ -203,10 +211,12 @@ export async function updateDocument(collectionName, docId, data) {
       updatedAt: serverTimestamp(),
     })
   } catch (error) {
-    console.error(
-      `Error updating document ${collectionName}/${docId}:`,
-      error
-    )
+    if (import.meta.env.DEV) {
+      console.error(
+        `Error updating document ${collectionName}/${docId}:`,
+        error
+      )
+    }
     throw new Error(`Failed to update document ${collectionName}/${docId}: ${error.message}`)
   }
 }
@@ -222,10 +232,12 @@ export async function deleteDocument(collectionName, docId) {
     const docRef = getDocRef(collectionName, docId)
     await deleteDoc(docRef)
   } catch (error) {
-    console.error(
-      `Error deleting document ${collectionName}/${docId}:`,
-      error
-    )
+    if (import.meta.env.DEV) {
+      console.error(
+        `Error deleting document ${collectionName}/${docId}:`,
+        error
+      )
+    }
     throw new Error(`Failed to delete document ${collectionName}/${docId}: ${error.message}`)
   }
 }
@@ -242,7 +254,11 @@ export function subscribeToDocument(
   collectionName,
   docId,
   callback,
-  errorCallback = console.error
+  errorCallback = (error) => {
+    if (import.meta.env.DEV) {
+      console.error(error)
+    }
+  }
 ) {
   const docRef = getDocRef(collectionName, docId)
 
@@ -274,7 +290,11 @@ export function subscribeToCollection(
   collectionName,
   options = {},
   callback,
-  errorCallback = console.error
+  errorCallback = (error) => {
+    if (import.meta.env.DEV) {
+      console.error(error)
+    }
+  }
 ) {
   const colRef = getCollection(collectionName)
   let q = colRef

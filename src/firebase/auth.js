@@ -34,7 +34,9 @@ googleProvider.setCustomParameters({
  * This keeps users logged in across browser sessions
  */
 setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('Failed to set auth persistence:', error)
+  if (import.meta.env.DEV) {
+    console.error('Failed to set auth persistence:', error)
+  }
 })
 
 /**
@@ -47,7 +49,9 @@ export async function signInWithGoogle() {
     const result = await signInWithPopup(auth, googleProvider)
     return result
   } catch (error) {
-    console.error('Google sign-in error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Google sign-in error:', error)
+    }
     throw new Error(getAuthErrorMessage(error.code))
   }
 }
@@ -64,7 +68,9 @@ export async function signInWithEmail(email, password) {
     const result = await signInWithEmailAndPassword(auth, email, password)
     return result
   } catch (error) {
-    console.error('Email sign-in error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Email sign-in error:', error)
+    }
     throw new Error(getAuthErrorMessage(error.code))
   }
 }
@@ -93,7 +99,9 @@ export async function createAccount(email, password, displayName = null) {
 
     return result
   } catch (error) {
-    console.error('Account creation error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Account creation error:', error)
+    }
     throw new Error(getAuthErrorMessage(error.code))
   }
 }
@@ -107,7 +115,9 @@ export async function signOut() {
   try {
     await firebaseSignOut(auth)
   } catch (error) {
-    console.error('Sign-out error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Sign-out error:', error)
+    }
     throw new Error('Failed to sign out. Please try again.')
   }
 }
@@ -122,7 +132,9 @@ export async function resetPassword(email) {
   try {
     await sendPasswordResetEmail(auth, email)
   } catch (error) {
-    console.error('Password reset error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Password reset error:', error)
+    }
     throw new Error(getAuthErrorMessage(error.code))
   }
 }
@@ -141,7 +153,9 @@ export async function sendVerificationEmail() {
   try {
     await sendEmailVerification(user)
   } catch (error) {
-    console.error('Email verification error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Email verification error:', error)
+    }
     throw new Error('Failed to send verification email. Please try again.')
   }
 }
@@ -153,7 +167,9 @@ export async function sendVerificationEmail() {
  */
 export function onAuthChange(callback) {
   return onAuthStateChanged(auth, callback, (error) => {
-    console.error('Auth state change error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Auth state change error:', error)
+    }
   })
 }
 

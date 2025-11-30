@@ -56,7 +56,9 @@ async function handleSignOut() {
     await authStore.signOut()
     router.push({ name: 'Login' })
   } catch (error) {
-    console.error('Sign out error:', error)
+    if (import.meta.env.DEV) {
+      console.error('Sign out error:', error)
+    }
   }
 }
 

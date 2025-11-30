@@ -107,7 +107,9 @@ async function handleSubmit() {
     resetForm()
     emit('update:open', false)
   } catch (error) {
-    console.error('Failed to save set:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to save set:', error)
+    }
   } finally {
     saving.value = false
   }

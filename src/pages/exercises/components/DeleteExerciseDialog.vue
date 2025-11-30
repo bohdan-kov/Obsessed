@@ -132,7 +132,6 @@ async function handleConfirm() {
     // Redirect to exercises list after successful deletion
     router.push({ name: 'Exercises' })
   } catch (error) {
-    console.error('Failed to delete exercise:', error)
     toast({
       title: t('exercises.toast.error'),
       description: t('exercises.toast.deleteFailed'),

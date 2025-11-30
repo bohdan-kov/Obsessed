@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useWorkoutStore } from './workoutStore'
+import { useExerciseStore } from './exerciseStore'
 
 /**
  * @typedef {Object} VolumeDataPoint
@@ -18,6 +19,7 @@ import { useWorkoutStore } from './workoutStore'
 
 export const useAnalyticsStore = defineStore('analytics', () => {
   const workoutStore = useWorkoutStore()
+  const exerciseStore = useExerciseStore()
 
   // State
   const period = ref('2weeks') // 'week', '2weeks', 'month', 'quarter'
@@ -31,12 +33,40 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
+   * Calculate total volume for a workout
+   * Fallback calculation if totalVolume field is missing
+   * @param {Object} workout
+   * @returns {number}
+   */
+  function calculateWorkoutVolume(workout) {
+    // Use stored totalVolume if available
+    if (workout.totalVolume != null && workout.totalVolume > 0) {
+      return workout.totalVolume
+    }
+
+    // Fallback: Calculate from exercises and sets
+    if (!workout.exercises || workout.exercises.length === 0) {
+      return 0
+    }
+
+    return workout.exercises.reduce((total, exercise) => {
+      if (!exercise.sets || exercise.sets.length === 0) {
+        return total
+      }
+
+      return total + exercise.sets.reduce((exTotal, set) => {
+        return exTotal + (set.weight || 0) * (set.reps || 0)
+      }, 0)
+    }, 0)
+  }
+
+  /**
    * Total volume load (weight × reps × sets)
    */
   const volumeLoad = computed(() => {
     return workoutStore.workouts
       .filter((w) => w.status === 'completed')
-      .reduce((total, workout) => total + (workout.totalVolume || 0), 0)
+      .reduce((total, workout) => total + calculateWorkoutVolume(workout), 0)
   })
 
   /**
@@ -115,20 +145,22 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       dailyData[dateStr] = { volume: 0, workouts: 0 }
     }
 
-    // Fill in actual data
-    workoutStore.workouts
-      .filter((w) => w.status === 'completed')
-      .forEach((workout) => {
-        const date = workout.completedAt?.toDate
-          ? workout.completedAt.toDate()
-          : new Date(workout.completedAt)
-        const dateStr = date.toISOString().split('T')[0]
+    const completedWorkouts = workoutStore.workouts.filter((w) => w.status === 'completed')
 
-        if (dailyData[dateStr]) {
-          dailyData[dateStr].volume += workout.totalVolume || 0
-          dailyData[dateStr].workouts += 1
-        }
-      })
+    // Fill in actual data
+    completedWorkouts.forEach((workout) => {
+      const date = workout.completedAt?.toDate
+        ? workout.completedAt.toDate()
+        : new Date(workout.completedAt)
+      const dateStr = date.toISOString().split('T')[0]
+
+      const volume = calculateWorkoutVolume(workout)
+
+      if (dailyData[dateStr]) {
+        dailyData[dateStr].volume += volume
+        dailyData[dateStr].workouts += 1
+      }
+    })
 
     // Convert to array and sort by date
     return Object.entries(dailyData)
@@ -142,6 +174,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
 
   /**
    * Muscle group distribution for donut chart
+   * Resolves muscle groups from exercise library
    * @returns {MuscleDistribution[]}
    */
   const muscleDistribution = computed(() => {
@@ -152,9 +185,9 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       .filter((w) => w.status === 'completed')
       .forEach((workout) => {
         workout.exercises.forEach((exercise) => {
-          // This assumes exercise has muscleGroups property
-          // In real implementation, you'd need to fetch exercise data
-          const muscle = exercise.primaryMuscle || 'Unknown'
+          // Resolve full exercise data from exercise library
+          const exerciseData = exerciseStore.getExerciseById(exercise.exerciseId)
+          const muscle = exerciseData?.muscleGroup || 'unknown'
           const setCount = exercise.sets.length
 
           if (!muscleData[muscle]) {
@@ -245,11 +278,11 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     })
 
     const currentVolume = currentWeek.reduce(
-      (total, w) => total + (w.totalVolume || 0),
+      (total, w) => total + calculateWorkoutVolume(w),
       0
     )
     const previousVolume = previousWeek.reduce(
-      (total, w) => total + (w.totalVolume || 0),
+      (total, w) => total + calculateWorkoutVolume(w),
       0
     )
 
@@ -331,7 +364,9 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     return workoutStore.workouts
       .filter((w) => w.status === 'completed')
       .reduce((best, current) => {
-        if (!best || (current.totalVolume || 0) > (best.totalVolume || 0)) {
+        const currentVol = calculateWorkoutVolume(current)
+        const bestVol = best ? calculateWorkoutVolume(best) : 0
+        if (!best || currentVol > bestVol) {
           return current
         }
         return best
@@ -340,6 +375,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
 
   /**
    * Muscle progress by week
+   * Resolves muscle groups from exercise library
    * @returns {Array<{muscle: string, percent: number, color: string}>}
    */
   const muscleProgress = computed(() => {
@@ -361,7 +397,9 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       })
       .forEach((workout) => {
         workout.exercises.forEach((exercise) => {
-          const muscle = exercise.primaryMuscle || 'Unknown'
+          // Resolve full exercise data from exercise library
+          const exerciseData = exerciseStore.getExerciseById(exercise.exerciseId)
+          const muscle = exerciseData?.muscleGroup || 'unknown'
           const exerciseVolume = exercise.sets.reduce(
             (sum, set) => sum + set.weight * set.reps,
             0
@@ -376,15 +414,17 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         })
       })
 
-    // Map to colors
+    // Map to colors (using muscle group IDs from exercise library)
     const muscleColors = {
-      Chest: 'bg-red-500',
-      Back: 'bg-orange-500',
-      Legs: 'bg-yellow-500',
-      Shoulders: 'bg-green-500',
-      Arms: 'bg-blue-500',
-      Core: 'bg-purple-500',
-      Cardio: 'bg-pink-500',
+      chest: 'bg-red-500',
+      back: 'bg-orange-500',
+      legs: 'bg-yellow-500',
+      shoulders: 'bg-green-500',
+      biceps: 'bg-blue-500',
+      triceps: 'bg-cyan-500',
+      core: 'bg-purple-500',
+      calves: 'bg-pink-500',
+      unknown: 'bg-gray-500',
     }
 
     // Convert to array with percentages

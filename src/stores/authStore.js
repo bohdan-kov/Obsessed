@@ -62,8 +62,8 @@ export const useAuthStore = defineStore('auth', () => {
         initializing.value = false
 
         // Subscribe to user profile from Firestore (in background, don't block)
-        subscribeToUserProfile(firebaseUser.uid).catch((err) => {
-          console.error('Error subscribing to user profile:', err)
+        subscribeToUserProfile(firebaseUser.uid).catch(() => {
+          // Profile subscription error - will retry on next auth state change
         })
       } else {
         user.value = null
@@ -109,8 +109,8 @@ export const useAuthStore = defineStore('auth', () => {
       (profileData) => {
         userProfile.value = profileData
       },
-      (err) => {
-        console.error('Error subscribing to user profile:', err)
+      () => {
+        // Profile subscription error - silent fail, profile already loaded
       }
     )
   }
@@ -146,8 +146,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await setDocument(COLLECTIONS.USERS, userId, profileData)
       userProfile.value = profileData
-    } catch (err) {
-      console.error('Error creating user profile:', err)
+    } catch {
+      // Profile creation failed - will retry on next auth state change
     }
   }
 

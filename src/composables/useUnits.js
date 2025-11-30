@@ -158,14 +158,12 @@ export function useUnits() {
    */
   async function changeWeightUnit(unit) {
     if (!['kg', 'lbs'].includes(unit)) {
-      console.warn(`[useUnits] Invalid weight unit: ${unit}`)
       return
     }
 
     try {
       await userStore.updateSettings({ weightUnit: unit })
     } catch (error) {
-      console.error('[useUnits] Failed to change weight unit:', error)
       throw error
     }
   }

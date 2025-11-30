@@ -30,7 +30,8 @@
     "biceps": "Біцепси",
     "triceps": "Тріцепси",
     "core": "Кор",
-    "calves": "Литки"
+    "calves": "Литки",
+    "unknown": "Невідомо"
   },
   "equipment": {
     "barbell": "Штанга",

@@ -423,7 +423,6 @@ async function handleSubmit() {
     emit('success')
     handleOpenChange(false)
   } catch (error) {
-    console.error('Error submitting form:', error)
     toast({
       title: t('exercises.toast.error'),
       description: error.message,

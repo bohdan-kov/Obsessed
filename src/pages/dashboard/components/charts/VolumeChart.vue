@@ -1,8 +1,8 @@
-<script setup>
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAnalyticsStore } from '@/stores/analyticsStore'
+import type { ChartConfig } from '@/components/ui/chart'
+import { VisArea, VisAxis, VisLine, VisXYContainer } from '@unovis/vue'
 import {
   Card,
   CardContent,
@@ -10,114 +10,193 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartCrosshair,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  componentToString,
+} from '@/components/ui/chart'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useWorkoutStore } from '@/stores/workoutStore'
 
-const { t, locale } = useI18n()
-const analyticsStore = useAnalyticsStore()
-const { volumeByDay } = storeToRefs(analyticsStore)
+const { t } = useI18n()
+const workoutStore = useWorkoutStore()
 
-// Get last 14 days
-const chartData = computed(() => volumeByDay.value.slice(-14))
+// Chart data from completed workouts
+const chartData = computed(() => {
+  const days = getLastNDays(daysToSubtract.value)
 
-// Calculate max for scaling
-const maxVolume = computed(() => {
-  if (chartData.value.length === 0) return 1
-  return Math.max(...chartData.value.map((d) => d.volume))
+  // Guard against undefined completedWorkouts
+  const completedWorkouts = workoutStore.completedWorkouts || []
+
+  return days.map(date => {
+    const dayWorkouts = completedWorkouts.filter(w => {
+      const workoutDate = new Date(w.completedAt).toDateString()
+      return workoutDate === date.toDateString()
+    })
+
+    const volume = dayWorkouts.reduce((sum, w) => sum + (w.totalVolume || 0), 0)
+    const exercises = dayWorkouts.reduce((sum, w) => sum + (w.exercises?.length || 0), 0)
+
+    return {
+      date,
+      volume,
+      exercises: exercises * 100, // Scale for visibility
+    }
+  })
 })
 
-// Format date for display
-function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
-}
+type Data = typeof chartData.value[number]
 
-// Get bar height percentage
-function getBarHeight(volume) {
-  if (maxVolume.value === 0) return 0
-  return (volume / maxVolume.value) * 100
-}
+const chartConfig = {
+  volume: {
+    label: t('dashboard.volumeChart.volume'),
+    color: 'var(--chart-1)', // Primary color
+  },
+  exercises: {
+    label: t('dashboard.volumeChart.exercises'),
+    color: 'var(--chart-2)', // Secondary color
+  },
+} satisfies ChartConfig
 
-// Format volume for tooltip
-function formatVolume(volume) {
-  return volume.toLocaleString(locale.value) + ' ' + t('common.units.kg')
+const svgDefs = `
+  <linearGradient id="fillVolume" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="5%" stop-color="var(--color-volume)" stop-opacity="0.8" />
+    <stop offset="95%" stop-color="var(--color-volume)" stop-opacity="0.1" />
+  </linearGradient>
+  <linearGradient id="fillExercises" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="5%" stop-color="var(--color-exercises)" stop-opacity="0.8" />
+    <stop offset="95%" stop-color="var(--color-exercises)" stop-opacity="0.1" />
+  </linearGradient>
+`
+
+// Time range selector
+const timeRange = ref('14d')
+
+const daysToSubtract = computed(() => {
+  if (timeRange.value === '7d') return 7
+  if (timeRange.value === '30d') return 30
+  return 14
+})
+
+// Y domain - dynamic based on max values
+const yDomain = computed(() => {
+  const maxVolume = Math.max(...chartData.value.map(d => d.volume), 100)
+  const maxExercises = Math.max(...chartData.value.map(d => d.exercises), 100)
+  return [0, Math.max(maxVolume, maxExercises) * 1.1]
+})
+
+// Helper to get last N days
+function getLastNDays(n: number): Date[] {
+  const days: Date[] = []
+  const today = new Date()
+
+  for (let i = n - 1; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    date.setHours(0, 0, 0, 0)
+    days.push(date)
+  }
+
+  return days
 }
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>{{ t('dashboard.charts.volumeTitle') }}</CardTitle>
-      <CardDescription>
-        {{ t('dashboard.charts.volumeDescription') }}
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div class="h-[300px] w-full">
-        <!-- Chart container -->
-        <div v-if="chartData.length > 0" class="h-full flex items-end justify-between gap-1">
-          <div
-            v-for="(day, index) in chartData"
-            :key="index"
-            class="flex-1 flex flex-col items-center gap-2 group"
-          >
-            <!-- Bar -->
-            <div class="flex-1 w-full flex items-end">
-              <div
-                :style="{ height: `${getBarHeight(day.volume)}%` }"
-                class="w-full bg-gradient-to-t from-primary to-primary/50 rounded-t-md transition-all hover:from-primary/80 hover:to-primary/40 cursor-pointer relative"
-                :title="`${formatDate(day.date)}: ${formatVolume(day.volume)}`"
-              >
-                <!-- Tooltip on hover -->
-                <div
-                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10"
-                >
-                  <div class="font-medium">{{ formatDate(day.date) }}</div>
-                  <div class="text-muted-foreground">{{ formatVolume(day.volume) }}</div>
-                  <div v-if="day.workouts > 0" class="text-xs text-muted-foreground">
-                    {{ day.workouts }} {{ day.workouts === 1 ? t('dashboard.charts.workout') : t('dashboard.charts.workouts') }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Date label -->
-            <span class="text-xs text-muted-foreground">
-              {{ new Date(day.date).getDate() }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Empty state -->
-        <div
-          v-else
-          class="h-full flex flex-col items-center justify-center text-muted-foreground"
+  <Card class="pt-0">
+    <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+      <div class="grid flex-1 gap-1">
+        <CardTitle>{{ t('dashboard.volumeChart.title') }}</CardTitle>
+        <CardDescription>
+          {{ t('dashboard.volumeChart.subtitle', { days: daysToSubtract }) }}
+        </CardDescription>
+      </div>
+      <Select v-model="timeRange">
+        <SelectTrigger
+          class="hidden w-[160px] rounded-lg sm:ml-auto sm:flex"
+          aria-label="Select a value"
         >
-          <svg
-            class="w-12 h-12 mb-2 opacity-50"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-          <p class="text-sm">{{ t('dashboard.charts.noData') }}</p>
-          <p class="text-xs mt-1">{{ t('dashboard.charts.noDataSubtitle') }}</p>
-        </div>
-      </div>
+          <SelectValue :placeholder="t('dashboard.volumeChart.days', { count: 14 })" />
+        </SelectTrigger>
+        <SelectContent class="rounded-xl">
+          <SelectItem value="7d" class="rounded-lg">
+            {{ t('dashboard.volumeChart.days', { count: 7 }) }}
+          </SelectItem>
+          <SelectItem value="14d" class="rounded-lg">
+            {{ t('dashboard.volumeChart.days', { count: 14 }) }}
+          </SelectItem>
+          <SelectItem value="30d" class="rounded-lg">
+            {{ t('dashboard.volumeChart.days', { count: 30 }) }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </CardHeader>
 
-      <!-- Legend -->
-      <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{{ t('dashboard.charts.last14Days') }}</span>
-        <div class="flex items-center gap-2">
-          <div class="w-3 h-3 rounded bg-gradient-to-t from-primary to-primary/50" />
-          <span>{{ t('dashboard.charts.volumeLabel') }}</span>
-        </div>
-      </div>
+    <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-4">
+      <ChartContainer :config="chartConfig" class="aspect-auto h-[250px] w-full" :cursor="false">
+        <VisXYContainer
+          :data="chartData"
+          :svg-defs="svgDefs"
+          :margin="{ left: -40 }"
+          :y-domain="yDomain"
+        >
+          <VisArea
+            :x="(d: Data) => d.date"
+            :y="[(d: Data) => d.exercises, (d: Data) => d.volume]"
+            :color="(d: Data, i: number) => ['url(#fillExercises)', 'url(#fillVolume)'][i]"
+            :opacity="0.6"
+          />
+          <VisLine
+            :x="(d: Data) => d.date"
+            :y="[(d: Data) => d.exercises, (d: Data) => d.volume]"
+            :color="(d: Data, i: number) => [chartConfig.exercises.color, chartConfig.volume.color][i]"
+            :line-width="1"
+          />
+          <VisAxis
+            type="x"
+            :x="(d: Data) => d.date"
+            :tick-line="false"
+            :domain-line="false"
+            :grid-line="false"
+            :num-ticks="6"
+            :tick-format="(d: number) => {
+              const date = new Date(d)
+              return date.toLocaleDateString('uk-UA', {
+                month: 'short',
+                day: 'numeric',
+              })
+            }"
+          />
+          <VisAxis
+            type="y"
+            :num-ticks="3"
+            :tick-line="false"
+            :domain-line="false"
+          />
+          <ChartTooltip />
+          <ChartCrosshair
+            :template="componentToString(chartConfig, ChartTooltipContent, {
+              labelFormatter: (d) => {
+                return new Date(d).toLocaleDateString('uk-UA', {
+                  month: 'short',
+                  day: 'numeric',
+                })
+              },
+            })"
+            :color="(d: Data, i: number) => [chartConfig.exercises.color, chartConfig.volume.color][i % 2]"
+          />
+        </VisXYContainer>
+
+        <ChartLegendContent />
+      </ChartContainer>
     </CardContent>
   </Card>
 </template>

@@ -11,6 +11,7 @@
     "submit": "Submit",
     "retry": "Retry"
   },
+  "more": "more",
   "status": {
     "loading": "Loading...",
     "saving": "Saving...",
@@ -22,6 +23,8 @@
     "inProgress": "In Progress",
     "scheduled": "Scheduled"
   },
+  "saving": "Saving...",
+  "loading": "Loading...",
   "units": {
     "kg": "kg",
     "lbs": "lbs",

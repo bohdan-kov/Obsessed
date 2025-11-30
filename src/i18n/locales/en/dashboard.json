@@ -65,6 +65,22 @@
       "sun": "Sun"
     }
   },
+  "volumeChart": {
+    "title": "Training Volume",
+    "subtitle": "Last {days} days",
+    "days": "{count} days",
+    "volume": "Volume (kg)",
+    "exercises": "Exercises",
+    "period7Days": "7 days",
+    "period14Days": "14 days",
+    "period30Days": "30 days",
+    "volumeLine": "Volume (kg)",
+    "exercisesLine": "Exercises",
+    "noData": "No data to display",
+    "noDataSubtitle": "Start training to view chart",
+    "tooltipVolume": "Volume",
+    "tooltipExercises": "Exercises"
+  },
   "muscleProgress": {
     "title": "Muscle Focus",
     "description": "Training volume distribution for the week",
