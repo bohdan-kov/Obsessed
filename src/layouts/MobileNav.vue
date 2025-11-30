@@ -17,6 +17,7 @@ import { VisuallyHidden } from 'reka-ui'
 import {
   LayoutDashboard,
   Activity,
+  Dumbbell,
   BarChart3,
   Settings,
   LogOut,
@@ -35,19 +36,21 @@ const isOpen = ref(false)
 const navItems = computed(() => [
   { name: t('common.nav.dashboard.name'), route: 'Dashboard', icon: LayoutDashboard },
   { name: t('common.nav.workouts.name'), route: 'Workouts', icon: Activity },
+  { name: t('exercises.title'), route: 'Exercises', icon: Dumbbell },
   { name: t('common.nav.analytics.name'), route: 'Analytics', icon: BarChart3 },
   { name: t('common.nav.settings.name'), route: 'Settings', icon: Settings },
 ])
 
-// Get user initials
-const userInitials = displayName.value
-  ? displayName.value
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  : 'U'
+// Get user initials - computed for reactivity
+const userInitials = computed(() => {
+  if (!displayName.value) return 'U'
+  return displayName.value
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+})
 
 // Check if route is active
 function isActive(routeName) {

@@ -5,6 +5,7 @@ import workout from './workout.json'
 import analytics from './analytics.json'
 import settings from './settings.json'
 import errors from './errors.json'
+import exercises from './exercises.json'
 
 export default {
   common,
@@ -14,4 +15,5 @@ export default {
   analytics,
   settings,
   errors,
+  exercises,
 }

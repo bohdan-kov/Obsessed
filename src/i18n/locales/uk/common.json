@@ -46,12 +46,15 @@
     "maxLength": "Максимум {max} символів"
   },
   "success": {
+    "title": "Успішно",
     "saved": "Збережено",
     "deleted": "Видалено",
     "updated": "Оновлено",
     "created": "Створено",
     "setLogged": "Підхід записано"
   },
+  "error": "Помилка",
+  "warning": "Увага",
   "nav": {
     "dashboard": {
       "name": "Дашборд",
@@ -86,5 +89,15 @@
       "signOut": "Вийти"
     },
     "defaultName": "Користувач"
+  },
+  "custom": "Власна",
+  "deleting": "Видалення...",
+  "unknown": "Невідомо",
+  "periods": {
+    "week": "Тиждень",
+    "2weeks": "2 тижні",
+    "month": "Місяць",
+    "quarter": "Квартал",
+    "year": "Рік"
   }
 }

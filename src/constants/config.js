@@ -67,6 +67,12 @@ export const CONFIG = {
     MAX_RECENT_EXERCISES: 10,
     MAX_CUSTOM_EXERCISES: 100,
     SEARCH_DEBOUNCE: 300, // ms
+    NOTES_AUTOSAVE_DELAY: 2000, // ms - autosave delay for exercise notes
+    CACHE_KEY: 'obsessed_exercises_cache',
+    CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    CACHE_VERSION: '1.0',
+    MAX_SECONDARY_MUSCLES: 3,
+    EXERCISES_PER_PAGE: 20, // Pagination: exercises displayed per page
   },
 
   // Performance Configuration
@@ -151,20 +157,4 @@ export function getPeriodDays(period) {
     year: 365,
   }
   return PERIOD_DAYS[period] || 14
-}
-
-/**
- * Get human-readable period label
- * @param {string} period - Period identifier
- * @returns {string} Period label
- */
-export function getPeriodLabel(period) {
-  const PERIOD_LABELS = {
-    week: 'Тиждень',
-    '2weeks': '2 тижні',
-    month: 'Місяць',
-    quarter: 'Квартал',
-    year: 'Рік',
-  }
-  return PERIOD_LABELS[period] || '2 тижні'
 }

@@ -460,13 +460,13 @@ export const useWorkoutStore = defineStore('workout', () => {
   }
 
   return {
-    // State
-    currentWorkout: computed(() => currentWorkout.value),
-    workouts: computed(() => workouts.value),
-    loading: computed(() => loading.value),
-    error: computed(() => error.value),
+    // State - return refs directly
+    currentWorkout,
+    workouts,
+    loading,
+    error,
 
-    // Getters
+    // Getters - keep as computeds
     todaysWorkout,
     activeWorkout,
     recentWorkouts,

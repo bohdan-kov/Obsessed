@@ -19,6 +19,8 @@ import { CONFIG } from '@/constants/config'
  * @property {boolean} notifications - Enable notifications
  * @property {boolean} autoStartTimer - Auto-start rest timer
  * @property {boolean} soundEnabled - Enable sound effects
+ * @property {string[]} [favoriteExercises] - Array of favorite exercise IDs
+ * @property {string[]} [recentlyUsedExercises] - Recently used exercise IDs
  */
 
 /**
@@ -62,6 +64,8 @@ export const useUserStore = defineStore('user', () => {
     notifications: true,
     autoStartTimer: true,
     soundEnabled: true,
+    favoriteExercises: [],
+    recentlyUsedExercises: [],
   })
   const loading = ref(false)
   const error = ref(null)
@@ -191,6 +195,8 @@ export const useUserStore = defineStore('user', () => {
           notifications: true,
           autoStartTimer: true,
           soundEnabled: true,
+          favoriteExercises: [],
+          recentlyUsedExercises: [],
         },
         stats: {
           totalWorkouts: 0,
@@ -289,6 +295,45 @@ export const useUserStore = defineStore('user', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Toggle favorite exercise
+   * @param {string} exerciseId - Exercise ID to toggle
+   * @returns {Promise<void>}
+   */
+  async function toggleFavoriteExercise(exerciseId) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated')
+    }
+
+    const currentFavorites = settings.value.favoriteExercises || []
+    const isFavorite = currentFavorites.includes(exerciseId)
+
+    const updatedFavorites = isFavorite
+      ? currentFavorites.filter((id) => id !== exerciseId)
+      : [...currentFavorites, exerciseId]
+
+    await updateSettings({ favoriteExercises: updatedFavorites })
+  }
+
+  /**
+   * Add exercise to recently used
+   * @param {string} exerciseId - Exercise ID
+   * @returns {Promise<void>}
+   */
+  async function addRecentlyUsedExercise(exerciseId) {
+    if (!authStore.uid) return
+
+    const currentRecent = settings.value.recentlyUsedExercises || []
+
+    // Remove if already exists
+    const filtered = currentRecent.filter((id) => id !== exerciseId)
+
+    // Add to beginning and keep only last 10
+    const updatedRecent = [exerciseId, ...filtered].slice(0, CONFIG.exercise.MAX_RECENT_EXERCISES)
+
+    await updateSettings({ recentlyUsedExercises: updatedRecent })
   }
 
   /**
@@ -458,41 +503,46 @@ export const useUserStore = defineStore('user', () => {
   // Track if theme has been initialized
   let themeInitialized = false
 
-  // CRITICAL: Sync settings from authStore's userProfile (Firestore data)
-  // This connects userStore.settings to the real-time Firestore subscription in authStore
-  watch(
-    () => authStore.userProfile,
-    (newProfile) => {
-      if (newProfile?.settings) {
-        const oldTheme = settings.value.theme
+  /**
+   * Initialize userStore - sets up watchers and theme
+   * Call this explicitly from App.vue onMounted
+   */
+  function initializeUserStore() {
+    // Set up reactive watchers
+    watch(
+      () => authStore.userProfile,
+      (newProfile) => {
+        if (newProfile?.settings) {
+          const oldTheme = settings.value.theme
 
-        // Update settings from Firestore
-        settings.value = {
-          ...settings.value,
-          ...newProfile.settings,
-        }
+          // Update settings from Firestore
+          settings.value = {
+            ...settings.value,
+            ...newProfile.settings,
+          }
 
-        // Initialize theme ONCE after Firestore data loads (fixes race condition)
-        if (!themeInitialized) {
-          initTheme()
-          themeInitialized = true
-        } else if (newProfile.settings.theme && newProfile.settings.theme !== oldTheme) {
-          // On subsequent updates, only apply if theme actually changed
-          applyTheme(newProfile.settings.theme)
+          // Initialize theme ONCE after Firestore data loads (fixes race condition)
+          if (!themeInitialized) {
+            initTheme()
+            themeInitialized = true
+          } else if (newProfile.settings.theme && newProfile.settings.theme !== oldTheme) {
+            // On subsequent updates, only apply if theme actually changed
+            applyTheme(newProfile.settings.theme)
+          }
         }
+      },
+      { immediate: true } // Run immediately to catch existing profile
+    )
+
+    // FALLBACK: If user is not authenticated or profile doesn't load,
+    // initialize theme from localStorage after a short delay
+    setTimeout(() => {
+      if (!themeInitialized) {
+        initTheme()
+        themeInitialized = true
       }
-    },
-    { immediate: true } // Run immediately to catch existing profile
-  )
-
-  // FALLBACK: If user is not authenticated or profile doesn't load,
-  // initialize theme from localStorage after a short delay
-  setTimeout(() => {
-    if (!themeInitialized) {
-      initTheme()
-      themeInitialized = true
-    }
-  }, 500)
+    }, 500)
+  }
 
   return {
     // State
@@ -515,11 +565,14 @@ export const useUserStore = defineStore('user', () => {
     createProfile,
     updateProfile,
     updateSettings,
+    toggleFavoriteExercise,
+    addRecentlyUsedExercise,
     updateStats,
     incrementWorkoutStats,
     subscribeToProfile,
     applyTheme,
     initTheme,
+    initializeUserStore,
     unsubscribe,
     clearError,
   }

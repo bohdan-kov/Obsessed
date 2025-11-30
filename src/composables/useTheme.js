@@ -60,6 +60,7 @@ export function useTheme() {
   /**
    * Change theme preference
    * Coordinates: applyTheme (instant visual) -> updateSettings (Firestore + localStorage)
+   * Implements optimistic update with rollback on failure
    * @param {'light'|'dark'|'system'} theme - Theme to switch to
    */
   async function changeTheme(theme) {
@@ -71,13 +72,19 @@ export function useTheme() {
       return // No change needed
     }
 
+    const previousTheme = themePreference.value // Save state
+
     try {
-      // Apply immediately to DOM (instant visual feedback)
+      // Optimistic update - apply immediately to DOM
       userStore.applyTheme(theme)
 
       // Persist to Firestore + localStorage
       await userStore.updateSettings({ theme })
     } catch (error) {
+      // Revert on failure
+      userStore.applyTheme(previousTheme)
+
+      console.error('[useTheme] Failed to change theme:', error)
       throw error
     }
   }

@@ -25,6 +25,11 @@ service cloud.firestore {
       match /customExercises/{exerciseId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Nested exercise notes subcollection
+      match /exerciseNotes/{exerciseId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Shared exercises collection (read-only for authenticated users)

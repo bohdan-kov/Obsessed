@@ -8,6 +8,7 @@ import {
   subscribeToCollection,
 } from '@/firebase/firestore'
 import { MUSCLE_GROUPS } from '@/shared/config/constants'
+import { defaultExercises } from '@/data/defaultExercises'
 
 /**
  * @typedef {Object} Exercise
@@ -73,8 +74,10 @@ export const useExerciseStore = defineStore('exercise', () => {
     const grouped = {}
 
     MUSCLE_GROUPS.forEach((group) => {
-      grouped[group.id] = allExercises.value.filter((exercise) =>
-        exercise.muscleGroups?.includes(group.id)
+      grouped[group.id] = allExercises.value.filter(
+        (exercise) =>
+          exercise.muscleGroup === group.id ||
+          exercise.secondaryMuscles?.includes(group.id)
       )
     })
 
@@ -94,12 +97,19 @@ export const useExerciseStore = defineStore('exercise', () => {
     return allExercises.value.filter((exercise) => {
       const nameMatch = exercise.name.toLowerCase().includes(query)
       const categoryMatch = exercise.category?.toLowerCase().includes(query)
-      const muscleMatch = exercise.muscleGroups?.some((muscle) =>
+      const primaryMuscleMatch = exercise.muscleGroup?.toLowerCase().includes(query)
+      const secondaryMuscleMatch = exercise.secondaryMuscles?.some((muscle) =>
         muscle.toLowerCase().includes(query)
       )
       const equipmentMatch = exercise.equipment?.toLowerCase().includes(query)
 
-      return nameMatch || categoryMatch || muscleMatch || equipmentMatch
+      return (
+        nameMatch ||
+        categoryMatch ||
+        primaryMuscleMatch ||
+        secondaryMuscleMatch ||
+        equipmentMatch
+      )
     })
   })
 
@@ -129,7 +139,8 @@ export const useExerciseStore = defineStore('exercise', () => {
 
   // Actions
   /**
-   * Fetch shared exercises from Firestore
+   * Load default exercises from local data
+   * Default exercises are stored locally to avoid cluttering Firestore
    * @returns {Promise<void>}
    */
   async function fetchExercises() {
@@ -137,16 +148,14 @@ export const useExerciseStore = defineStore('exercise', () => {
     error.value = null
 
     try {
-      const fetchedExercises = await fetchCollection('exercises', {
-        orderBy: [['name', 'asc']],
-      })
-
-      exercises.value = fetchedExercises.map((ex) => ({
+      // Use slug as id for default exercises
+      exercises.value = defaultExercises.map((ex) => ({
         ...ex,
+        id: ex.slug,
         isCustom: false,
       }))
     } catch (err) {
-      console.error('Error fetching exercises:', err)
+      console.error('Error loading default exercises:', err)
       error.value = err.message
       throw err
     } finally {
@@ -333,8 +342,10 @@ export const useExerciseStore = defineStore('exercise', () => {
    * @returns {Exercise[]}
    */
   function filterByMuscleGroup(muscleGroupId) {
-    return allExercises.value.filter((exercise) =>
-      exercise.muscleGroups?.includes(muscleGroupId)
+    return allExercises.value.filter(
+      (exercise) =>
+        exercise.muscleGroup === muscleGroupId ||
+        exercise.secondaryMuscles?.includes(muscleGroupId)
     )
   }
 
@@ -355,6 +366,26 @@ export const useExerciseStore = defineStore('exercise', () => {
       unsubscribeCustom()
       unsubscribeCustom = null
     }
+  }
+
+  /**
+   * Get localized display name for an exercise
+   * Handles both bilingual objects and simple strings
+   * @param {Exercise} exercise - Exercise object
+   * @returns {string} Localized exercise name
+   */
+  function getExerciseDisplayName(exercise) {
+    if (!exercise || !exercise.name) return ''
+
+    // Handle bilingual structure: { uk: '...', en: '...' }
+    if (typeof exercise.name === 'object') {
+      // Get current locale from localStorage or default to 'uk'
+      const currentLocale = localStorage.getItem('obsessed_locale') || 'uk'
+      return exercise.name[currentLocale] || exercise.name.en || exercise.name.uk || ''
+    }
+
+    // Handle simple string (legacy support)
+    return exercise.name
   }
 
   /**
@@ -394,6 +425,7 @@ export const useExerciseStore = defineStore('exercise', () => {
     updateCustomExercise,
     addToRecent,
     getExerciseById,
+    getExerciseDisplayName,
     filterByMuscleGroup,
     filterByCategory,
     unsubscribe,

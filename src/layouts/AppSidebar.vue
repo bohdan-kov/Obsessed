@@ -24,6 +24,7 @@ import {
 import {
   LayoutDashboard,
   Activity,
+  Dumbbell,
   BarChart3,
   Settings,
   PanelLeft,
@@ -66,6 +67,12 @@ const navItems = computed(() => [
     route: 'Workouts',
     icon: Activity,
     description: t('common.nav.workouts.description'),
+  },
+  {
+    name: t('exercises.title'),
+    route: 'Exercises',
+    icon: Dumbbell,
+    description: t('exercises.subtitle'),
   },
   {
     name: t('common.nav.analytics.name'),

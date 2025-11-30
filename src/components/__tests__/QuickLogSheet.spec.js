@@ -51,6 +51,8 @@ vi.mock('@/stores/exerciseStore', () => ({
     recentExercises: mockRecentExercises,
     allExercises: mockAllExercises,
     addToRecent: mockAddToRecent,
+    getExerciseDisplayName: vi.fn((exercise) => exercise?.name || ''),
+    getExerciseDescription: vi.fn((exercise) => exercise?.description || ''),
   })),
 }))
 

@@ -46,12 +46,15 @@
     "maxLength": "Maximum {max} characters"
   },
   "success": {
+    "title": "Success",
     "saved": "Saved",
     "deleted": "Deleted",
     "updated": "Updated",
     "created": "Created",
     "setLogged": "Set logged"
   },
+  "error": "Error",
+  "warning": "Warning",
   "nav": {
     "dashboard": {
       "name": "Dashboard",
@@ -86,5 +89,15 @@
       "signOut": "Sign out"
     },
     "defaultName": "User"
+  },
+  "custom": "Custom",
+  "deleting": "Deleting...",
+  "unknown": "Unknown",
+  "periods": {
+    "week": "Week",
+    "2weeks": "2 Weeks",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year"
   }
 }

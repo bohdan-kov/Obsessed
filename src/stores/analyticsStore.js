@@ -450,8 +450,8 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   }
 
   return {
-    // State
-    period: computed(() => period.value),
+    // State - return ref directly
+    period,
 
     // Basic metrics
     totalWorkouts,

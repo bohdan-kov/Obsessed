@@ -37,3 +37,29 @@ export const SET_TYPES = {
   REST_PAUSE: 'rest-pause',
   AMRAP: 'amrap'
 }
+
+// Equipment types for exercises
+export const EQUIPMENT_TYPES = [
+  'barbell',
+  'dumbbell',
+  'cable',
+  'machine',
+  'bodyweight',
+  'bands',
+  'kettlebell',
+  'other'
+]
+
+// Exercise types
+export const EXERCISE_TYPES = [
+  'compound',
+  'isolation'
+]
+
+// Sort options for exercise library
+export const EXERCISE_SORT_OPTIONS = [
+  { value: 'alphabetical', labelKey: 'exercises.sort.alphabetical' },
+  { value: 'muscleGroup', labelKey: 'exercises.sort.muscleGroup' },
+  { value: 'recent', labelKey: 'exercises.sort.recent' },
+  { value: 'frequent', labelKey: 'exercises.sort.frequent' }
+]

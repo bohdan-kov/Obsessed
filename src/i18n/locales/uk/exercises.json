@@ -1,0 +1,175 @@
+{
+  "title": "Бібліотека вправ",
+  "subtitle": "Керуйте вашими вправами та відстежуйте прогрес",
+  "search": {
+    "placeholder": "Пошук вправ...",
+    "noResults": "Вправ не знайдено",
+    "clear": "Очистити пошук"
+  },
+  "filters": {
+    "title": "Фільтри",
+    "muscleGroup": "Група м'язів",
+    "equipment": "Обладнання",
+    "type": "Тип",
+    "showFavoritesOnly": "Тільки вибрані",
+    "reset": "Скинути фільтри",
+    "all": "Всі"
+  },
+  "sort": {
+    "label": "Сортувати за",
+    "alphabetical": "За алфавітом",
+    "muscleGroup": "За групою м'язів",
+    "recent": "Нещодавні",
+    "frequent": "Частіше використовувані"
+  },
+  "muscleGroups": {
+    "chest": "Груди",
+    "back": "Спина",
+    "legs": "Ноги",
+    "shoulders": "Плечі",
+    "biceps": "Біцепси",
+    "triceps": "Тріцепси",
+    "core": "Кор",
+    "calves": "Литки"
+  },
+  "equipment": {
+    "barbell": "Штанга",
+    "dumbbell": "Гантелі",
+    "cable": "Тросовий тренажер",
+    "machine": "Тренажер",
+    "bodyweight": "Власна вага",
+    "bands": "Резинки",
+    "kettlebell": "Гиря",
+    "other": "Інше"
+  },
+  "types": {
+    "compound": "Базова",
+    "isolation": "Ізоляційна"
+  },
+  "list": {
+    "count": "{count} вправ",
+    "showing": "Показано {showing} з {total}",
+    "empty": "Немає вправ",
+    "emptyFiltered": "Жодної вправи не відповідає вашим фільтрам"
+  },
+  "pagination": {
+    "previous": "Попередня сторінка",
+    "next": "Наступна сторінка",
+    "page": "Сторінка {page}",
+    "of": "з {total}",
+    "goToPage": "Перейти до сторінки {page}"
+  },
+  "emptyState": {
+    "title": "Немає вправ",
+    "description": "Почніть зі створення вашої першої вправи або огляньте нашу вбудовану бібліотеку",
+    "createButton": "Створити вправу",
+    "browseButton": "Переглянути бібліотеку"
+  },
+  "detail": {
+    "overview": "Огляд",
+    "stats": "Статистика",
+    "history": "Історія",
+    "notes": "Нотатки",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "back": "Назад до списку"
+  },
+  "stats": {
+    "title": "Статистика",
+    "personalRecord": "Особистий рекорд",
+    "estimated1RM": "Розрахунковий 1ПМ",
+    "totalVolume": "Загальний об'єм",
+    "timesPerformed": "Разів виконано",
+    "averageWeight": "Середня вага",
+    "averageReps": "Середня кількість повторень",
+    "lastPerformed": "Останнє виконання",
+    "never": "Ніколи",
+    "noData": "Немає даних",
+    "description": "Статистика базується на ваших тренуваннях"
+  },
+  "history": {
+    "title": "Історія вправи",
+    "chart": "Графік прогресу",
+    "noData": "Історії виконання поки немає",
+    "startTracking": "Почніть виконувати цю вправу, щоб побачити ваш прогрес тут"
+  },
+  "notes": {
+    "title": "Нотатки",
+    "placeholder": "Додайте нотатки про цю вправу...\n\nНаприклад: техніка, налаштування тренажера, особисті спостереження",
+    "saving": "Збереження...",
+    "saved": "Збережено",
+    "autoSave": "Автоматичне збереження через {seconds} сек"
+  },
+  "form": {
+    "create": "Створити вправу",
+    "edit": "Редагувати вправу",
+    "nameLabel": "Назва вправи",
+    "namePlaceholder": "напр., Жим лежачи",
+    "nameUk": "Назва (українською)",
+    "nameEn": "Назва (англійською)",
+    "muscleGroupLabel": "Основна група м'язів",
+    "muscleGroupPlaceholder": "Виберіть групу м'язів",
+    "secondaryMusclesLabel": "Другорядні м'язи (необов'язково)",
+    "secondaryMusclesPlaceholder": "Виберіть до 3 груп",
+    "equipmentLabel": "Обладнання",
+    "equipmentPlaceholder": "Виберіть обладнання",
+    "typeLabel": "Тип вправи",
+    "typePlaceholder": "Виберіть тип",
+    "descriptionLabel": "Опис (необов'язково)",
+    "descriptionPlaceholder": "Додайте опис вправи...",
+    "descriptionUk": "Опис (українською)",
+    "descriptionEn": "Опис (англійською)",
+    "videoUrlLabel": "URL відео (необов'язково)",
+    "videoUrlPlaceholder": "https://youtube.com/watch?v=...",
+    "submit": "Зберегти вправу",
+    "cancel": "Скасувати",
+    "submitting": "Збереження..."
+  },
+  "validation": {
+    "nameRequired": "Назва вправи є обов'язковою",
+    "nameMin": "Назва повинна містити принаймні 2 символи",
+    "nameMax": "Назва не повинна перевищувати 100 символів",
+    "muscleGroupRequired": "Виберіть групу м'язів",
+    "equipmentRequired": "Виберіть обладнання",
+    "descriptionMax": "Опис не повинен перевищувати 500 символів",
+    "videoUrlInvalid": "Введіть дійсний URL",
+    "secondaryMusclesMax": "Можна вибрати максимум 3 другорядні групи м'язів"
+  },
+  "actions": {
+    "create": "Створити вправу",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "favorite": "Додати до вибраних",
+    "unfavorite": "Видалити з вибраних",
+    "viewDetails": "Переглянути деталі",
+    "browseAll": "Переглянути всі"
+  },
+  "favorites": {
+    "title": "Вибрані вправи",
+    "empty": "У вас поки немає вибраних вправ",
+    "addHint": "Натисніть на іконку зірки, щоб додати вправу до вибраних"
+  },
+  "delete": {
+    "title": "Видалити вправу?",
+    "message": "Ви впевнені, що хочете видалити \"{name}\"?",
+    "warning": "Ця вправа використовується у {count} тренуваннях. Вона буде позначена як видалена, але історія збережеться.",
+    "warningUnused": "Це призведе до повного видалення вправи.",
+    "confirm": "Так, видалити",
+    "cancel": "Скасувати"
+  },
+  "toast": {
+    "created": "Вправу створено успішно",
+    "updated": "Вправу оновлено",
+    "deleted": "Вправу видалено",
+    "exerciseDeleted": "Вправу видалено",
+    "softDeleteMessage": "Історія тренувань збережена",
+    "hardDeleteMessage": "Вправу повністю видалено",
+    "deleteFailed": "Не вдалося видалити вправу",
+    "favoriteAdded": "Додано до вибраних",
+    "favoriteRemoved": "Видалено з вибраних",
+    "notesSaved": "Нотатки збережено",
+    "notesSaveFailed": "Не вдалося зберегти нотатки. Спробуйте ще раз.",
+    "notesLoadFailed": "Не вдалося завантажити нотатки",
+    "error": "Щось пішло не так"
+  }
+}

@@ -44,6 +44,19 @@ const router = createRouter({
           meta: { title: 'Workouts' },
         },
         {
+          path: 'exercises',
+          name: 'Exercises',
+          component: () => import('@/pages/exercises/ExercisesView.vue'),
+          meta: { title: 'Exercises' },
+        },
+        {
+          path: 'exercises/:id',
+          name: 'ExerciseDetail',
+          component: () => import('@/pages/exercises/ExerciseDetailView.vue'),
+          meta: { title: 'Exercise Detail' },
+          props: true,
+        },
+        {
           path: 'analytics',
           name: 'Analytics',
           component: () => import('@/pages/analytics/AnalyticsView.vue'),
@@ -64,7 +77,7 @@ const router = createRouter({
  * Global navigation guard
  * Handles authentication and email verification checks
  */
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
   // Wait for auth to initialize
