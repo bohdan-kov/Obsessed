@@ -31,5 +31,7 @@
     "invalidInput": "Некоректні дані",
     "weightOutOfRange": "Вага повинна бути від {min} до {max} {unit}",
     "repsOutOfRange": "Повтори повинні бути від {min} до {max}"
-  }
+  },
+  "notFound": "Не знайдено",
+  "exerciseNotFound": "Вправу не знайдено"
 }

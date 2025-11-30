@@ -39,6 +39,7 @@ export function useLocale() {
   /**
    * Switch locale
    * Coordinates: vue-i18n -> userStore -> localStorage -> Firestore
+   * Implements optimistic update with rollback on failure
    * @param {string} code - Locale code ('uk' | 'en')
    */
   async function changeLocale(code) {
@@ -51,13 +52,18 @@ export function useLocale() {
       return
     }
 
+    const previousLocale = locale.value // Save previous state
+
     try {
-      // Update vue-i18n (UI updates immediately)
+      // Optimistic update - update vue-i18n immediately
       setI18nLocale(code)
 
-      // Update userStore (handles localStorage + Firestore sync)
+      // Persist to Firestore
       await userStore.updateSettings({ locale: code })
     } catch (error) {
+      // Revert on failure
+      setI18nLocale(previousLocale)
+
       console.error('[useLocale] Failed to change locale:', error)
       throw error
     }

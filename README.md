@@ -42,3 +42,40 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## Database Setup
+
+### Seeding Default Exercises
+
+The application comes with a comprehensive library of 68 default exercises covering all major muscle groups. To populate your Firestore database with these exercises, run:
+
+```sh
+npm run seed:exercises
+```
+
+This seed script will:
+- Add 68 bilingual (Ukrainian & English) exercises to your database
+- Skip exercises that already exist (safe to run multiple times)
+- Use efficient batch operations for fast seeding
+- Provide detailed progress and statistics
+
+**When to run this:**
+- First time setting up the project
+- After creating a new Firebase project
+- When you want to restore default exercises
+
+**Prerequisites:**
+- Ensure your `.env.local` file is configured with Firebase credentials
+- Firestore database must be enabled in your Firebase project
+
+**Exercise Coverage:**
+- Chest: 9 exercises
+- Back: 10 exercises
+- Shoulders: 8 exercises
+- Biceps: 7 exercises
+- Triceps: 6 exercises
+- Legs: 14 exercises (quads, hamstrings, glutes)
+- Calves: 3 exercises
+- Core: 8 exercises
+
+All exercises include proper muscle group categorization, equipment types, and bilingual names.

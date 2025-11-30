@@ -31,5 +31,7 @@
     "invalidInput": "Invalid data",
     "weightOutOfRange": "Weight must be between {min} and {max} {unit}",
     "repsOutOfRange": "Reps must be between {min} and {max}"
-  }
+  },
+  "notFound": "Not Found",
+  "exerciseNotFound": "Exercise not found"
 }

@@ -1,0 +1,175 @@
+{
+  "title": "Exercise Library",
+  "subtitle": "Manage your exercises and track progress",
+  "search": {
+    "placeholder": "Search exercises...",
+    "noResults": "No exercises found",
+    "clear": "Clear search"
+  },
+  "filters": {
+    "title": "Filters",
+    "muscleGroup": "Muscle Group",
+    "equipment": "Equipment",
+    "type": "Type",
+    "showFavoritesOnly": "Favorites Only",
+    "reset": "Reset Filters",
+    "all": "All"
+  },
+  "sort": {
+    "label": "Sort by",
+    "alphabetical": "Alphabetical",
+    "muscleGroup": "Muscle Group",
+    "recent": "Recently Used",
+    "frequent": "Most Frequent"
+  },
+  "muscleGroups": {
+    "chest": "Chest",
+    "back": "Back",
+    "legs": "Legs",
+    "shoulders": "Shoulders",
+    "biceps": "Biceps",
+    "triceps": "Triceps",
+    "core": "Core",
+    "calves": "Calves"
+  },
+  "equipment": {
+    "barbell": "Barbell",
+    "dumbbell": "Dumbbell",
+    "cable": "Cable",
+    "machine": "Machine",
+    "bodyweight": "Bodyweight",
+    "bands": "Resistance Bands",
+    "kettlebell": "Kettlebell",
+    "other": "Other"
+  },
+  "types": {
+    "compound": "Compound",
+    "isolation": "Isolation"
+  },
+  "list": {
+    "count": "{count} exercises",
+    "showing": "Showing {showing} of {total}",
+    "empty": "No exercises",
+    "emptyFiltered": "No exercises match your filters"
+  },
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {page}",
+    "of": "of {total}",
+    "goToPage": "Go to page {page}"
+  },
+  "emptyState": {
+    "title": "No Exercises Yet",
+    "description": "Start by creating your first exercise or browse our built-in library",
+    "createButton": "Create Exercise",
+    "browseButton": "Browse Library"
+  },
+  "detail": {
+    "overview": "Overview",
+    "stats": "Statistics",
+    "history": "History",
+    "notes": "Notes",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back to List"
+  },
+  "stats": {
+    "title": "Statistics",
+    "personalRecord": "Personal Record",
+    "estimated1RM": "Estimated 1RM",
+    "totalVolume": "Total Volume",
+    "timesPerformed": "Times Performed",
+    "averageWeight": "Average Weight",
+    "averageReps": "Average Reps",
+    "lastPerformed": "Last Performed",
+    "never": "Never",
+    "noData": "No data available",
+    "description": "Statistics based on your workouts"
+  },
+  "history": {
+    "title": "Exercise History",
+    "chart": "Progress Chart",
+    "noData": "No history yet",
+    "startTracking": "Start performing this exercise to see your progress here"
+  },
+  "notes": {
+    "title": "Notes",
+    "placeholder": "Add notes about this exercise...\n\nFor example: form cues, machine settings, personal observations",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "autoSave": "Auto-saving in {seconds}s"
+  },
+  "form": {
+    "create": "Create Exercise",
+    "edit": "Edit Exercise",
+    "nameLabel": "Exercise Name",
+    "namePlaceholder": "e.g., Bench Press",
+    "nameUk": "Name (Ukrainian)",
+    "nameEn": "Name (English)",
+    "muscleGroupLabel": "Primary Muscle Group",
+    "muscleGroupPlaceholder": "Select muscle group",
+    "secondaryMusclesLabel": "Secondary Muscles (Optional)",
+    "secondaryMusclesPlaceholder": "Select up to 3 groups",
+    "equipmentLabel": "Equipment",
+    "equipmentPlaceholder": "Select equipment",
+    "typeLabel": "Exercise Type",
+    "typePlaceholder": "Select type",
+    "descriptionLabel": "Description (Optional)",
+    "descriptionPlaceholder": "Add exercise description...",
+    "descriptionUk": "Description (Ukrainian)",
+    "descriptionEn": "Description (English)",
+    "videoUrlLabel": "Video URL (Optional)",
+    "videoUrlPlaceholder": "https://youtube.com/watch?v=...",
+    "submit": "Save Exercise",
+    "cancel": "Cancel",
+    "submitting": "Saving..."
+  },
+  "validation": {
+    "nameRequired": "Exercise name is required",
+    "nameMin": "Name must be at least 2 characters",
+    "nameMax": "Name must not exceed 100 characters",
+    "muscleGroupRequired": "Please select a muscle group",
+    "equipmentRequired": "Please select equipment",
+    "descriptionMax": "Description must not exceed 500 characters",
+    "videoUrlInvalid": "Please enter a valid URL",
+    "secondaryMusclesMax": "You can select up to 3 secondary muscle groups"
+  },
+  "actions": {
+    "create": "Create Exercise",
+    "edit": "Edit",
+    "delete": "Delete",
+    "favorite": "Add to Favorites",
+    "unfavorite": "Remove from Favorites",
+    "viewDetails": "View Details",
+    "browseAll": "Browse All"
+  },
+  "favorites": {
+    "title": "Favorite Exercises",
+    "empty": "You don't have any favorite exercises yet",
+    "addHint": "Tap the star icon to add exercises to your favorites"
+  },
+  "delete": {
+    "title": "Delete Exercise?",
+    "message": "Are you sure you want to delete \"{name}\"?",
+    "warning": "This exercise is used in {count} workouts. It will be marked as deleted but history will be preserved.",
+    "warningUnused": "This will permanently delete the exercise.",
+    "confirm": "Yes, Delete",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "created": "Exercise created successfully",
+    "updated": "Exercise updated",
+    "deleted": "Exercise deleted",
+    "exerciseDeleted": "Exercise deleted",
+    "softDeleteMessage": "Workout history preserved",
+    "hardDeleteMessage": "Exercise completely removed",
+    "deleteFailed": "Failed to delete exercise",
+    "favoriteAdded": "Added to favorites",
+    "favoriteRemoved": "Removed from favorites",
+    "notesSaved": "Notes saved",
+    "notesSaveFailed": "Failed to save notes. Please try again.",
+    "notesLoadFailed": "Failed to load notes",
+    "error": "Something went wrong"
+  }
+}

@@ -13,7 +13,8 @@
     "lint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
     "test": "NODE_OPTIONS='--no-webstorage' vitest",
-    "test:run": "NODE_OPTIONS='--no-webstorage' vitest run"
+    "test:run": "NODE_OPTIONS='--no-webstorage' vitest run",
+    "seed:exercises": "node scripts/seedExercises.js"
   },
   "dependencies": {
     "@vee-validate/zod": "^4.15.1",
@@ -44,6 +45,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.22",
+    "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "eslint-plugin-vue": "~10.5.1",
     "globals": "^16.5.0",

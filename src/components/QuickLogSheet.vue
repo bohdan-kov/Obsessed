@@ -27,9 +27,9 @@ import { useUnits } from '@/composables/useUnits'
 import { storeToRefs } from 'pinia'
 
 const { t } = useI18n()
-const { weightUnit, unitLabel, toStorageUnit } = useUnits()
+const { unitLabel, toStorageUnit } = useUnits()
 
-const props = defineProps({
+defineProps({
   open: Boolean,
 })
 const emit = defineEmits(['update:open'])
@@ -38,6 +38,7 @@ const workoutStore = useWorkoutStore()
 const exerciseStore = useExerciseStore()
 
 const { recentExercises, allExercises } = storeToRefs(exerciseStore)
+const { getExerciseDisplayName } = exerciseStore
 
 // Form state
 const step = ref('exercise') // 'exercise' | 'details'
@@ -82,12 +83,11 @@ async function handleSubmit() {
     )
 
     if (!exerciseInWorkout) {
-      await workoutStore.addExercise({
-        id: selectedExercise.value.id,
-        name: selectedExercise.value.name,
-        muscleGroup: selectedExercise.value.muscleGroups?.[0] || 'Unknown',
-        category: selectedExercise.value.category,
-      })
+      const exerciseName = getExerciseDisplayName(selectedExercise.value)
+      await workoutStore.addExercise(
+        selectedExercise.value.id,
+        exerciseName
+      )
     }
 
     // Add set (convert weight to storage unit - kg)
@@ -142,7 +142,7 @@ function handleClose(open) {
           </Button>
           <div>
             <SheetTitle>
-              {{ step === 'exercise' ? t('workout.quickLog.title') : selectedExercise?.name }}
+              {{ step === 'exercise' ? t('workout.quickLog.title') : getExerciseDisplayName(selectedExercise) }}
             </SheetTitle>
             <SheetDescription>
               {{
@@ -166,13 +166,13 @@ function handleClose(open) {
               <CommandItem
                 v-for="exercise in recentExercises"
                 :key="exercise.id"
-                :value="exercise.name"
+                :value="getExerciseDisplayName(exercise)"
                 @select="selectExercise(exercise)"
                 class="py-3"
               >
-                <span>{{ exercise.name }}</span>
+                <span>{{ getExerciseDisplayName(exercise) }}</span>
                 <span class="ml-auto text-xs text-muted-foreground">
-                  {{ exercise.muscleGroups?.[0] || 'Unknown' }}
+                  {{ exercise.muscleGroups?.[0] || t('common.unknown') }}
                 </span>
               </CommandItem>
             </CommandGroup>
@@ -181,13 +181,13 @@ function handleClose(open) {
               <CommandItem
                 v-for="exercise in allExercises"
                 :key="exercise.id"
-                :value="exercise.name"
+                :value="getExerciseDisplayName(exercise)"
                 @select="selectExercise(exercise)"
                 class="py-3"
               >
-                <span>{{ exercise.name }}</span>
+                <span>{{ getExerciseDisplayName(exercise) }}</span>
                 <span class="ml-auto text-xs text-muted-foreground">
-                  {{ exercise.muscleGroups?.[0] || 'Unknown' }}
+                  {{ exercise.muscleGroups?.[0] || t('common.unknown') }}
                 </span>
               </CommandItem>
             </CommandGroup>
@@ -206,6 +206,7 @@ function handleClose(open) {
               type="number"
               inputmode="decimal"
               placeholder="0"
+              :aria-label="`${t('workout.quickLog.weight')} (${unitLabel})`"
               class="text-3xl h-16 text-center font-mono"
             />
           </div>
@@ -217,6 +218,7 @@ function handleClose(open) {
               type="number"
               inputmode="numeric"
               placeholder="0"
+              :aria-label="t('workout.quickLog.reps')"
               class="text-3xl h-16 text-center font-mono"
             />
           </div>
@@ -232,6 +234,7 @@ function handleClose(open) {
             min="1"
             max="10"
             placeholder="1-10"
+            :aria-label="t('workout.quickLog.rpe')"
             class="h-12 text-center font-mono"
           />
         </div>

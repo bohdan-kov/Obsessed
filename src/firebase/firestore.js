@@ -44,21 +44,27 @@ export const COLLECTIONS = {
 
 /**
  * Get reference to a collection
- * @param {string} collectionName
+ * Handles both simple paths (e.g., 'users') and nested paths (e.g., 'users/userId/exerciseNotes')
+ * @param {string} collectionName - Collection path (can contain slashes for nested collections)
  * @returns {CollectionReference}
  */
 export function getCollection(collectionName) {
-  return collection(db, collectionName)
+  // Split the collection name by slashes to handle nested paths
+  const pathSegments = collectionName.split('/').filter(Boolean)
+  return collection(db, ...pathSegments)
 }
 
 /**
  * Get reference to a document
- * @param {string} collectionName
- * @param {string} docId
+ * Handles both simple paths (e.g., 'users', 'userId') and nested paths (e.g., 'users/userId/exerciseNotes')
+ * @param {string} collectionName - Collection path (can contain slashes for nested collections)
+ * @param {string} docId - Document ID
  * @returns {DocumentReference}
  */
 export function getDocRef(collectionName, docId) {
-  return doc(db, collectionName, docId)
+  // Split the collection name by slashes to handle nested paths
+  const pathSegments = collectionName.split('/').filter(Boolean)
+  return doc(db, ...pathSegments, docId)
 }
 
 /**
@@ -91,7 +97,7 @@ export async function fetchDocument(collectionName, docId) {
     return null
   } catch (error) {
     console.error(`Error fetching document ${collectionName}/${docId}:`, error)
-    throw new Error('Failed to fetch document')
+    throw new Error(`Failed to fetch document ${collectionName}/${docId}: ${error.message}`)
   }
 }
 
@@ -132,7 +138,7 @@ export async function fetchCollection(collectionName, options = {}) {
     }))
   } catch (error) {
     console.error(`Error fetching collection ${collectionName}:`, error)
-    throw new Error('Failed to fetch collection')
+    throw new Error(`Failed to fetch collection ${collectionName}: ${error.message}`)
   }
 }
 
@@ -153,7 +159,7 @@ export async function createDocument(collectionName, data) {
     return docRef.id
   } catch (error) {
     console.error(`Error creating document in ${collectionName}:`, error)
-    throw new Error('Failed to create document')
+    throw new Error(`Failed to create document in ${collectionName}: ${error.message}`)
   }
 }
 
@@ -178,7 +184,7 @@ export async function setDocument(collectionName, docId, data, options = {}) {
     )
   } catch (error) {
     console.error(`Error setting document ${collectionName}/${docId}:`, error)
-    throw new Error('Failed to set document')
+    throw new Error(`Failed to set document ${collectionName}/${docId}: ${error.message}`)
   }
 }
 
@@ -201,7 +207,7 @@ export async function updateDocument(collectionName, docId, data) {
       `Error updating document ${collectionName}/${docId}:`,
       error
     )
-    throw new Error('Failed to update document')
+    throw new Error(`Failed to update document ${collectionName}/${docId}: ${error.message}`)
   }
 }
 
@@ -220,7 +226,7 @@ export async function deleteDocument(collectionName, docId) {
       `Error deleting document ${collectionName}/${docId}:`,
       error
     )
-    throw new Error('Failed to delete document')
+    throw new Error(`Failed to delete document ${collectionName}/${docId}: ${error.message}`)
   }
 }
 
