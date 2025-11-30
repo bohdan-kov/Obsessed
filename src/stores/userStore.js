@@ -157,7 +157,9 @@ export const useUserStore = defineStore('user', () => {
         })
       }
     } catch (err) {
-      console.error('Error fetching profile:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error fetching profile:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -217,7 +219,9 @@ export const useUserStore = defineStore('user', () => {
 
       settings.value = profileData.settings
     } catch (err) {
-      console.error('Error creating profile:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error creating profile:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -249,7 +253,9 @@ export const useUserStore = defineStore('user', () => {
         }
       }
     } catch (err) {
-      console.error('Error updating profile:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error updating profile:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -289,7 +295,9 @@ export const useUserStore = defineStore('user', () => {
         applyTheme(newSettings.theme)
       }
     } catch (err) {
-      console.error('Error updating settings:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error updating settings:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -364,7 +372,9 @@ export const useUserStore = defineStore('user', () => {
         profile.value.stats = updatedStats
       }
     } catch (err) {
-      console.error('Error updating stats:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error updating stats:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -417,7 +427,9 @@ export const useUserStore = defineStore('user', () => {
         }
       },
       (err) => {
-        console.error('Error in profile subscription:', err)
+        if (import.meta.env.DEV) {
+          console.error('Error in profile subscription:', err)
+        }
         error.value = err.message
       }
     )

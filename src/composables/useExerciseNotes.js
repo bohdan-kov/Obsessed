@@ -34,7 +34,9 @@ export function useExerciseNotes(exerciseId) {
       isDirty.value = false
     } catch (err) {
       error.value = err.message
-      console.error('Error loading note:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error loading note:', err)
+      }
     }
   }
 

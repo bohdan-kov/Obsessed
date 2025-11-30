@@ -331,6 +331,97 @@ describe('workoutStore', () => {
       })
     })
 
+    describe('completedWorkouts', () => {
+      it('should return all completed workouts (not limited to 10)', async () => {
+        const authStore = useAuthStore()
+
+        const store = useWorkoutStore()
+        const now = new Date()
+
+        // Create 15 workouts to test that all are returned (unlike recentWorkouts which is limited to 10)
+        const workouts = Array.from({ length: 15 }, (_, i) => ({
+          id: `workout-${i}`,
+          status: 'completed',
+          completedAt: new Date(now.getTime() - i * 86400000),
+        }))
+
+        fetchCollection.mockResolvedValue(workouts)
+        await store.fetchWorkouts('month')
+
+        expect(store.completedWorkouts).toHaveLength(15)
+        expect(store.completedWorkouts[0].id).toBe('workout-0')
+        expect(store.completedWorkouts[14].id).toBe('workout-14')
+      })
+
+      it('should filter out non-completed workouts', async () => {
+        const authStore = useAuthStore()
+
+        const store = useWorkoutStore()
+        const now = new Date()
+
+        const mockWorkouts = [
+          { id: 'workout-1', status: 'completed', completedAt: now },
+          { id: 'workout-2', status: 'active', completedAt: now },
+          { id: 'workout-3', status: 'completed', completedAt: now },
+          { id: 'workout-4', status: 'cancelled', completedAt: now },
+        ]
+
+        fetchCollection.mockResolvedValue(mockWorkouts)
+        await store.fetchWorkouts('week')
+
+        expect(store.completedWorkouts).toHaveLength(2)
+        expect(store.completedWorkouts.every(w => w.status === 'completed')).toBe(true)
+      })
+
+      it('should sort workouts by completedAt in descending order', async () => {
+        const authStore = useAuthStore()
+
+        const store = useWorkoutStore()
+        const now = new Date()
+
+        const mockWorkouts = [
+          {
+            id: 'workout-1',
+            status: 'completed',
+            completedAt: new Date(now.getTime() - 3 * 86400000),
+          },
+          {
+            id: 'workout-2',
+            status: 'completed',
+            completedAt: new Date(now.getTime() - 1 * 86400000),
+          },
+          {
+            id: 'workout-3',
+            status: 'completed',
+            completedAt: new Date(now.getTime() - 2 * 86400000),
+          },
+        ]
+
+        fetchCollection.mockResolvedValue(mockWorkouts)
+        await store.fetchWorkouts('week')
+
+        expect(store.completedWorkouts[0].id).toBe('workout-2')
+        expect(store.completedWorkouts[1].id).toBe('workout-3')
+        expect(store.completedWorkouts[2].id).toBe('workout-1')
+      })
+
+      it('should return empty array when no completed workouts', async () => {
+        const authStore = useAuthStore()
+
+        const store = useWorkoutStore()
+
+        const mockWorkouts = [
+          { id: 'workout-1', status: 'active' },
+          { id: 'workout-2', status: 'cancelled' },
+        ]
+
+        fetchCollection.mockResolvedValue(mockWorkouts)
+        await store.fetchWorkouts('week')
+
+        expect(store.completedWorkouts).toEqual([])
+      })
+    })
+
     describe('hasActiveWorkout', () => {
       it('should return true when active workout exists', async () => {
         const authStore = useAuthStore()
@@ -489,7 +580,7 @@ describe('workoutStore', () => {
       expect(updateDocument).toHaveBeenCalledWith(
         'users/test-user-id/workouts',
         'workout-1',
-        {
+        expect.objectContaining({
           exercises: [
             {
               exerciseId: 'exercise-123',
@@ -498,7 +589,7 @@ describe('workoutStore', () => {
               order: 0,
             },
           ],
-        }
+        })
       )
       expect(store.error).toBeNull()
     })
@@ -724,6 +815,75 @@ describe('workoutStore', () => {
       await expect(store.finishWorkout()).rejects.toThrow(
         'No active workout to finish'
       )
+    })
+
+    it('should calculate duration based on actual time, not custom date', async () => {
+      const authStore = useAuthStore()
+
+      const store = useWorkoutStore()
+      const startTime = new Date(Date.now() - 3600000) // 1 hour ago
+
+      createDocument.mockResolvedValue('workout-1')
+      subscribeToCollection.mockImplementation((path, options, callback) => {
+        callback([{
+          id: 'workout-1',
+          startedAt: startTime,
+          status: 'active',
+        }])
+        return vi.fn()
+      })
+
+      await store.startWorkout()
+
+      updateDocument.mockResolvedValue()
+
+      // Finish workout with a PAST custom date (2 days ago)
+      const customDate = new Date(Date.now() - 2 * 86400000)
+      await store.finishWorkout({ date: customDate })
+
+      const updateCall = updateDocument.mock.calls[0][2]
+
+      // Duration should be positive (based on actual time elapsed ~1 hour = 3600 seconds)
+      expect(updateCall.duration).toBeGreaterThan(0)
+      expect(updateCall.duration).toBeGreaterThanOrEqual(3595) // Allow small timing variance
+      expect(updateCall.duration).toBeLessThanOrEqual(3605)
+
+      // completedAt should be the custom date
+      expect(updateCall.completedAt).toEqual(customDate)
+
+      expect(store.error).toBeNull()
+    })
+
+    it('should ensure duration is never negative with edge cases', async () => {
+      const authStore = useAuthStore()
+
+      const store = useWorkoutStore()
+      const startTime = new Date() // Just started
+
+      createDocument.mockResolvedValue('workout-1')
+      subscribeToCollection.mockImplementation((path, options, callback) => {
+        callback([{
+          id: 'workout-1',
+          startedAt: startTime,
+          status: 'active',
+        }])
+        return vi.fn()
+      })
+
+      await store.startWorkout()
+
+      updateDocument.mockResolvedValue()
+
+      // Finish with a date in the FUTURE
+      const futureDate = new Date(Date.now() + 86400000)
+      await store.finishWorkout({ date: futureDate })
+
+      const updateCall = updateDocument.mock.calls[0][2]
+
+      // Duration should still be >= 0 (Math.max ensures this)
+      expect(updateCall.duration).toBeGreaterThanOrEqual(0)
+
+      expect(store.error).toBeNull()
     })
   })
 

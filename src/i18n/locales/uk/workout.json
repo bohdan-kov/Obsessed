@@ -1,4 +1,113 @@
 {
+  "activeWorkout": {
+    "title": "Активне тренування",
+    "startWorkout": "Почати тренування",
+    "finishWorkout": "Завершити тренування",
+    "cancelWorkout": "Скасувати тренування",
+    "resumeWorkout": "Продовжити тренування",
+
+    "timer": {
+      "elapsed": "Час тренування"
+    },
+
+    "stats": {
+      "sets": "Підходи",
+      "volume": "Обсяг",
+      "exercises": "Вправи"
+    },
+
+    "status": {
+      "active": "Триває",
+      "syncing": "Синхронізація...",
+      "offline": "Офлайн",
+      "pendingChanges": "{count} змін очікують"
+    },
+
+    "exercise": {
+      "addExercise": "Додати вправу",
+      "addExerciseDescription": "Знайдіть та виберіть вправу для додавання до тренування",
+      "noExercises": "Вправ ще немає",
+      "noExercisesHint": "Натисніть кнопку нижче, щоб додати першу вправу",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Додайте нотатки для цієї вправи..."
+    },
+
+    "set": {
+      "addSet": "Додати підхід",
+      "logSet": "Записати підхід",
+      "weight": "Вага",
+      "reps": "Повторення",
+      "rpe": "RPE",
+      "rpeOptional": "RPE (необов'язково)",
+      "type": "Тип підходу",
+
+      "types": {
+        "normal": "Звичайний",
+        "warmup": "Розминка",
+        "dropset": "Дроп-сет"
+      },
+
+      "delete": "Видалити підхід",
+      "deleteConfirm": "Видалити цей підхід?",
+      "setNumber": "Підхід {number}"
+    },
+
+    "finish": {
+      "title": "Завершити тренування",
+      "summary": "Підсумок тренування",
+      "date": "Дата тренування",
+      "duration": "Тривалість",
+      "totalSets": "Всього підходів",
+      "totalVolume": "Загальний обсяг",
+      "exercisesPerformed": "Виконано вправ",
+      "workoutNotes": "Нотатки до тренування",
+      "workoutNotesPlaceholder": "Як пройшло тренування?",
+      "confirm": "Завершити",
+      "cancel": "Продовжити"
+    },
+
+    "cancel": {
+      "title": "Скасувати тренування?",
+      "message": "Ви записали {count} підходів. Цю дію не можна скасувати.",
+      "confirm": "Видалити тренування",
+      "keepGoing": "Продовжити"
+    },
+
+    "recovery": {
+      "title": "Продовжити попереднє тренування?",
+      "message": "У вас є незавершене тренування від {date}. Бажаєте продовжити?",
+      "resume": "Продовжити",
+      "discard": "Почати нове"
+    },
+
+    "errors": {
+      "alreadyActive": "У вас вже є активне тренування",
+      "noActiveWorkout": "Активне тренування не знайдено",
+      "startFailed": "Не вдалося почати тренування",
+      "saveFailed": "Не вдалося зберегти зміни",
+      "syncFailed": "Помилка синхронізації. Ваші зміни збережені локально."
+    }
+  },
+
+  "history": {
+    "title": "Історія тренувань",
+    "empty": "Тренувань ще немає",
+    "emptyHint": "Почніть перше тренування, щоб побачити його тут",
+    "filters": {
+      "all": "Всі",
+      "week": "Цей тиждень",
+      "month": "Цей місяць"
+    },
+    "card": {
+      "duration": "{hours}год {minutes}хв",
+      "durationMinutes": "{minutes} хв",
+      "durationUnknown": "Невідомо",
+      "durationLessThanMinute": "< 1 хв",
+      "exercises": "{count} вправ",
+      "sets": "{count} підходів"
+    }
+  },
+
   "quickLog": {
     "title": "Записати підхід",
     "selectExercise": "Оберіть вправу",

@@ -73,7 +73,9 @@ const i18n = createI18n({
  */
 export function setLocale(locale) {
   if (!SUPPORTED_LOCALES[locale]) {
-    console.warn(`[i18n] Unsupported locale: ${locale}`)
+    if (import.meta.env.DEV) {
+      console.warn(`[i18n] Unsupported locale: ${locale}`)
+    }
     return
   }
 

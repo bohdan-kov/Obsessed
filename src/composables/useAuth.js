@@ -23,7 +23,9 @@ export function useAuth() {
       await authStore.signOut()
       router.push({ name: 'Login' })
     } catch (error) {
-      console.error('Logout error:', error)
+      if (import.meta.env.DEV) {
+        console.error('Logout error:', error)
+      }
       throw error
     }
   }

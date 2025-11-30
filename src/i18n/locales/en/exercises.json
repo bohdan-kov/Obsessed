@@ -30,7 +30,8 @@
     "biceps": "Biceps",
     "triceps": "Triceps",
     "core": "Core",
-    "calves": "Calves"
+    "calves": "Calves",
+    "unknown": "Unknown"
   },
   "equipment": {
     "barbell": "Barbell",

@@ -65,6 +65,22 @@
       "sun": "Нд"
     }
   },
+  "volumeChart": {
+    "title": "Обсяг навантаження",
+    "subtitle": "За останні {days} днів",
+    "days": "{count} днів",
+    "volume": "Обсяг (кг)",
+    "exercises": "Вправи",
+    "period7Days": "7 днів",
+    "period14Days": "14 днів",
+    "period30Days": "30 днів",
+    "volumeLine": "Обсяг (кг)",
+    "exercisesLine": "Вправи",
+    "noData": "Немає даних для відображення",
+    "noDataSubtitle": "Почніть тренуватися для перегляду графіка",
+    "tooltipVolume": "Обсяг",
+    "tooltipExercises": "Вправ"
+  },
   "muscleProgress": {
     "title": "Фокус м'язів",
     "description": "Розподіл обсягу тренувань за тиждень",

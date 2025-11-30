@@ -78,9 +78,9 @@ export const useWorkoutStore = defineStore('workout', () => {
   })
 
   /**
-   * Get recent workouts (last 10 completed)
+   * Get all completed workouts (sorted by completion date descending)
    */
-  const recentWorkouts = computed(() => {
+  const completedWorkouts = computed(() => {
     return workouts.value
       .filter((w) => w.status === 'completed')
       .sort((a, b) => {
@@ -88,7 +88,13 @@ export const useWorkoutStore = defineStore('workout', () => {
         const dateB = b.completedAt?.toDate ? b.completedAt.toDate() : new Date(b.completedAt)
         return dateB - dateA
       })
-      .slice(0, 10)
+  })
+
+  /**
+   * Get recent workouts (last 10 completed)
+   */
+  const recentWorkouts = computed(() => {
+    return completedWorkouts.value.slice(0, 10)
   })
 
   /**
@@ -119,9 +125,11 @@ export const useWorkoutStore = defineStore('workout', () => {
         userId: authStore.uid,
         status: 'active',
         startedAt: serverTimestamp(),
+        lastSavedAt: serverTimestamp(),
         exercises: [],
         duration: 0,
         totalVolume: 0,
+        totalSets: 0,
       }
 
       const workoutPath = `users/${authStore.uid}/workouts`
@@ -138,7 +146,9 @@ export const useWorkoutStore = defineStore('workout', () => {
 
       return workoutId
     } catch (err) {
-      console.error('Error starting workout:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error starting workout:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -174,6 +184,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       const workoutPath = `users/${authStore.uid}/workouts`
       await updateDocument(workoutPath, activeWorkout.value.id, {
         exercises: updatedExercises,
+        lastSavedAt: serverTimestamp(),
       })
 
       // Update local state
@@ -181,7 +192,9 @@ export const useWorkoutStore = defineStore('workout', () => {
         currentWorkout.value.exercises = updatedExercises
       }
     } catch (err) {
-      console.error('Error adding exercise:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error adding exercise:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -222,7 +235,7 @@ export const useWorkoutStore = defineStore('workout', () => {
         reps,
         rpe: rpe || null,
         type,
-        completedAt: serverTimestamp(),
+        completedAt: new Date().toISOString(), // ✅ FIXED: Use ISO string instead of serverTimestamp()
       }
 
       const updatedExercises = [...activeWorkout.value.exercises]
@@ -238,19 +251,29 @@ export const useWorkoutStore = defineStore('workout', () => {
         )
       }, 0)
 
+      // Calculate total sets
+      const totalSets = updatedExercises.reduce((total, exercise) => {
+        return total + exercise.sets.length
+      }, 0)
+
       const workoutPath = `users/${authStore.uid}/workouts`
       await updateDocument(workoutPath, activeWorkout.value.id, {
         exercises: updatedExercises,
         totalVolume,
+        totalSets,
+        lastSavedAt: serverTimestamp(), // ✅ OK: Top-level field
       })
 
       // Update local state
       if (currentWorkout.value) {
         currentWorkout.value.exercises = updatedExercises
         currentWorkout.value.totalVolume = totalVolume
+        currentWorkout.value.totalSets = totalSets
       }
     } catch (err) {
-      console.error('Error adding set:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error adding set:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -260,10 +283,12 @@ export const useWorkoutStore = defineStore('workout', () => {
 
   /**
    * Finish current workout
+   * @param {Object} options - Finish options
+   * @param {Date|null} options.date - Optional custom completion date (defaults to current date)
    * @returns {Promise<void>}
    * @throws {Error} If no active workout
    */
-  async function finishWorkout() {
+  async function finishWorkout(options = {}) {
     if (!activeWorkout.value) {
       throw new Error('No active workout to finish')
     }
@@ -272,18 +297,34 @@ export const useWorkoutStore = defineStore('workout', () => {
     error.value = null
 
     try {
-      const now = new Date()
+      const { date = null } = options
+
+      // Use custom date or current date for completedAt field
+      const completedDate = date || new Date()
+
       const startTime = activeWorkout.value.startedAt?.toDate
         ? activeWorkout.value.startedAt.toDate()
         : new Date(activeWorkout.value.startedAt)
 
-      const duration = Math.floor((now - startTime) / 1000) // in seconds
+      // Calculate duration based on ACTUAL time elapsed (now - startedAt)
+      // This ensures duration is always positive and reflects real workout time
+      // completedAt is just for categorization (which day to show in history)
+      const now = new Date()
+      const duration = Math.max(0, Math.floor((now - startTime) / 1000)) // in seconds, ensure non-negative
+
+      // Validation: Ensure duration is non-negative
+      if (duration < 0) {
+        // Duration should never be negative - this is a data integrity safeguard
+      }
+
+      // Additional safeguard: Ensure duration is a positive integer
+      const validDuration = Math.max(0, Math.floor(duration))
 
       const workoutPath = `users/${authStore.uid}/workouts`
       await updateDocument(workoutPath, activeWorkout.value.id, {
         status: 'completed',
-        completedAt: serverTimestamp(),
-        duration,
+        completedAt: completedDate,
+        duration: validDuration,
       })
 
       currentWorkout.value = null
@@ -294,7 +335,9 @@ export const useWorkoutStore = defineStore('workout', () => {
         unsubscribeActive = null
       }
     } catch (err) {
-      console.error('Error finishing workout:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error finishing workout:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -342,7 +385,9 @@ export const useWorkoutStore = defineStore('workout', () => {
 
       workouts.value = fetchedWorkouts
     } catch (err) {
-      console.error('Error fetching workouts:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error fetching workouts:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -378,7 +423,9 @@ export const useWorkoutStore = defineStore('workout', () => {
         }
       },
       (err) => {
-        console.error('Error in active workout subscription:', err)
+        if (import.meta.env.DEV) {
+          console.error('Error in active workout subscription:', err)
+        }
         error.value = err.message
       }
     )
@@ -429,7 +476,9 @@ export const useWorkoutStore = defineStore('workout', () => {
         workouts.value = fetchedWorkouts
       },
       (err) => {
-        console.error('Error in workouts subscription:', err)
+        if (import.meta.env.DEV) {
+          console.error('Error in workouts subscription:', err)
+        }
         error.value = err.message
       }
     )
@@ -453,6 +502,24 @@ export const useWorkoutStore = defineStore('workout', () => {
   }
 
   /**
+   * Generic workout update helper
+   * @param {string} workoutId - Workout ID
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<void>}
+   */
+  async function updateWorkout(workoutId, updates) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated')
+    }
+
+    const workoutPath = `users/${authStore.uid}/workouts`
+    await updateDocument(workoutPath, workoutId, {
+      ...updates,
+      lastSavedAt: serverTimestamp(),
+    })
+  }
+
+  /**
    * Clear error message
    */
   function clearError() {
@@ -469,6 +536,7 @@ export const useWorkoutStore = defineStore('workout', () => {
     // Getters - keep as computeds
     todaysWorkout,
     activeWorkout,
+    completedWorkouts,
     recentWorkouts,
     hasActiveWorkout,
 
@@ -477,6 +545,7 @@ export const useWorkoutStore = defineStore('workout', () => {
     addExercise,
     addSet,
     finishWorkout,
+    updateWorkout,
     fetchWorkouts,
     subscribeToActive,
     subscribeToWorkouts,

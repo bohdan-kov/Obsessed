@@ -37,6 +37,33 @@ export const CONFIG = {
     MAX_REPS: 100,
   },
 
+  // Active Workout Configuration
+  activeWorkout: {
+    AUTO_SAVE_DEBOUNCE: 2000, // ms - Firestore write debounce
+    BACKUP_WRITE_DEBOUNCE: 500, // ms - localStorage debounce
+    TIMER_UPDATE_INTERVAL: 1000, // ms - timer refresh rate
+    SYNC_RETRY_DELAY: 5000, // ms - offline retry delay
+    SYNC_MAX_RETRIES: 5,
+    SYNC_BACKOFF_MULTIPLIER: 2,
+    PENDING_QUEUE_MAX: 50,
+    STALE_BACKUP_THRESHOLD: 24 * 60 * 60 * 1000, // 24 hours
+    FIRESTORE_LISTENER_WAIT_MS: 100, // Wait for serverTimestamp to propagate
+  },
+
+  // Set types
+  setTypes: {
+    NORMAL: 'normal',
+    WARMUP: 'warmup',
+    DROPSET: 'dropset',
+  },
+
+  // RPE color thresholds
+  rpe: {
+    LOW_MAX: 4, // 1-4 = green
+    MEDIUM_MAX: 7, // 5-7 = yellow
+    // 8-10 = red
+  },
+
   // Analytics Configuration
   analytics: {
     // Default time period for analytics
@@ -113,6 +140,8 @@ export const CONFIG = {
     SIDEBAR_COLLAPSED: 'obsessed_sidebar_collapsed',
     RECENT_EXERCISES: 'obsessed_recent_exercises',
     LAST_WEIGHT: 'obsessed_lastWeight',
+    LAST_RPE: 'obsessed_lastRpe',
+    ACTIVE_WORKOUT_BACKUP: 'obsessed_active_workout',
     THEME: 'obsessed_theme',
     USER_PREFERENCES: 'obsessed_prefs',
   },

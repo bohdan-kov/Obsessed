@@ -298,7 +298,9 @@ onMounted(async () => {
     // Subscribe to custom exercises for real-time updates
     exerciseStore.subscribeToCustom()
   } catch (error) {
-    console.error('Error loading exercises:', error)
+    if (import.meta.env.DEV) {
+      console.error('Error loading exercises:', error)
+    }
   }
 })
 </script>

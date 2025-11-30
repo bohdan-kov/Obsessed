@@ -84,7 +84,9 @@ export function useTheme() {
       // Revert on failure
       userStore.applyTheme(previousTheme)
 
-      console.error('[useTheme] Failed to change theme:', error)
+      if (import.meta.env.DEV) {
+        console.error('[useTheme] Failed to change theme:', error)
+      }
       throw error
     }
   }

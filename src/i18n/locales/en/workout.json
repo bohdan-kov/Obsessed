@@ -1,4 +1,113 @@
 {
+  "activeWorkout": {
+    "title": "Active Workout",
+    "startWorkout": "Start Workout",
+    "finishWorkout": "Finish Workout",
+    "cancelWorkout": "Cancel Workout",
+    "resumeWorkout": "Resume Workout",
+
+    "timer": {
+      "elapsed": "Elapsed Time"
+    },
+
+    "stats": {
+      "sets": "Sets",
+      "volume": "Volume",
+      "exercises": "Exercises"
+    },
+
+    "status": {
+      "active": "In Progress",
+      "syncing": "Syncing...",
+      "offline": "Offline",
+      "pendingChanges": "{count} changes pending"
+    },
+
+    "exercise": {
+      "addExercise": "Add Exercise",
+      "addExerciseDescription": "Search and select an exercise to add to your workout",
+      "noExercises": "No exercises yet",
+      "noExercisesHint": "Tap the button below to add your first exercise",
+      "notes": "Notes",
+      "notesPlaceholder": "Add notes for this exercise..."
+    },
+
+    "set": {
+      "addSet": "Add Set",
+      "logSet": "Log Set",
+      "weight": "Weight",
+      "reps": "Reps",
+      "rpe": "RPE",
+      "rpeOptional": "RPE (optional)",
+      "type": "Set Type",
+
+      "types": {
+        "normal": "Normal",
+        "warmup": "Warm-up",
+        "dropset": "Drop Set"
+      },
+
+      "delete": "Delete Set",
+      "deleteConfirm": "Delete this set?",
+      "setNumber": "Set {number}"
+    },
+
+    "finish": {
+      "title": "Finish Workout",
+      "summary": "Workout Summary",
+      "date": "Workout Date",
+      "duration": "Duration",
+      "totalSets": "Total Sets",
+      "totalVolume": "Total Volume",
+      "exercisesPerformed": "Exercises Performed",
+      "workoutNotes": "Workout Notes",
+      "workoutNotesPlaceholder": "How did the workout go?",
+      "confirm": "Finish",
+      "cancel": "Keep Training"
+    },
+
+    "cancel": {
+      "title": "Cancel Workout?",
+      "message": "You have logged {count} sets. This action cannot be undone.",
+      "confirm": "Discard Workout",
+      "keepGoing": "Keep Training"
+    },
+
+    "recovery": {
+      "title": "Resume Previous Workout?",
+      "message": "You have an unfinished workout from {date}. Would you like to continue?",
+      "resume": "Resume",
+      "discard": "Start Fresh"
+    },
+
+    "errors": {
+      "alreadyActive": "You already have an active workout",
+      "noActiveWorkout": "No active workout found",
+      "startFailed": "Failed to start workout",
+      "saveFailed": "Failed to save changes",
+      "syncFailed": "Sync failed. Your changes are saved locally."
+    }
+  },
+
+  "history": {
+    "title": "Workout History",
+    "empty": "No workouts yet",
+    "emptyHint": "Start your first workout to see it here",
+    "filters": {
+      "all": "All",
+      "week": "This Week",
+      "month": "This Month"
+    },
+    "card": {
+      "duration": "{hours}h {minutes}m",
+      "durationMinutes": "{minutes} min",
+      "durationUnknown": "Unknown",
+      "durationLessThanMinute": "< 1 min",
+      "exercises": "{count} exercises",
+      "sets": "{count} sets"
+    }
+  },
+
   "quickLog": {
     "title": "Log Set",
     "selectExercise": "Select an exercise",

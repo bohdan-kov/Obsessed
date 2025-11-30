@@ -36,7 +36,9 @@ const { muscleProgress, quickStats } = storeToRefs(analyticsStore)
         >
           <!-- Muscle name and percentage -->
           <div class="flex justify-between items-center">
-            <span class="text-sm font-medium">{{ muscle.muscle }}</span>
+            <span class="text-sm font-medium">
+              {{ t(`exercises.muscleGroups.${muscle.muscle}`) }}
+            </span>
             <span class="text-sm text-muted-foreground font-mono">
               {{ muscle.percent }}%
             </span>

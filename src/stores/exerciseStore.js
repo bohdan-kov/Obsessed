@@ -54,8 +54,8 @@ export const useExerciseStore = defineStore('exercise', () => {
       if (stored) {
         recentlyUsed.value = JSON.parse(stored)
       }
-    } catch (err) {
-      console.error('Error loading recently used exercises:', err)
+    } catch {
+      // Failed to load from localStorage - continue with empty array
     }
   }
 
@@ -155,7 +155,9 @@ export const useExerciseStore = defineStore('exercise', () => {
         isCustom: false,
       }))
     } catch (err) {
-      console.error('Error loading default exercises:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error loading default exercises:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -184,7 +186,9 @@ export const useExerciseStore = defineStore('exercise', () => {
         isCustom: true,
       }))
     } catch (err) {
-      console.error('Error fetching custom exercises:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error fetching custom exercises:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -218,7 +222,9 @@ export const useExerciseStore = defineStore('exercise', () => {
         }))
       },
       (err) => {
-        console.error('Error in custom exercises subscription:', err)
+        if (import.meta.env.DEV) {
+          console.error('Error in custom exercises subscription:', err)
+        }
         error.value = err.message
       }
     )
@@ -272,7 +278,9 @@ export const useExerciseStore = defineStore('exercise', () => {
 
       return exerciseId
     } catch (err) {
-      console.error('Error adding custom exercise:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error adding custom exercise:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -299,7 +307,9 @@ export const useExerciseStore = defineStore('exercise', () => {
       const customPath = `users/${authStore.uid}/customExercises`
       await updateDocument(customPath, exerciseId, updates)
     } catch (err) {
-      console.error('Error updating custom exercise:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error updating custom exercise:', err)
+      }
       error.value = err.message
       throw err
     } finally {
@@ -323,7 +333,9 @@ export const useExerciseStore = defineStore('exercise', () => {
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(recentlyUsed.value))
     } catch (err) {
-      console.error('Error adding to recent exercises:', err)
+      if (import.meta.env.DEV) {
+        console.error('Error adding to recent exercises:', err)
+      }
     }
   }
 

@@ -27,10 +27,11 @@ const muscleColors = [
   'var(--chart-8, #06b6d4)', // cyan
 ]
 
-// Top 8 muscles for donut chart
+// Top 8 muscles for donut chart with translated names
 const chartData = computed(() => {
   return muscleDistribution.value.slice(0, 8).map((muscle, index) => ({
     ...muscle,
+    muscleName: t(`exercises.muscleGroups.${muscle.muscle}`),
     color: muscleColors[index % muscleColors.length],
   }))
 })
@@ -143,7 +144,7 @@ const donutSegments = computed(() => {
                   :stroke="segment.color"
                   stroke-width="1"
                 >
-                  <title>{{ segment.muscle }}: {{ segment.sets }} {{ t('dashboard.charts.sets') }} ({{ segment.percentage.toFixed(1) }}%)</title>
+                  <title>{{ segment.muscleName }}: {{ segment.sets }} {{ t('dashboard.charts.sets') }} ({{ segment.percentage.toFixed(1) }}%)</title>
                 </path>
               </g>
             </svg>
@@ -198,7 +199,7 @@ const donutSegments = computed(() => {
                 class="w-3 h-3 rounded-full flex-shrink-0"
                 :style="{ backgroundColor: muscle.color }"
               />
-              <span class="font-medium">{{ muscle.muscle }}</span>
+              <span class="font-medium">{{ muscle.muscleName }}</span>
             </div>
             <div class="flex items-center gap-3 text-muted-foreground">
               <span class="font-mono">{{ muscle.sets }} {{ t('dashboard.charts.setsShort') }}</span>

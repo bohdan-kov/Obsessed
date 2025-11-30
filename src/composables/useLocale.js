@@ -44,7 +44,6 @@ export function useLocale() {
    */
   async function changeLocale(code) {
     if (!SUPPORTED_LOCALES[code]) {
-      console.warn(`[useLocale] Unsupported locale: ${code}`)
       return
     }
 
@@ -63,8 +62,6 @@ export function useLocale() {
     } catch (error) {
       // Revert on failure
       setI18nLocale(previousLocale)
-
-      console.error('[useLocale] Failed to change locale:', error)
       throw error
     }
   }

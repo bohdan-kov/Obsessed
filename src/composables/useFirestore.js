@@ -40,7 +40,9 @@ export function useDocument(collectionName, docId) {
         loading.value = false
       },
       (err) => {
-        console.error(`Error in useDocument(${collectionName}/${id}):`, err)
+        if (import.meta.env.DEV) {
+          console.error(`Error in useDocument(${collectionName}/${id}):`, err)
+        }
         error.value = err.message || 'Failed to load document'
         loading.value = false
       }
@@ -108,7 +110,9 @@ export function useCollection(collectionName, options = {}) {
       loading.value = false
     },
     (err) => {
-      console.error(`Error in useCollection(${collectionName}):`, err)
+      if (import.meta.env.DEV) {
+        console.error(`Error in useCollection(${collectionName}):`, err)
+      }
       error.value = err.message || 'Failed to load collection'
       loading.value = false
     }
@@ -176,10 +180,12 @@ export function useDocuments(collectionName, docIds) {
           }
         },
         (err) => {
-          console.error(
-            `Error loading document ${collectionName}/${id}:`,
-            err
-          )
+          if (import.meta.env.DEV) {
+            console.error(
+              `Error loading document ${collectionName}/${id}:`,
+              err
+            )
+          }
           error.value = err.message || 'Failed to load documents'
           loadedCount++
 
