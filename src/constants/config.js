@@ -37,6 +37,13 @@ export const CONFIG = {
     MAX_REPS: 100,
   },
 
+  // Personal Info Configuration
+  personalInfo: {
+    MIN_WEIGHT: 30, // kg - minimum valid body weight
+    MAX_WEIGHT: 300, // kg - maximum valid body weight
+    WEIGHT_DECIMAL_PLACES: 1, // precision for storage
+  },
+
   // Active Workout Configuration
   activeWorkout: {
     AUTO_SAVE_DEBOUNCE: 2000, // ms - Firestore write debounce
@@ -66,9 +73,6 @@ export const CONFIG = {
 
   // Analytics Configuration
   analytics: {
-    // Default time period for analytics
-    DEFAULT_PERIOD: '2weeks',
-
     // Chart display limits
     VOLUME_CHART_DAYS: 14,
     MAX_MUSCLE_GROUPS_DISPLAY: 8,
@@ -86,6 +90,97 @@ export const CONFIG = {
       OUTER_RADIUS: 70,
       INNER_RADIUS: 45,
       VIEWBOX: '0 0 200 200',
+    },
+
+    // Insight thresholds
+    insights: {
+      restDays: {
+        WARNING_THRESHOLD: 3, // Days before warning
+        OPTIMAL_MIN: 1,
+        OPTIMAL_MAX: 2,
+      },
+      streak: {
+        EXCELLENT_THRESHOLD: 7, // Days for excellent status
+        GOOD_THRESHOLD: 3, // Days for good status
+      },
+      workouts: {
+        MONTHLY_TARGET: 12, // Target workouts per month
+        WEEKLY_TARGET: 3, // Target workouts per week
+      },
+      volume: {
+        GROWTH_TARGET_PERCENT: 5, // Target growth percentage
+        DECLINE_WARNING_PERCENT: -10, // Decline warning threshold
+      },
+      pr: {
+        WEIGHT_TIER_SIZE_KG: 2.5, // Weight tier for rep PRs (rounded to nearest 2.5kg)
+        RECENT_PR_DAYS: 30, // Days to consider for "recent" PRs
+      },
+    },
+
+    // Period identifiers
+    periods: {
+      THIS_WEEK: 'thisWeek',
+      THIS_MONTH: 'thisMonth',
+      LAST_7_DAYS: 'last7Days',
+      LAST_30_DAYS: 'last30Days',
+
+      // Period options for global period selector
+      PERIOD_OPTIONS: [
+        {
+          id: 'last7Days',
+          labelKey: 'dashboard.periodSelector.last7Days',
+          days: 7,
+          type: 'rolling',
+          comparisonType: 'rolling',
+        },
+        {
+          id: 'last14Days',
+          labelKey: 'dashboard.periodSelector.last14Days',
+          days: 14,
+          type: 'rolling',
+          comparisonType: 'rolling',
+        },
+        {
+          id: 'last30Days',
+          labelKey: 'dashboard.periodSelector.last30Days',
+          days: 30,
+          type: 'rolling',
+          comparisonType: 'rolling',
+          isDefault: true,
+        },
+        {
+          id: 'thisMonth',
+          labelKey: 'dashboard.periodSelector.thisMonth',
+          type: 'calendarMonth',
+          comparisonType: 'previousMonth',
+        },
+        {
+          id: 'lastMonth',
+          labelKey: 'dashboard.periodSelector.lastMonth',
+          type: 'previousCalendarMonth',
+          comparisonType: 'monthBeforeLast',
+        },
+        {
+          id: 'last90Days',
+          labelKey: 'dashboard.periodSelector.last90Days',
+          days: 90,
+          type: 'rolling',
+          comparisonType: 'rolling',
+        },
+        {
+          id: 'thisYear',
+          labelKey: 'dashboard.periodSelector.thisYear',
+          type: 'calendarYear',
+          comparisonType: 'previousYear',
+        },
+        {
+          id: 'allTime',
+          labelKey: 'dashboard.periodSelector.allTime',
+          type: 'allTime',
+          comparisonType: null,
+        },
+      ],
+      DEFAULT_PERIOD: 'last30Days',
     },
   },
 
@@ -147,6 +242,7 @@ export const CONFIG = {
     ACTIVE_WORKOUT_BACKUP: 'obsessed_active_workout',
     THEME: 'obsessed_theme',
     USER_PREFERENCES: 'obsessed_prefs',
+    ANALYTICS_PERIOD: 'obsessed_analytics_period',
   },
 
   // Date/Time formats

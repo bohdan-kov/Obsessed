@@ -129,6 +129,14 @@ export const useUserStore = defineStore('user', () => {
     )
   })
 
+  /**
+   * User's current body weight in kg (storage unit)
+   * Returns null if never set, allowing UI to show placeholder
+   */
+  const currentWeight = computed(() => {
+    return profile.value?.personalInfo?.weight ?? null
+  })
+
   // Actions
   /**
    * Fetch user profile from Firestore
@@ -245,11 +253,24 @@ export const useUserStore = defineStore('user', () => {
     try {
       await updateDocument(COLLECTIONS.USERS, authStore.uid, updates)
 
-      // Update local state
+      // Update local state with deep merge for nested objects
       if (profile.value) {
-        profile.value = {
-          ...profile.value,
-          ...updates,
+        // Deep merge personalInfo if it exists in updates
+        if (updates.personalInfo) {
+          profile.value = {
+            ...profile.value,
+            ...updates,
+            personalInfo: {
+              ...profile.value.personalInfo,
+              ...updates.personalInfo,
+            },
+          }
+        } else {
+          // Shallow merge for other updates
+          profile.value = {
+            ...profile.value,
+            ...updates,
+          }
         }
       }
     } catch (err) {
@@ -406,6 +427,43 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
+   * Update user's body weight
+   * @param {number} weightInKg - Weight in kg (storage unit)
+   * @returns {Promise<void>}
+   * @throws {Error} If validation fails or user not authenticated
+   */
+  async function updateWeight(weightInKg) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated')
+    }
+
+    if (typeof weightInKg !== 'number' || isNaN(weightInKg)) {
+      throw new Error('Weight must be a valid number')
+    }
+
+    if (
+      weightInKg < CONFIG.personalInfo.MIN_WEIGHT ||
+      weightInKg > CONFIG.personalInfo.MAX_WEIGHT
+    ) {
+      throw new Error(
+        `Weight must be between ${CONFIG.personalInfo.MIN_WEIGHT} and ${CONFIG.personalInfo.MAX_WEIGHT} kg`
+      )
+    }
+
+    // Round to 1 decimal place
+    const roundedWeight = Math.round(weightInKg * 10) / 10
+
+    const currentPersonalInfo = profile.value?.personalInfo || {}
+
+    await updateProfile({
+      personalInfo: {
+        ...currentPersonalInfo,
+        weight: roundedWeight,
+      },
+    })
+  }
+
+  /**
    * Subscribe to profile real-time updates
    * @returns {Function|null} Unsubscribe function
    */
@@ -524,22 +582,27 @@ export const useUserStore = defineStore('user', () => {
     watch(
       () => authStore.userProfile,
       (newProfile) => {
-        if (newProfile?.settings) {
-          const oldTheme = settings.value.theme
+        // Sync full profile from authStore (single source of truth)
+        if (newProfile) {
+          profile.value = newProfile
 
-          // Update settings from Firestore
-          settings.value = {
-            ...settings.value,
-            ...newProfile.settings,
-          }
+          // Update settings if available
+          if (newProfile.settings) {
+            const oldTheme = settings.value.theme
 
-          // Initialize theme ONCE after Firestore data loads (fixes race condition)
-          if (!themeInitialized) {
-            initTheme()
-            themeInitialized = true
-          } else if (newProfile.settings.theme && newProfile.settings.theme !== oldTheme) {
-            // On subsequent updates, only apply if theme actually changed
-            applyTheme(newProfile.settings.theme)
+            settings.value = {
+              ...settings.value,
+              ...newProfile.settings,
+            }
+
+            // Initialize theme ONCE after Firestore data loads (fixes race condition)
+            if (!themeInitialized) {
+              initTheme()
+              themeInitialized = true
+            } else if (newProfile.settings.theme && newProfile.settings.theme !== oldTheme) {
+              // On subsequent updates, only apply if theme actually changed
+              applyTheme(newProfile.settings.theme)
+            }
           }
         }
       },
@@ -571,6 +634,7 @@ export const useUserStore = defineStore('user', () => {
     totalVolume,
     currentStreak,
     isProfileComplete,
+    currentWeight,
 
     // Actions
     fetchProfile,
@@ -581,6 +645,7 @@ export const useUserStore = defineStore('user', () => {
     addRecentlyUsedExercise,
     updateStats,
     incrementWorkoutStats,
+    updateWeight,
     subscribeToProfile,
     applyTheme,
     initTheme,

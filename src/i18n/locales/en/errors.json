@@ -3,6 +3,7 @@
   "noWorkout": "No active workout",
   "saveFailed": "Failed to save",
   "loadFailed": "Failed to load data",
+  "updateFailed": "Failed to update",
   "networkError": "Network connection problem",
   "authRequired": "Authentication required",
   "invalidInput": "Invalid data",

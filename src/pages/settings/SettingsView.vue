@@ -27,6 +27,7 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar'
 import { Globe, Scale, User, LogOut } from 'lucide-vue-next'
+import PersonalInfoCard from './components/PersonalInfoCard.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -185,6 +186,9 @@ const userInitials = computed(() => {
         </div>
       </CardContent>
     </Card>
+
+    <!-- Personal Info Section -->
+    <PersonalInfoCard />
 
     <!-- Account Section -->
     <Card>

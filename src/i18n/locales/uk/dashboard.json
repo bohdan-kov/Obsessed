@@ -4,6 +4,19 @@
   "errors": {
     "loadFailed": "Не вдалося завантажити дані дашборду"
   },
+  "periodSelector": {
+    "label": "Часовий період",
+    "ariaLabel": "Оберіть часовий період аналітики",
+    "placeholder": "Оберіть період...",
+    "last7Days": "Останні 7 днів",
+    "last14Days": "Останні 14 днів",
+    "last30Days": "Останні 30 днів",
+    "thisMonth": "Цього місяця",
+    "lastMonth": "Минулого місяця",
+    "last90Days": "Останні 90 днів",
+    "thisYear": "Цього року",
+    "allTime": "За весь час"
+  },
   "stats": {
     "totalWorkouts": "Всього тренувань",
     "volumeLoad": "Обсяг навантаження",
@@ -14,7 +27,43 @@
     "thisPeriod": "За цей період",
     "keepItUp": "Так тримати!",
     "vsLastWeek": "vs минулий тиждень",
-    "days": "днів"
+    "days": "днів",
+    "periods": {
+      "thisMonth": "Цього місяця",
+      "thisWeek": "Цього тижня",
+      "last7Days": "Останні 7 днів",
+      "last14Days": "Останні 14 днів",
+      "last30Days": "Останні 30 днів",
+      "lastMonth": "Минулого місяця",
+      "monthBeforeLast": "Позаминулого місяця",
+      "last90Days": "Останні 90 днів",
+      "thisYear": "Цього року",
+      "lastYear": "Минулого року",
+      "allTime": "За весь час",
+      "sinceLast": "З останнього тренування",
+      "consecutive": "Поспіль днів"
+    },
+    "trends": {
+      "up": "+{value}%",
+      "down": "{value}%",
+      "upCount": "+{value}",
+      "downCount": "{value}",
+      "vsLastMonth": "vs минулий місяць",
+      "vsLastWeek": "vs минулий тиждень"
+    },
+    "insights": {
+      "strongConsistency": "Стабільна робота",
+      "onTrack": "За планом",
+      "needsAttention": "Потребує уваги",
+      "keepItUp": "Так тримати!",
+      "greatProgress": "Чудовий прогрес",
+      "timeToTrain": "Час тренуватися",
+      "streakBuilding": "Серія зростає",
+      "newPRs": "Нові рекорди!",
+      "maintainingStrength": "Підтримка сили",
+      "volumeGrowing": "Обсяг зростає",
+      "volumeStable": "Обсяг стабільний"
+    }
   },
   "tabs": {
     "volume": "Обсяг",
@@ -27,10 +76,14 @@
     "volumeDescription": "Загальний обсяг (кг) за останні 14 днів",
     "muscleTitle": "Розподіл по м'язах",
     "muscleDescription": "Кількість підходів по групах м'язів",
+    "muscleDescriptionPeriod": "Кількість підходів по групах м'язів за {period}",
     "frequencyTitle": "Частота тренувань",
     "frequencyDescription": "Коли ви зазвичай тренуєтесь (день тижня та час)",
-    "comparisonTitle": "Тижневий прогрес",
-    "comparisonDescription": "Порівняння поточного та минулого тижня",
+    "comparisonTitle": "Порівняння періодів",
+    "comparisonDescription": "Порівняння поточного та попереднього періоду",
+    "comparisonPrevious": "Попередні {period}",
+    "previousPeriod": "Попередній період",
+    "vsPreviousPeriod": "відносно попереднього",
     "noData": "Немає даних для відображення",
     "noDataSubtitle": "Почніть тренуватися для перегляду статистики",
     "noMuscleData": "Немає даних",
@@ -68,6 +121,7 @@
   "volumeChart": {
     "title": "Обсяг навантаження",
     "subtitle": "За останні {days} днів",
+    "subtitlePeriod": "Обсяг тренувань за {period}",
     "days": "{count} днів",
     "volume": "Обсяг (кг)",
     "workouts": "Тренувань",
@@ -88,7 +142,7 @@
     "description": "Розподіл обсягу тренувань за тиждень",
     "noMuscleData": "Немає даних про м'язові групи",
     "startTraining": "Почніть тренування для відстеження прогресу",
-    "avgBpm": "Середній пульс",
+    "avgRpe": "Середній RPE",
     "weight": "Вага"
   }
 }

@@ -20,7 +20,7 @@ import {
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
-const { muscleDistribution } = storeToRefs(analyticsStore)
+const { muscleDistribution, periodLabel, period } = storeToRefs(analyticsStore)
 
 // Top 8 muscles for donut chart with translated names
 // CRITICAL: Each item MUST have `fill: "var(--color-{muscle})"` property
@@ -61,25 +61,19 @@ const totalSets = computed(() => {
 })
 
 // Tooltip formatter function
-// CRITICAL: Tooltip is rendered in a portal outside .dark scope, so CSS variables don't work
-// Use hardcoded OKLCH values for dark mode (matching design tokens in globals.css)
 // CRITICAL: Unovis wraps chartData in d.data, not directly in d
+// Uses Tailwind classes that automatically adapt to light/dark theme
 const getTooltipContent = (d) => {
   // Extract actual data from Unovis wrapper
   const data = d.data
   const percentage = ((data.sets / totalSets.value) * 100).toFixed(1)
 
-  // Dark mode colors (hardcoded from globals.css design tokens)
-  // Using OKLCH color space as defined in theme
-  const backgroundColor = 'oklch(0.35 0 0)' // --popover in dark mode (slightly lighter than background for better contrast)
-  const foreground = 'oklch(0.985 0 0)' // --foreground in dark mode
-  const border = 'oklch(0.269 0 0)' // --border in dark mode
-  const mutedForeground = 'oklch(0.708 0 0)' // --muted-foreground in dark mode
-
+  // Use Tailwind classes that work with theme switching
+  // The bg-popover, text-popover-foreground, etc. classes will adapt based on theme
   return `
-    <div style="background: ${backgroundColor}; color: ${foreground}; border: 1px solid ${border}; border-radius: 0.5rem; padding: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); min-width: 180px;">
-      <div style="font-weight: 600; margin-bottom: 0.25rem; color: ${foreground};">${data.muscleName}</div>
-      <div style="font-size: 0.875rem; color: ${mutedForeground};">${data.sets} ${t('dashboard.charts.setsShort')} (${percentage}%)</div>
+    <div class="bg-popover text-popover-foreground border border-border rounded-lg p-3 shadow-lg min-w-[180px]" data-tooltip-content="true">
+      <div class="font-semibold mb-1">${data.muscleName}</div>
+      <div class="text-sm text-muted-foreground">${data.sets} ${t('dashboard.charts.setsShort')} (${percentage}%)</div>
     </div>
   `
 }
@@ -90,7 +84,7 @@ const getTooltipContent = (d) => {
     <CardHeader class="pb-4">
       <CardTitle>{{ t('dashboard.charts.muscleTitle') }}</CardTitle>
       <CardDescription>
-        {{ t('dashboard.charts.muscleDescription') }}
+        {{ t('dashboard.charts.muscleDescriptionPeriod', { period: t(periodLabel) }) }}
       </CardDescription>
     </CardHeader>
 
@@ -109,6 +103,7 @@ const getTooltipContent = (d) => {
             }"
           >
             <VisSingleContainer
+              :key="`muscle-chart-${period}`"
               :data="chartData"
               :margin="{ top: 30, bottom: 30 }"
             >

@@ -2,6 +2,28 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useWorkoutStore } from './workoutStore'
 import { useExerciseStore } from './exerciseStore'
+import { useUserStore } from './userStore'
+import { CONFIG } from '@/constants/config'
+import {
+  getThisMonthRange,
+  getLastMonthRange,
+  isWithinRange,
+  getRollingRange,
+  getComparisonRollingRange,
+  getThisYearRange,
+  getLastYearRange,
+  getMonthBeforeLastRange,
+  getAllTimeRange,
+  normalizeDate,
+} from '@/utils/dateUtils'
+import {
+  createTrendObject,
+  generateRestDaysInsight,
+  generateStreakInsight,
+  generateWorkoutInsight,
+  generateVolumeInsight,
+  generatePRInsight,
+} from '@/utils/insightUtils'
 
 /**
  * @typedef {Object} VolumeDataPoint
@@ -21,9 +43,11 @@ import { useExerciseStore } from './exerciseStore'
 export const useAnalyticsStore = defineStore('analytics', () => {
   const workoutStore = useWorkoutStore()
   const exerciseStore = useExerciseStore()
+  const userStore = useUserStore()
 
   // State
-  const period = ref('2weeks') // 'week', '2weeks', 'month', 'quarter'
+  const period = ref(CONFIG.analytics.periods.DEFAULT_PERIOD)
+  const periodInitialized = ref(false)
 
   // Computed analytics from workout store
   /**
@@ -148,28 +172,38 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
-   * Volume by day for bar chart
+   * Convert a Date to a local date string (YYYY-MM-DD) without timezone conversion
+   * @param {Date} date
+   * @returns {string}
+   */
+  function toLocalDateString(date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  /**
+   * Volume by day for bar chart (period-aware)
+   * Uses currentRange to filter workouts based on selected period
    * @returns {VolumeDataPoint[]}
    */
   const volumeByDay = computed(() => {
     const dailyData = {}
-    const periodDays = getPeriodDays(period.value)
-    const now = new Date()
+    const range = currentRange.value
 
-    // Initialize all days with 0
-    for (let i = 0; i < periodDays; i++) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
+    // Initialize all days in the current range with 0
+    const currentDate = new Date(range.start)
+    while (currentDate <= range.end) {
+      const dateStr = toLocalDateString(currentDate)
       dailyData[dateStr] = { volume: 0, workouts: 0, exercises: 0 }
+      currentDate.setDate(currentDate.getDate() + 1)
     }
 
-    // Fill in actual data
-    completedWorkouts.value.forEach((workout) => {
-      const date = workout.completedAt?.toDate
-        ? workout.completedAt.toDate()
-        : new Date(workout.completedAt)
-      const dateStr = date.toISOString().split('T')[0]
+    // Fill in actual data from period workouts
+    periodWorkouts.value.forEach((workout) => {
+      const date = normalizeDate(workout.completedAt)
+      const dateStr = toLocalDateString(date)
 
       const volume = calculateWorkoutVolume(workout)
       const exerciseCount = workout.exercises?.length || 0
@@ -193,15 +227,16 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
-   * Muscle group distribution for donut chart
+   * Muscle group distribution for donut chart (period-aware)
    * Resolves muscle groups from exercise library
+   * Uses periodWorkouts instead of all completedWorkouts
    * @returns {MuscleDistribution[]}
    */
   const muscleDistribution = computed(() => {
     const muscleData = {}
     let totalSetCount = 0
 
-    completedWorkouts.value.forEach((workout) => {
+    periodWorkouts.value.forEach((workout) => {
         workout.exercises.forEach((exercise) => {
           // Resolve full exercise data from exercise library
           const exerciseData = exerciseStore.getExerciseById(exercise.exerciseId)
@@ -228,7 +263,8 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
-   * Frequency heatmap data
+   * Frequency heatmap data (period-aware)
+   * Uses periodWorkouts instead of all completedWorkouts
    * @returns {Object} Heatmap data by day of week and hour
    */
   const frequencyHeatmap = computed(() => {
@@ -249,7 +285,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       heatmap[day] = Array(24).fill(0)
     })
 
-    completedWorkouts.value.forEach((workout) => {
+    periodWorkouts.value.forEach((workout) => {
         const date = workout.startedAt?.toDate
           ? workout.startedAt.toDate()
           : new Date(workout.startedAt)
@@ -266,7 +302,58 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
-   * Compare current week with previous week
+   * Compare current period with previous period (period-aware)
+   * Replaces weekComparison with dynamic period-based comparison
+   * Uses periodWorkouts and comparisonWorkouts
+   * @returns {Object} Comparison metrics
+   */
+  const periodComparison = computed(() => {
+    const currentPeriodWorkouts = periodWorkouts.value
+    const previousPeriodWorkouts = comparisonWorkouts.value
+
+    const currentVolume = currentPeriodWorkouts.reduce(
+      (total, w) => total + calculateWorkoutVolume(w),
+      0
+    )
+    const previousVolume = previousPeriodWorkouts.reduce(
+      (total, w) => total + calculateWorkoutVolume(w),
+      0
+    )
+
+    const volumeChange =
+      previousVolume > 0
+        ? ((currentVolume - previousVolume) / previousVolume) * 100
+        : 0
+
+    return {
+      currentPeriod: {
+        workouts: currentPeriodWorkouts.length,
+        volume: currentVolume,
+        avgVolume:
+          currentPeriodWorkouts.length > 0
+            ? Math.round(currentVolume / currentPeriodWorkouts.length)
+            : 0,
+      },
+      previousPeriod: {
+        workouts: previousPeriodWorkouts.length,
+        volume: previousVolume,
+        avgVolume:
+          previousPeriodWorkouts.length > 0
+            ? Math.round(previousVolume / previousPeriodWorkouts.length)
+            : 0,
+      },
+      change: {
+        workouts: currentPeriodWorkouts.length - previousPeriodWorkouts.length,
+        volume: Math.round(currentVolume - previousVolume),
+        volumePercentage: Math.round(volumeChange),
+      },
+    }
+  })
+
+  /**
+   * Compare current week with previous week (legacy - kept for backwards compatibility)
+   * Use periodComparison instead for period-aware comparison
+   * @deprecated Use periodComparison instead
    * @returns {Object} Comparison metrics
    */
   const weekComparison = computed(() => {
@@ -384,44 +471,34 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
-   * Muscle progress by week
+   * Muscle progress by period (period-aware)
    * Resolves muscle groups from exercise library
+   * Uses periodWorkouts instead of filtering by week
    * @returns {Array<{muscle: string, percent: number, color: string}>}
    */
   const muscleProgress = computed(() => {
     const muscleData = {}
     let totalVolume = 0
 
-    // Calculate volume per muscle group in current week
-    const now = new Date()
-    const weekStart = new Date(now)
-    weekStart.setDate(now.getDate() - 7)
+    // Calculate volume per muscle group in selected period
+    periodWorkouts.value.forEach((workout) => {
+      workout.exercises.forEach((exercise) => {
+        // Resolve full exercise data from exercise library
+        const exerciseData = exerciseStore.getExerciseById(exercise.exerciseId)
+        const muscle = exerciseData?.muscleGroup || 'unknown'
+        const exerciseVolume = exercise.sets.reduce(
+          (sum, set) => sum + set.weight * set.reps,
+          0
+        )
 
-    completedWorkouts.value
-      .filter((w) => {
-        const date = w.completedAt?.toDate
-          ? w.completedAt.toDate()
-          : new Date(w.completedAt)
-        return date >= weekStart && date <= now
+        if (!muscleData[muscle]) {
+          muscleData[muscle] = 0
+        }
+
+        muscleData[muscle] += exerciseVolume
+        totalVolume += exerciseVolume
       })
-      .forEach((workout) => {
-        workout.exercises.forEach((exercise) => {
-          // Resolve full exercise data from exercise library
-          const exerciseData = exerciseStore.getExerciseById(exercise.exerciseId)
-          const muscle = exerciseData?.muscleGroup || 'unknown'
-          const exerciseVolume = exercise.sets.reduce(
-            (sum, set) => sum + set.weight * set.reps,
-            0
-          )
-
-          if (!muscleData[muscle]) {
-            muscleData[muscle] = 0
-          }
-
-          muscleData[muscle] += exerciseVolume
-          totalVolume += exerciseVolume
-        })
-      })
+    })
 
     // Map to colors (using muscle group IDs from exercise library)
     const muscleColors = {
@@ -447,55 +524,467 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
+   * Average RPE (Rate of Perceived Exertion) for last 7 days
+   * Calculates average from all sets with valid RPE values (1-10)
+   * @returns {number} Average RPE (0 if no data, formatted to 1 decimal place)
+   */
+  const avgRpe = computed(() => {
+    const now = new Date()
+    const weekStart = new Date(now)
+    weekStart.setDate(now.getDate() - 7)
+
+    // Filter workouts from last 7 days
+    const recentWorkouts = completedWorkouts.value.filter((w) => {
+      const date = w.completedAt?.toDate
+        ? w.completedAt.toDate()
+        : new Date(w.completedAt)
+      return date >= weekStart && date <= now
+    })
+
+    // Extract all valid RPE values from sets
+    const rpeSets = []
+    recentWorkouts.forEach((workout) => {
+      workout.exercises?.forEach((exercise) => {
+        exercise.sets?.forEach((set) => {
+          if (
+            set.rpe >= CONFIG.workout.RPE_MIN &&
+            set.rpe <= CONFIG.workout.RPE_MAX
+          ) {
+            rpeSets.push(set.rpe)
+          }
+        })
+      })
+    })
+
+    if (rpeSets.length === 0) return 0
+
+    const sum = rpeSets.reduce((total, rpe) => total + rpe, 0)
+    return Number((sum / rpeSets.length).toFixed(1))
+  })
+
+  /**
    * Quick stats
    * @returns {Object} Quick stats for muscle progress card
    */
   const quickStats = computed(() => {
-    // Calculate average BPM from recent workouts (placeholder)
-    // In real implementation, this would come from workout data
-    const avgBpm = 0 // TODO: Implement BPM tracking
-
-    // Get latest weight from user profile or workouts
-    // In real implementation, this would come from userStore
-    const weight = 0 // TODO: Implement weight tracking
-
     return {
-      avgBpm,
-      weight,
+      avgRpe: avgRpe.value,
+      weight: userStore.currentWeight, // Reactive reference to userStore
     }
   })
 
-  // Helper functions
+  // ========================================
+  // Period-aware computeds (new architecture)
+  // ========================================
+
   /**
-   * Get number of days for a period
-   * @param {'week'|'2weeks'|'month'|'quarter'} periodType
-   * @returns {number}
+   * Period configuration
    */
-  function getPeriodDays(periodType) {
-    switch (periodType) {
-      case 'week':
-        return 7
-      case '2weeks':
-        return 14
-      case 'month':
-        return 30
-      case 'quarter':
-        return 90
+  const periodConfig = computed(() => {
+    const options = CONFIG.analytics.periods.PERIOD_OPTIONS
+    return (
+      options.find((opt) => opt.id === period.value) ||
+      options.find((opt) => opt.isDefault)
+    )
+  })
+
+  /**
+   * Current period range
+   */
+  const currentRange = computed(() => {
+    const config = periodConfig.value
+
+    switch (config.type) {
+      case 'rolling':
+        return getRollingRange(config.days)
+      case 'calendarMonth':
+        return getThisMonthRange()
+      case 'previousCalendarMonth':
+        return getLastMonthRange()
+      case 'calendarYear':
+        return getThisYearRange()
+      case 'allTime':
+        return getAllTimeRange()
       default:
-        return 14
+        return getThisMonthRange()
+    }
+  })
+
+  /**
+   * Comparison period range
+   */
+  const comparisonRange = computed(() => {
+    const config = periodConfig.value
+    if (!config.comparisonType) return null
+
+    switch (config.comparisonType) {
+      case 'rolling':
+        return getComparisonRollingRange(config.days)
+      case 'previousMonth':
+        return getLastMonthRange()
+      case 'monthBeforeLast':
+        return getMonthBeforeLastRange()
+      case 'previousYear':
+        return getLastYearRange()
+      default:
+        return null
+    }
+  })
+
+  /**
+   * Check if trend should be shown
+   */
+  const hasTrend = computed(() => comparisonRange.value !== null)
+
+  /**
+   * Period workouts (replaces workoutsThisMonth)
+   */
+  const periodWorkouts = computed(() => {
+    const range = currentRange.value
+    return completedWorkouts.value.filter((w) => {
+      const date = normalizeDate(w.completedAt)
+      return isWithinRange(date, range.start, range.end)
+    })
+  })
+
+  /**
+   * Comparison workouts (replaces workoutsLastMonth)
+   */
+  const comparisonWorkouts = computed(() => {
+    const range = comparisonRange.value
+    if (!range) return []
+
+    return completedWorkouts.value.filter((w) => {
+      const date = normalizeDate(w.completedAt)
+      return isWithinRange(date, range.start, range.end)
+    })
+  })
+
+  /**
+   * Period volume (replaces volumeThisMonth)
+   */
+  const periodVolume = computed(() => {
+    return periodWorkouts.value.reduce((sum, workout) => {
+      return sum + calculateWorkoutVolume(workout)
+    }, 0)
+  })
+
+  /**
+   * Comparison volume (replaces volumeLastMonth)
+   */
+  const comparisonVolume = computed(() => {
+    return comparisonWorkouts.value.reduce((sum, workout) => {
+      return sum + calculateWorkoutVolume(workout)
+    }, 0)
+  })
+
+  /**
+   * Dynamic period label for stat cards
+   */
+  const periodLabel = computed(() => {
+    return `dashboard.stats.periods.${periodConfig.value.id}`
+  })
+
+  // ========================================
+  // Legacy month-based computeds (kept for backwards compatibility)
+  // ========================================
+
+  /**
+   * Workouts this month (current calendar month)
+   */
+  const workoutsThisMonth = computed(() => {
+    const { start, end } = getThisMonthRange()
+    return completedWorkouts.value.filter((w) => {
+      const date = w.completedAt?.toDate
+        ? w.completedAt.toDate()
+        : new Date(w.completedAt)
+      return isWithinRange(date, start, end)
+    }).length
+  })
+
+  /**
+   * Workouts last month (previous calendar month)
+   */
+  const workoutsLastMonth = computed(() => {
+    const { start, end } = getLastMonthRange()
+    return completedWorkouts.value.filter((w) => {
+      const date = w.completedAt?.toDate
+        ? w.completedAt.toDate()
+        : new Date(w.completedAt)
+      return isWithinRange(date, start, end)
+    }).length
+  })
+
+  /**
+   * Workout count trend (period-aware)
+   */
+  const workoutsTrend = computed(() => {
+    if (!hasTrend.value) return null
+
+    const current = periodWorkouts.value.length
+    const previous = comparisonWorkouts.value.length
+
+    return createTrendObject(current, previous, 'percentage')
+  })
+
+  /**
+   * Volume this month (current calendar month)
+   */
+  const volumeThisMonth = computed(() => {
+    const { start, end } = getThisMonthRange()
+    return completedWorkouts.value
+      .filter((w) => {
+        const date = w.completedAt?.toDate
+          ? w.completedAt.toDate()
+          : new Date(w.completedAt)
+        return isWithinRange(date, start, end)
+      })
+      .reduce((total, workout) => total + calculateWorkoutVolume(workout), 0)
+  })
+
+  /**
+   * Volume last month (previous calendar month)
+   */
+  const volumeLastMonth = computed(() => {
+    const { start, end } = getLastMonthRange()
+    return completedWorkouts.value
+      .filter((w) => {
+        const date = w.completedAt?.toDate
+          ? w.completedAt.toDate()
+          : new Date(w.completedAt)
+        return isWithinRange(date, start, end)
+      })
+      .reduce((total, workout) => total + calculateWorkoutVolume(workout), 0)
+  })
+
+  /**
+   * Volume trend (period-aware)
+   */
+  const volumeTrend = computed(() => {
+    if (!hasTrend.value) return null
+
+    return createTrendObject(
+      periodVolume.value,
+      comparisonVolume.value,
+      'percentage'
+    )
+  })
+
+  /**
+   * Rest days insight
+   */
+  const restDaysInsight = computed(() => {
+    return generateRestDaysInsight(
+      restDays.value,
+      CONFIG.analytics.insights.restDays
+    )
+  })
+
+  /**
+   * Streak insight
+   */
+  const streakInsight = computed(() => {
+    return generateStreakInsight(
+      currentStreak.value,
+      CONFIG.analytics.insights.streak
+    )
+  })
+
+  /**
+   * Workouts insight (monthly target)
+   */
+  const workoutsInsight = computed(() => {
+    return generateWorkoutInsight(
+      workoutsThisMonth.value,
+      CONFIG.analytics.insights.workouts.MONTHLY_TARGET,
+      workoutsTrend.value
+    )
+  })
+
+  /**
+   * Volume insight
+   */
+  const volumeInsight = computed(() => {
+    return generateVolumeInsight(
+      volumeTrend.value,
+      CONFIG.analytics.insights.volume
+    )
+  })
+
+  /**
+   * Personal Records (PRs) tracking
+   * Tracks weight PRs and rep PRs for each exercise
+   */
+  const exercisePRs = computed(() => {
+    const prs = new Map()
+    const { WEIGHT_TIER_SIZE_KG } = CONFIG.analytics.insights.pr
+
+    // Sort workouts chronologically (oldest first) to track PRs properly
+    const sortedWorkouts = [...completedWorkouts.value].sort((a, b) => {
+      const dateA = a.completedAt?.toDate
+        ? a.completedAt.toDate()
+        : new Date(a.completedAt)
+      const dateB = b.completedAt?.toDate
+        ? b.completedAt.toDate()
+        : new Date(b.completedAt)
+      return dateA - dateB
+    })
+
+    sortedWorkouts.forEach((workout) => {
+      workout.exercises?.forEach((exercise) => {
+        const exerciseId = exercise.exerciseId
+
+        // Initialize exercise PR tracking if not exists
+        if (!prs.has(exerciseId)) {
+          prs.set(exerciseId, {
+            exerciseId,
+            exerciseName: exercise.exerciseName,
+            weightPR: { weight: 0, reps: 0, date: null },
+            repPRs: new Map(), // Map of weight tier -> { reps, date }
+            prCount: 0,
+          })
+        }
+
+        const exercisePR = prs.get(exerciseId)
+
+        exercise.sets?.forEach((set) => {
+          const weight = set.weight || 0
+          const reps = set.reps || 0
+
+          // Weight PR: Highest weight lifted for any reps
+          if (weight > exercisePR.weightPR.weight) {
+            exercisePR.weightPR = {
+              weight,
+              reps,
+              date: workout.completedAt,
+            }
+            exercisePR.prCount++
+          }
+
+          // Rep PR: Highest reps at a given weight tier
+          const weightTier =
+            Math.round(weight / WEIGHT_TIER_SIZE_KG) * WEIGHT_TIER_SIZE_KG
+          const currentRepPR = exercisePR.repPRs.get(weightTier)
+
+          if (!currentRepPR || reps > currentRepPR.reps) {
+            exercisePR.repPRs.set(weightTier, {
+              reps,
+              date: workout.completedAt,
+            })
+            exercisePR.prCount++
+          }
+        })
+      })
+    })
+
+    return prs
+  })
+
+  /**
+   * Total PR count (all-time)
+   */
+  const prCount = computed(() => {
+    let total = 0
+    exercisePRs.value.forEach((exercisePR) => {
+      total += exercisePR.prCount
+    })
+    return total
+  })
+
+  /**
+   * PR count this month
+   */
+  const prCountThisMonth = computed(() => {
+    const { start, end } = getThisMonthRange()
+    let count = 0
+
+    exercisePRs.value.forEach((exercisePR) => {
+      // Check weight PR date
+      if (exercisePR.weightPR.date) {
+        const prDate = exercisePR.weightPR.date.toDate
+          ? exercisePR.weightPR.date.toDate()
+          : new Date(exercisePR.weightPR.date)
+        if (isWithinRange(prDate, start, end)) {
+          count++
+        }
+      }
+
+      // Check rep PR dates
+      exercisePR.repPRs.forEach((repPR) => {
+        if (repPR.date) {
+          const prDate = repPR.date.toDate
+            ? repPR.date.toDate()
+            : new Date(repPR.date)
+          if (isWithinRange(prDate, start, end)) {
+            count++
+          }
+        }
+      })
+    })
+
+    return count
+  })
+
+  /**
+   * PR insight
+   */
+  const prInsight = computed(() => {
+    return generatePRInsight(prCountThisMonth.value, prCount.value)
+  })
+
+  // Helper functions
+
+  /**
+   * Set the analytics period
+   * @param {string} newPeriod - Period ID (e.g., 'last30Days')
+   */
+  function setPeriod(newPeriod) {
+    const validPeriod = CONFIG.analytics.periods.PERIOD_OPTIONS.find(
+      (p) => p.id === newPeriod
+    )
+    if (!validPeriod) {
+      console.warn(`Invalid period: ${newPeriod}, using default`)
+      newPeriod = CONFIG.analytics.periods.DEFAULT_PERIOD
+    }
+
+    period.value = newPeriod
+
+    // Persist to localStorage
+    try {
+      localStorage.setItem(CONFIG.storage.ANALYTICS_PERIOD, newPeriod)
+    } catch (e) {
+      if (import.meta.env.DEV) {
+        console.warn('Failed to persist period to localStorage:', e)
+      }
     }
   }
 
   /**
-   * Set analytics period
-   * @param {'week'|'2weeks'|'month'|'quarter'} newPeriod
+   * Initialize period from localStorage
    */
-  function setPeriod(newPeriod) {
-    period.value = newPeriod
-    // Trigger workout refetch with new period
-    workoutStore.fetchWorkouts(
-      newPeriod === '2weeks' ? 'month' : newPeriod
-    )
+  function initializePeriod() {
+    if (periodInitialized.value) return
+
+    try {
+      const stored = localStorage.getItem(CONFIG.storage.ANALYTICS_PERIOD)
+
+      if (stored) {
+        const isValid = CONFIG.analytics.periods.PERIOD_OPTIONS.some(
+          (p) => p.id === stored
+        )
+        if (isValid) {
+          period.value = stored
+        } else {
+          localStorage.removeItem(CONFIG.storage.ANALYTICS_PERIOD)
+        }
+      }
+    } catch (e) {
+      if (import.meta.env.DEV) {
+        console.warn('Failed to read period from localStorage:', e)
+      }
+    }
+
+    periodInitialized.value = true
   }
 
   return {
@@ -516,11 +1005,45 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     volumeByDay,
     muscleDistribution,
     frequencyHeatmap,
-    weekComparison,
+    weekComparison, // Legacy - kept for backwards compatibility
+    periodComparison, // Period-aware comparison
     muscleProgress,
+    avgRpe,
     quickStats,
+
+    // Period-aware data (new architecture)
+    periodConfig,
+    currentRange,
+    comparisonRange,
+    hasTrend,
+    periodWorkouts,
+    comparisonWorkouts,
+    periodVolume,
+    comparisonVolume,
+    periodLabel,
+
+    // Trend data (legacy - now uses period-aware data)
+    workoutsThisMonth,
+    workoutsLastMonth,
+    workoutsTrend,
+    volumeThisMonth,
+    volumeLastMonth,
+    volumeTrend,
+
+    // Insights
+    restDaysInsight,
+    streakInsight,
+    workoutsInsight,
+    volumeInsight,
+    prInsight,
+
+    // PR tracking
+    exercisePRs,
+    prCount,
+    prCountThisMonth,
 
     // Actions
     setPeriod,
+    initializePeriod,
   }
 })

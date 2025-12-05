@@ -11,7 +11,7 @@ import StatCard from './components/StatCard.vue'
 import ChartSection from './components/ChartSection.vue'
 import ExerciseTable from './components/ExerciseTable.vue'
 import MuscleProgress from './components/MuscleProgress.vue'
-import { Activity, TrendingUp, Calendar, Award } from 'lucide-vue-next'
+import GlobalPeriodSelector from './components/GlobalPeriodSelector.vue'
 
 const { t } = useI18n()
 const { displayName } = useAuth()
@@ -25,46 +25,52 @@ const {
   volumeLoad,
   restDays,
   currentStreak,
-  weekComparison,
+  periodWorkouts,
+  periodVolume,
+  periodLabel,
+  hasTrend,
+  workoutsTrend,
+  volumeTrend,
+  restDaysInsight,
+  streakInsight,
+  workoutsInsight,
+  volumeInsight,
 } = storeToRefs(analyticsStore)
 
 // Stat cards configuration
 const stats = computed(() => {
-  const workoutChange = weekComparison.value.change.workouts
-  const volumeChange = weekComparison.value.change.volumePercentage
-
   return [
     {
       title: t('dashboard.stats.totalWorkouts'),
-      value: totalWorkouts.value,
-      description: t('dashboard.stats.allTime'),
-      icon: Activity,
-      change: workoutChange > 0 ? `+${workoutChange}` : workoutChange < 0 ? `${workoutChange}` : null,
-      trend: workoutChange > 0 ? 'up' : workoutChange < 0 ? 'down' : null,
-      trendLabel: t('dashboard.stats.vsLastWeek'),
+      value: periodWorkouts.value.length,
+      trend: hasTrend.value ? workoutsTrend.value : null,
+      periodLabel: t(periodLabel.value),
+      insight: workoutsInsight.value,
+      variant: workoutsInsight.value.status === 'warning' ? 'warning' : 'default',
     },
     {
       title: t('dashboard.stats.volumeLoad'),
-      value: formatWeight(volumeLoad.value),
-      description: t('dashboard.stats.totalLifted'),
-      icon: TrendingUp,
-      change: volumeChange > 0 ? `+${volumeChange}%` : volumeChange < 0 ? `${volumeChange}%` : null,
-      trend: volumeChange > 0 ? 'up' : volumeChange < 0 ? 'down' : null,
-      trendLabel: t('dashboard.stats.vsLastWeek'),
+      value: formatWeight(periodVolume.value),
+      trend: hasTrend.value ? volumeTrend.value : null,
+      periodLabel: t(periodLabel.value),
+      insight: volumeInsight.value,
+      variant: volumeInsight.value.status === 'warning' ? 'warning' : 'default',
     },
     {
       title: t('dashboard.stats.restDays'),
       value: restDays.value,
-      description: t('dashboard.stats.thisPeriod'),
-      icon: Calendar,
       trend: null,
+      periodLabel: t('dashboard.stats.periods.sinceLast'),
+      insight: restDaysInsight.value,
+      variant: restDaysInsight.value.status === 'warning' ? 'warning' : 'default',
     },
     {
       title: t('dashboard.stats.currentStreak'),
-      value: `${currentStreak.value} ${t('dashboard.stats.days')}`,
-      description: t('dashboard.stats.keepItUp'),
-      icon: Award,
+      value: currentStreak.value,
       trend: null,
+      periodLabel: t('dashboard.stats.periods.consecutive'),
+      insight: streakInsight.value,
+      variant: streakInsight.value.status === 'warning' ? 'warning' : 'default',
     },
   ]
 })
@@ -76,6 +82,9 @@ let unsubscribeWorkouts = null
  * Fetch workout data and subscribe to real-time updates
  */
 onMounted(async () => {
+  // Initialize period from localStorage first
+  analyticsStore.initializePeriod()
+
   try {
     await workoutStore.fetchWorkouts('month')
     // Subscribe to real-time updates and store unsubscribe function
@@ -100,14 +109,17 @@ onUnmounted(() => {
 
 <template>
   <div class="container max-w-7xl mx-auto py-6 px-4 sm:py-8 space-y-6 sm:space-y-8">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
+    <!-- Header with Period Selector -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-3xl font-bold">{{ t('dashboard.title') }}</h1>
         <p class="text-muted-foreground mt-1">
           {{ t('dashboard.welcomeBack') }}, {{ displayName || 'User' }}! 👋
         </p>
       </div>
+
+      <!-- Global Period Selector -->
+      <GlobalPeriodSelector />
     </div>
 
     <!-- Stats Grid -->
@@ -117,10 +129,10 @@ onUnmounted(() => {
         :key="stat.title"
         :title="stat.title"
         :value="stat.value"
-        :description="stat.description"
-        :icon="stat.icon"
         :trend="stat.trend"
-        :trend-label="stat.trendLabel"
+        :period-label="stat.periodLabel"
+        :insight="stat.insight"
+        :variant="stat.variant"
       />
     </div>
 
