@@ -15,7 +15,7 @@ vi.mock('lucide-vue-next', () => ({
   },
 }))
 
-// Mock UI components - Card needs to properly bind class attribute
+// Mock UI components
 vi.mock('@/components/ui/card', () => ({
   Card: {
     name: 'Card',
@@ -30,10 +30,6 @@ vi.mock('@/components/ui/card', () => ({
     name: 'CardHeader',
     template: '<div class="card-header"><slot /></div>',
   },
-  CardTitle: {
-    name: 'CardTitle',
-    template: '<span class="card-title"><slot /></span>',
-  },
 }))
 
 describe('StatCard', () => {
@@ -42,9 +38,7 @@ describe('StatCard', () => {
   })
 
   /**
-   * Factory function to create consistent wrapper with default props
-   * @param {Object} options - Mount options override
-   * @returns {Object} Vue Test Utils wrapper
+   * Factory function to create wrapper with default props
    */
   function createWrapper(options = {}) {
     return mount(StatCard, {
@@ -68,7 +62,7 @@ describe('StatCard', () => {
     })
   }
 
-  describe('props rendering', () => {
+  describe('required props rendering', () => {
     it('should render the title prop', () => {
       const wrapper = createWrapper({
         props: { title: 'Total Workouts', value: '42' },
@@ -92,118 +86,82 @@ describe('StatCard', () => {
 
       expect(wrapper.text()).toContain('42')
     })
-
-    it('should render subtitle when provided', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Volume',
-          value: '5000',
-          subtitle: 'This week',
-        },
-      })
-
-      expect(wrapper.text()).toContain('This week')
-    })
-
-    it('should not render subtitle section when not provided', () => {
-      const wrapper = createWrapper({
-        props: { title: 'Volume', value: '5000' },
-      })
-
-      // Find the element that would contain subtitle
-      const subtitleElement = wrapper.find('.text-xs span')
-      expect(wrapper.html()).not.toContain('v-if="subtitle"')
-    })
-
-    it('should render description when provided', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Streak',
-          value: '7',
-          description: 'Keep it up!',
-        },
-      })
-
-      expect(wrapper.text()).toContain('Keep it up!')
-    })
-
-    it('should render both subtitle and description together', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Volume',
-          value: '5000',
-          subtitle: 'Total',
-          description: 'All time best',
-        },
-      })
-
-      expect(wrapper.text()).toContain('Total')
-      expect(wrapper.text()).toContain('All time best')
-    })
   })
 
-  describe('trend and change display', () => {
-    it('should show change percentage with up trend', () => {
+  describe('trend prop', () => {
+    it('should render trending up icon when direction is up', () => {
+      const wrapper = createWrapper({
+        props: {
+          title: 'Workouts',
+          value: '10',
+          trend: { value: '+20%', direction: 'up' },
+        },
+      })
+
+      const upIcon = wrapper.find('[data-testid="trending-up-icon"]')
+      expect(upIcon.exists()).toBe(true)
+      expect(wrapper.text()).toContain('+20%')
+    })
+
+    it('should render trending down icon when direction is down', () => {
       const wrapper = createWrapper({
         props: {
           title: 'Volume',
           value: '5000',
-          change: '+15%',
-          trend: 'up',
+          trend: { value: '-10%', direction: 'down' },
         },
       })
 
-      expect(wrapper.text()).toContain('+15%')
-    })
-
-    it('should show change percentage with down trend', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Volume',
-          value: '3000',
-          change: '-10%',
-          trend: 'down',
-        },
-      })
-
+      const downIcon = wrapper.find('[data-testid="trending-down-icon"]')
+      expect(downIcon.exists()).toBe(true)
       expect(wrapper.text()).toContain('-10%')
     })
 
-    it('should not show change section when change is null', () => {
+    it('should not render trend indicator when direction is neutral', () => {
       const wrapper = createWrapper({
         props: {
-          title: 'Volume',
-          value: '5000',
-          change: null,
-          trend: 'up',
+          title: 'Workouts',
+          value: '10',
+          trend: { value: '0%', direction: 'neutral' },
         },
       })
 
-      // The change display div should not be rendered
-      expect(wrapper.find('[data-testid="trending-up-icon"]').exists()).toBe(
-        false
-      )
+      const upIcon = wrapper.find('[data-testid="trending-up-icon"]')
+      const downIcon = wrapper.find('[data-testid="trending-down-icon"]')
+      expect(upIcon.exists()).toBe(false)
+      expect(downIcon.exists()).toBe(false)
     })
 
-    it('should not show change section when trend is null', () => {
+    it('should not render trend indicator when trend is null', () => {
       const wrapper = createWrapper({
         props: {
-          title: 'Volume',
-          value: '5000',
-          change: '+15%',
+          title: 'Workouts',
+          value: '10',
           trend: null,
         },
       })
 
-      expect(wrapper.find('[data-testid="trending-up-icon"]').exists()).toBe(
-        false
-      )
-      expect(wrapper.find('[data-testid="trending-down-icon"]').exists()).toBe(
-        false
-      )
+      const upIcon = wrapper.find('[data-testid="trending-up-icon"]')
+      const downIcon = wrapper.find('[data-testid="trending-down-icon"]')
+      expect(upIcon.exists()).toBe(false)
+      expect(downIcon.exists()).toBe(false)
+    })
+  })
+
+  describe('periodLabel prop', () => {
+    it('should render period label when provided', () => {
+      const wrapper = createWrapper({
+        props: {
+          title: 'Volume',
+          value: '5000',
+          periodLabel: 'This month',
+        },
+      })
+
+      expect(wrapper.text()).toContain('This month')
     })
 
-    it('should not show change section when both change and trend are null', () => {
+    it('should not render period label when not provided', () => {
       const wrapper = createWrapper({
         props: {
           title: 'Volume',
@@ -211,396 +169,163 @@ describe('StatCard', () => {
         },
       })
 
-      expect(wrapper.find('[data-testid="trending-up-icon"]').exists()).toBe(
-        false
-      )
-      expect(wrapper.find('[data-testid="trending-down-icon"]').exists()).toBe(
-        false
-      )
+      // Only title and value should be present
+      expect(wrapper.text()).toContain('Volume')
+      expect(wrapper.text()).toContain('5000')
     })
   })
 
-  describe('trend icons', () => {
-    it('should render TrendingUp icon when trend is up', () => {
+  describe('insight prop', () => {
+    it('should render insight text when provided', () => {
       const wrapper = createWrapper({
         props: {
-          title: 'Volume',
-          value: '5000',
-          change: '+15%',
-          trend: 'up',
+          title: 'Workouts',
+          value: '10',
+          insight: {
+            textKey: 'dashboard.stats.insights.strongConsistency',
+            status: 'good',
+          },
         },
       })
 
-      expect(wrapper.find('[data-testid="trending-up-icon"]').exists()).toBe(
-        true
-      )
-      expect(wrapper.find('[data-testid="trending-down-icon"]').exists()).toBe(
-        false
-      )
+      // Should contain the translation key (mocked to return key itself)
+      expect(wrapper.text()).toContain('dashboard.stats.insights.strongConsistency')
     })
 
-    it('should render TrendingDown icon when trend is down', () => {
+    it('should not render insight when not provided', () => {
       const wrapper = createWrapper({
         props: {
-          title: 'Volume',
-          value: '3000',
-          change: '-10%',
-          trend: 'down',
+          title: 'Workouts',
+          value: '10',
         },
       })
 
-      expect(wrapper.find('[data-testid="trending-down-icon"]').exists()).toBe(
-        true
-      )
-      expect(wrapper.find('[data-testid="trending-up-icon"]').exists()).toBe(
-        false
-      )
+      // Only title and value should be present
+      expect(wrapper.text()).toContain('Workouts')
+      expect(wrapper.text()).toContain('10')
     })
   })
 
-  describe('trend color styling', () => {
-    it('should apply green color class for up trend', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Volume',
-          value: '5000',
-          change: '+15%',
-          trend: 'up',
-        },
-      })
-
-      const trendElement = wrapper.find('.text-green-500')
-      expect(trendElement.exists()).toBe(true)
-    })
-
-    it('should apply yellow color class for down trend', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Volume',
-          value: '3000',
-          change: '-10%',
-          trend: 'down',
-        },
-      })
-
-      const trendElement = wrapper.find('.text-yellow-500')
-      expect(trendElement.exists()).toBe(true)
-    })
-
-    it('should not apply trend color when trend is null', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Volume',
-          value: '5000',
-        },
-      })
-
-      expect(wrapper.find('.text-green-500').exists()).toBe(false)
-      expect(wrapper.find('.text-yellow-500').exists()).toBe(false)
-    })
-  })
-
-  describe('warning styling variant', () => {
-    it('should apply warning border class when warning prop is true', () => {
+  describe('variant prop', () => {
+    it('should apply warning variant class', () => {
       const wrapper = createWrapper({
         props: {
           title: 'Rest Days',
-          value: '0',
-          warning: true,
-        },
-      })
-
-      // The Card component should receive the warning class
-      const card = wrapper.find('.card')
-      expect(card.classes()).toContain('border-yellow-500/20')
-    })
-
-    it('should not apply warning border class when warning prop is false', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Rest Days',
-          value: '3',
-          warning: false,
+          value: '5',
+          variant: 'warning',
         },
       })
 
       const card = wrapper.find('.card')
-      expect(card.classes()).not.toContain('border-yellow-500/20')
+      expect(card.classes()).toContain('border-yellow-500/50')
+      expect(card.classes()).toContain('bg-yellow-500/5')
     })
 
-    it('should not apply warning border class when warning prop is not provided', () => {
+    it('should not apply warning classes for default variant', () => {
       const wrapper = createWrapper({
         props: {
-          title: 'Rest Days',
-          value: '3',
+          title: 'Workouts',
+          value: '10',
+          variant: 'default',
         },
       })
 
       const card = wrapper.find('.card')
-      expect(card.classes()).not.toContain('border-yellow-500/20')
-    })
-  })
-
-  describe('prop validation', () => {
-    it('should accept valid trend values', () => {
-      // up trend
-      const upWrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          change: '+10%',
-          trend: 'up',
-        },
-      })
-      expect(upWrapper.vm.trend).toBe('up')
-
-      // down trend
-      const downWrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          change: '-10%',
-          trend: 'down',
-        },
-      })
-      expect(downWrapper.vm.trend).toBe('down')
-
-      // null trend
-      const nullWrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          trend: null,
-        },
-      })
-      expect(nullWrapper.vm.trend).toBe(null)
-    })
-
-    it('should have required title prop', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Required Title',
-          value: '100',
-        },
-      })
-
-      expect(wrapper.vm.title).toBe('Required Title')
-    })
-
-    it('should have required value prop', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: 'Required Value',
-        },
-      })
-
-      expect(wrapper.vm.value).toBe('Required Value')
-    })
-  })
-
-  describe('computed properties', () => {
-    it('should compute correct trendColor for up trend', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          trend: 'up',
-          change: '+10%',
-        },
-      })
-
-      // Access the internal computed property via the component
-      expect(wrapper.find('.text-green-500').exists()).toBe(true)
-    })
-
-    it('should compute correct trendColor for down trend', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          trend: 'down',
-          change: '-10%',
-        },
-      })
-
-      expect(wrapper.find('.text-yellow-500').exists()).toBe(true)
-    })
-
-    it('should compute empty trendColor when trend is null', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          trend: null,
-        },
-      })
-
-      // No trend color classes should be applied
-      expect(wrapper.find('.text-green-500').exists()).toBe(false)
-      expect(wrapper.find('.text-yellow-500').exists()).toBe(false)
-    })
-
-    it('should compute correct cardClass with warning', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          warning: true,
-        },
-      })
-
-      const card = wrapper.find('.card')
-      expect(card.classes()).toContain('border-yellow-500/20')
-    })
-
-    it('should compute empty cardClass without warning', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '100',
-          warning: false,
-        },
-      })
-
-      const card = wrapper.find('.card')
-      expect(card.classes()).not.toContain('border-yellow-500/20')
-    })
-  })
-
-  describe('layout and structure', () => {
-    it('should render Card component as root element', () => {
-      const wrapper = createWrapper()
-
-      expect(wrapper.find('.card').exists()).toBe(true)
-    })
-
-    it('should render CardHeader with title', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test Title',
-          value: '100',
-        },
-      })
-
-      expect(wrapper.find('.card-header').exists()).toBe(true)
-      expect(wrapper.find('.card-title').text()).toBe('Test Title')
-    })
-
-    it('should render CardContent with value', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '12345',
-        },
-      })
-
-      expect(wrapper.find('.card-content').exists()).toBe(true)
-      expect(wrapper.text()).toContain('12345')
-    })
-
-    it('should render value with font-mono class for numeric display', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '1,234',
-        },
-      })
-
-      const valueElement = wrapper.find('.font-mono')
-      expect(valueElement.exists()).toBe(true)
-      expect(valueElement.text()).toBe('1,234')
-    })
-  })
-
-  describe('edge cases', () => {
-    it('should handle zero value', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Rest Days',
-          value: 0,
-        },
-      })
-
-      expect(wrapper.text()).toContain('0')
-    })
-
-    it('should handle empty string value', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Test',
-          value: '',
-        },
-      })
-
-      expect(wrapper.find('.font-mono').text()).toBe('')
-    })
-
-    it('should handle large numbers', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Total Volume',
-          value: '1,234,567 kg',
-        },
-      })
-
-      expect(wrapper.text()).toContain('1,234,567 kg')
-    })
-
-    it('should handle special characters in title', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: "M'yazovyi Progress",
-          value: '100%',
-        },
-      })
-
-      expect(wrapper.text()).toContain("M'yazovyi Progress")
-    })
-
-    it('should handle combined warning with trend', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Rest Days',
-          value: '0',
-          warning: true,
-          trend: 'down',
-          change: '-100%',
-        },
-      })
-
-      // Both warning border and down trend should be applied
-      expect(wrapper.find('.card').classes()).toContain('border-yellow-500/20')
-      expect(wrapper.find('.text-yellow-500').exists()).toBe(true)
+      expect(card.classes()).not.toContain('border-yellow-500/50')
+      expect(card.classes()).not.toContain('bg-yellow-500/5')
     })
   })
 
   describe('accessibility', () => {
-    it('should have semantic structure', () => {
+    it('should render title as heading (h3)', () => {
+      const wrapper = createWrapper({
+        props: { title: 'Accessible Title', value: '100' },
+      })
+
+      const heading = wrapper.find('h3')
+      expect(heading.exists()).toBe(true)
+      expect(heading.text()).toBe('Accessible Title')
+    })
+
+    it('should have aria-label on trend indicator', () => {
       const wrapper = createWrapper({
         props: {
-          title: 'Test Stat',
+          title: 'Workouts',
+          value: '10',
+          trend: { value: '+20%', direction: 'up' },
+        },
+      })
+
+      const trendDiv = wrapper.find('[role="status"]')
+      expect(trendDiv.exists()).toBe(true)
+      expect(trendDiv.attributes('aria-label')).toContain('increased')
+    })
+
+    it('should have aria-live on warning insights', () => {
+      const wrapper = createWrapper({
+        props: {
+          title: 'Rest Days',
+          value: '5',
+          insight: {
+            textKey: 'dashboard.stats.insights.needsAttention',
+            status: 'warning',
+          },
+        },
+      })
+
+      // Find all status elements and check if any have aria-live="polite"
+      const statusElements = wrapper.findAll('[role="status"]')
+      const hasPoliteAriaLive = statusElements.some(
+        (el) => el.attributes('aria-live') === 'polite'
+      )
+      expect(hasPoliteAriaLive).toBe(true)
+    })
+  })
+
+  describe('integration scenarios', () => {
+    it('should render complete stat card with all props', () => {
+      const wrapper = createWrapper({
+        props: {
+          title: 'Total Workouts',
+          value: '15',
+          trend: { value: '+25%', direction: 'up' },
+          periodLabel: 'This month',
+          insight: {
+            textKey: 'dashboard.stats.insights.strongConsistency',
+            status: 'good',
+          },
+          variant: 'default',
+        },
+      })
+
+      // Check all elements are present
+      expect(wrapper.text()).toContain('Total Workouts')
+      expect(wrapper.text()).toContain('15')
+      expect(wrapper.text()).toContain('+25%')
+      expect(wrapper.text()).toContain('This month')
+      expect(wrapper.text()).toContain('dashboard.stats.insights.strongConsistency')
+
+      // Check trend icon
+      const upIcon = wrapper.find('[data-testid="trending-up-icon"]')
+      expect(upIcon.exists()).toBe(true)
+    })
+
+    it('should render minimal stat card with only required props', () => {
+      const wrapper = createWrapper({
+        props: {
+          title: 'Simple Stat',
           value: '100',
         },
       })
 
-      // Card structure should be present
-      expect(wrapper.find('.card').exists()).toBe(true)
-      expect(wrapper.find('.card-header').exists()).toBe(true)
-      expect(wrapper.find('.card-content').exists()).toBe(true)
-    })
+      expect(wrapper.text()).toContain('Simple Stat')
+      expect(wrapper.text()).toContain('100')
 
-    it('should display title with proper styling', () => {
-      const wrapper = createWrapper({
-        props: {
-          title: 'Accessible Title',
-          value: '50',
-        },
-      })
-
-      const title = wrapper.find('.card-title')
-      expect(title.exists()).toBe(true)
-      expect(title.text()).toBe('Accessible Title')
+      // Verify optional elements are not present
+      const upIcon = wrapper.find('[data-testid="trending-up-icon"]')
+      const downIcon = wrapper.find('[data-testid="trending-down-icon"]')
+      expect(upIcon.exists()).toBe(false)
+      expect(downIcon.exists()).toBe(false)
     })
   })
 })

@@ -4,6 +4,19 @@
   "errors": {
     "loadFailed": "Failed to load dashboard data"
   },
+  "periodSelector": {
+    "label": "Time period",
+    "ariaLabel": "Select analytics time period",
+    "placeholder": "Select period...",
+    "last7Days": "Last 7 days",
+    "last14Days": "Last 14 days",
+    "last30Days": "Last 30 days",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "last90Days": "Last 90 days",
+    "thisYear": "This year",
+    "allTime": "All time"
+  },
   "stats": {
     "totalWorkouts": "Total Workouts",
     "volumeLoad": "Volume Load",
@@ -14,7 +27,43 @@
     "thisPeriod": "This period",
     "keepItUp": "Keep it up!",
     "vsLastWeek": "vs last week",
-    "days": "days"
+    "days": "days",
+    "periods": {
+      "thisMonth": "This month",
+      "thisWeek": "This week",
+      "last7Days": "Last 7 days",
+      "last14Days": "Last 14 days",
+      "last30Days": "Last 30 days",
+      "lastMonth": "Last month",
+      "monthBeforeLast": "Month before last",
+      "last90Days": "Last 90 days",
+      "thisYear": "This year",
+      "lastYear": "Last year",
+      "allTime": "All time",
+      "sinceLast": "Since last workout",
+      "consecutive": "Consecutive days"
+    },
+    "trends": {
+      "up": "+{value}%",
+      "down": "{value}%",
+      "upCount": "+{value}",
+      "downCount": "{value}",
+      "vsLastMonth": "vs last month",
+      "vsLastWeek": "vs last week"
+    },
+    "insights": {
+      "strongConsistency": "Strong consistency",
+      "onTrack": "On track",
+      "needsAttention": "Needs attention",
+      "keepItUp": "Keep it up!",
+      "greatProgress": "Great progress",
+      "timeToTrain": "Time to train",
+      "streakBuilding": "Streak building",
+      "newPRs": "New PRs!",
+      "maintainingStrength": "Maintaining strength",
+      "volumeGrowing": "Volume growing",
+      "volumeStable": "Volume stable"
+    }
   },
   "tabs": {
     "volume": "Volume",
@@ -27,10 +76,14 @@
     "volumeDescription": "Total volume (kg) over the last 14 days",
     "muscleTitle": "Muscle Distribution",
     "muscleDescription": "Number of sets by muscle groups",
+    "muscleDescriptionPeriod": "Number of sets by muscle groups for {period}",
     "frequencyTitle": "Training Frequency",
     "frequencyDescription": "When you typically train (day of week and time)",
-    "comparisonTitle": "Weekly Progress",
-    "comparisonDescription": "Comparison of current and previous week",
+    "comparisonTitle": "Period Comparison",
+    "comparisonDescription": "Comparison of current and previous period",
+    "comparisonPrevious": "Previous {period}",
+    "previousPeriod": "Previous period",
+    "vsPreviousPeriod": "vs previous period",
     "noData": "No data to display",
     "noDataSubtitle": "Start training to view statistics",
     "noMuscleData": "No data",
@@ -68,6 +121,7 @@
   "volumeChart": {
     "title": "Training Volume",
     "subtitle": "Last {days} days",
+    "subtitlePeriod": "Training volume for {period}",
     "days": "{count} days",
     "volume": "Volume (kg)",
     "workouts": "Workouts",
@@ -88,7 +142,7 @@
     "description": "Training volume distribution for the week",
     "noMuscleData": "No muscle group data",
     "startTraining": "Start training to track progress",
-    "avgBpm": "Avg BPM",
+    "avgRpe": "Avg RPE",
     "weight": "Weight"
   }
 }

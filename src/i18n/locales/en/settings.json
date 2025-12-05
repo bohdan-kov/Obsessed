@@ -27,6 +27,20 @@
     "title": "Account",
     "noName": "No name"
   },
+  "personalInfo": {
+    "title": "Personal Info",
+    "description": "Track your body metrics",
+    "weight": "Body Weight",
+    "weightPlaceholder": "Enter your weight",
+    "saveSuccess": "Weight saved successfully",
+    "validation": {
+      "required": "Weight is required",
+      "invalidType": "Please enter a valid number",
+      "min": "Weight must be at least {min} {unit}",
+      "max": "Weight cannot exceed {max} {unit}",
+      "decimalPlaces": "Maximum 1 decimal place allowed"
+    }
+  },
   "syncStatus": {
     "synced": "Settings synced",
     "pending": "Syncing...",

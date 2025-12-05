@@ -18,18 +18,11 @@ import {
   ChartTooltipContent,
   componentToString,
 } from '@/components/ui/chart'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
-const { volumeByDay } = storeToRefs(analyticsStore)
+const { volumeByDay, periodLabel, period } = storeToRefs(analyticsStore)
 
 // Chart data from analytics store
 const chartData = computed(() => {
@@ -65,30 +58,6 @@ const svgDefs = `
   </linearGradient>
 `
 
-// Time range selector - synced with analyticsStore period
-const timeRange = ref('14d')
-
-// Watch and update analytics store period when time range changes
-function handleTimeRangeChange(value) {
-  timeRange.value = value
-
-  // Map UI time range to analytics store period
-  const periodMap = {
-    '7d': 'week',
-    '14d': '2weeks',
-    '30d': 'month',
-  }
-
-  const period = periodMap[value] || '2weeks'
-  analyticsStore.setPeriod(period)
-}
-
-const daysToSubtract = computed(() => {
-  if (timeRange.value === '7d') return 7
-  if (timeRange.value === '30d') return 30
-  return 14
-})
-
 // Y domain - dynamic based on max volume (primary Y-axis)
 const yDomain = computed(() => {
   const maxVolume = Math.max(...chartData.value.map(d => d.volume), 100)
@@ -122,28 +91,9 @@ const formatExerciseAxisValue = computed(() => (value) => {
       <div class="grid flex-1 gap-1">
         <CardTitle>{{ t('dashboard.volumeChart.title') }}</CardTitle>
         <CardDescription>
-          {{ t('dashboard.volumeChart.subtitle', { days: daysToSubtract }) }}
+          {{ t('dashboard.volumeChart.subtitlePeriod', { period: t(periodLabel) }) }}
         </CardDescription>
       </div>
-      <Select :model-value="timeRange" @update:model-value="handleTimeRangeChange">
-        <SelectTrigger
-          class="hidden w-[160px] rounded-lg sm:ml-auto sm:flex"
-          :aria-label="t('dashboard.volumeChart.selectTimeRange')"
-        >
-          <SelectValue :placeholder="t('dashboard.volumeChart.days', { count: 14 })" />
-        </SelectTrigger>
-        <SelectContent class="rounded-xl">
-          <SelectItem value="7d" class="rounded-lg">
-            {{ t('dashboard.volumeChart.days', { count: 7 }) }}
-          </SelectItem>
-          <SelectItem value="14d" class="rounded-lg">
-            {{ t('dashboard.volumeChart.days', { count: 14 }) }}
-          </SelectItem>
-          <SelectItem value="30d" class="rounded-lg">
-            {{ t('dashboard.volumeChart.days', { count: 30 }) }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
     </CardHeader>
 
     <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
@@ -151,6 +101,7 @@ const formatExerciseAxisValue = computed(() => (value) => {
         <!-- Chart visualization with fixed height -->
         <div class="aspect-auto h-[300px] w-full">
           <VisXYContainer
+            :key="`volume-chart-${period}`"
             :data="chartData"
             :svg-defs="svgDefs"
             :margin="{ left: -40, right: 40 }"

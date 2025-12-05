@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAnalyticsStore } from '../analyticsStore'
 import { useWorkoutStore } from '../workoutStore'
 import { useAuthStore } from '../authStore'
+import { useExerciseStore } from '../exerciseStore'
 import { fetchCollection } from '@/firebase/firestore'
 
 // Mock Firebase modules
@@ -70,9 +71,9 @@ describe('analyticsStore', () => {
   })
 
   describe('initial state', () => {
-    it('should initialize with period as "2weeks"', () => {
+    it('should initialize with period as "last30Days"', () => {
       const store = useAnalyticsStore()
-      expect(store.period).toBe('2weeks')
+      expect(store.period).toBe('last30Days')
     })
   })
 
@@ -90,7 +91,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalWorkouts).toBe(3)
     })
@@ -100,7 +101,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalWorkouts).toBe(0)
     })
@@ -115,7 +116,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalWorkouts).toBe(0)
     })
@@ -133,7 +134,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.volumeLoad).toBe(4500)
     })
@@ -143,7 +144,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.volumeLoad).toBe(0)
     })
@@ -159,7 +160,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.volumeLoad).toBe(1000)
     })
@@ -175,7 +176,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.volumeLoad).toBe(1000)
     })
@@ -193,7 +194,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.avgVolumePerWorkout).toBe(2000)
     })
@@ -203,7 +204,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.avgVolumePerWorkout).toBe(0)
     })
@@ -218,7 +219,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.avgVolumePerWorkout).toBe(1250)
     })
@@ -232,7 +233,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.avgVolumePerWorkout).toBe(0)
     })
@@ -260,7 +261,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalSets).toBe(4)
     })
@@ -270,7 +271,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalSets).toBe(0)
     })
@@ -295,7 +296,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalSets).toBe(2)
     })
@@ -309,14 +310,14 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.totalSets).toBe(0)
     })
   })
 
   describe('restDays', () => {
-    it('should calculate rest days in period', async () => {
+    it('should calculate days since last workout', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
 
@@ -325,16 +326,15 @@ describe('analyticsStore', () => {
       yesterday.setDate(today.getDate() - 1)
 
       const mockWorkouts = [
-        createMockWorkout({ status: 'completed', completedAt: today }),
         createMockWorkout({ status: 'completed', completedAt: yesterday }),
+        createMockWorkout({ status: 'completed', completedAt: today }),
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      // Period is '2weeks' by default (14 days)
-      // 14 days total - 2 unique workout days = 12 rest days
-      expect(analyticsStore.restDays).toBe(12)
+      // Most recent workout is today, so 0 rest days
+      expect(analyticsStore.restDays).toBe(0)
     })
 
     it('should return 0 when no workouts', async () => {
@@ -342,32 +342,30 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.restDays).toBe(0)
     })
 
-    it('should count unique workout days correctly', async () => {
+    it('should calculate days since last workout with multiple workouts same day', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
 
-      const today = new Date()
+      const twoDaysAgo = new Date()
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
 
-      // Multiple workouts on the same day should count as 1 workout day
+      // Multiple workouts on the same day
       const mockWorkouts = [
-        createMockWorkout({ status: 'completed', completedAt: today }),
-        createMockWorkout({ status: 'completed', completedAt: today }),
-        createMockWorkout({ status: 'completed', completedAt: today }),
+        createMockWorkout({ status: 'completed', completedAt: twoDaysAgo }),
+        createMockWorkout({ status: 'completed', completedAt: twoDaysAgo }),
+        createMockWorkout({ status: 'completed', completedAt: twoDaysAgo }),
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      // Set period to 'week' (7 days)
-      analyticsStore.setPeriod('week')
-
-      // 7 days total - 1 unique workout day = 6 rest days
-      expect(analyticsStore.restDays).toBe(6)
+      // Most recent workout is 2 days ago
+      expect(analyticsStore.restDays).toBe(2)
     })
 
     it('should handle Firebase Timestamp objects', async () => {
@@ -384,11 +382,10 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
-
-      expect(analyticsStore.restDays).toBe(6)
+      // Workout today means 0 rest days
+      expect(analyticsStore.restDays).toBe(0)
     })
 
     it('should filter out non-completed workouts', async () => {
@@ -403,9 +400,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       expect(analyticsStore.restDays).toBe(0)
     })
@@ -425,9 +422,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week') // 7 days
+      analyticsStore.setPeriod('last7Days') // 7 days
 
       const result = analyticsStore.volumeByDay
 
@@ -453,9 +450,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       const result = analyticsStore.volumeByDay
       const todayData = result.find(d => d.date === todayStr)
@@ -469,9 +466,9 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       const result = analyticsStore.volumeByDay
 
@@ -500,9 +497,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       const result = analyticsStore.volumeByDay
       const todayData = result.find(d => d.date === todayStr)
@@ -516,9 +513,9 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       const result = analyticsStore.volumeByDay
 
@@ -544,9 +541,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       const result = analyticsStore.volumeByDay
 
@@ -568,9 +565,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
-      analyticsStore.setPeriod('week')
+      analyticsStore.setPeriod('last7Days')
 
       const result = analyticsStore.volumeByDay
 
@@ -582,17 +579,25 @@ describe('analyticsStore', () => {
     it('should calculate muscle distribution from exercises', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store to return muscle groups
+      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
+        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
+        if (id === 'exercise-back') return { muscleGroup: 'back' }
+        return null
+      })
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'completed',
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest',
               sets: [{ weight: 100, reps: 10 }, { weight: 100, reps: 10 }],
             },
             {
-              primaryMuscle: 'Back',
+              exerciseId: 'exercise-back',
               sets: [{ weight: 80, reps: 12 }],
             },
           ],
@@ -600,33 +605,42 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
 
       expect(result).toHaveLength(2)
-      expect(result.find(m => m.muscle === 'Chest')?.sets).toBe(2)
-      expect(result.find(m => m.muscle === 'Back')?.sets).toBe(1)
+      expect(result.find(m => m.muscle === 'chest')?.sets).toBe(2)
+      expect(result.find(m => m.muscle === 'back')?.sets).toBe(1)
     })
 
     it('should calculate percentages correctly', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store
+      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
+        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
+        if (id === 'exercise-back') return { muscleGroup: 'back' }
+        if (id === 'exercise-legs') return { muscleGroup: 'legs' }
+        return null
+      })
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'completed',
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest',
               sets: [{ weight: 100, reps: 10 }],
             },
             {
-              primaryMuscle: 'Back',
+              exerciseId: 'exercise-back',
               sets: [{ weight: 80, reps: 12 }],
             },
             {
-              primaryMuscle: 'Legs',
+              exerciseId: 'exercise-legs',
               sets: [{ weight: 150, reps: 8 }, { weight: 150, reps: 8 }],
             },
           ],
@@ -634,14 +648,14 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
 
       // Total: 4 sets, Chest: 1 (25%), Back: 1 (25%), Legs: 2 (50%)
-      expect(result.find(m => m.muscle === 'Chest')?.percentage).toBe(25)
-      expect(result.find(m => m.muscle === 'Back')?.percentage).toBe(25)
-      expect(result.find(m => m.muscle === 'Legs')?.percentage).toBe(50)
+      expect(result.find(m => m.muscle === 'chest')?.percentage).toBe(25)
+      expect(result.find(m => m.muscle === 'back')?.percentage).toBe(25)
+      expect(result.find(m => m.muscle === 'legs')?.percentage).toBe(50)
     })
 
     it('should return empty array when no workouts', async () => {
@@ -649,7 +663,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.muscleDistribution).toEqual([])
     })
@@ -657,17 +671,26 @@ describe('analyticsStore', () => {
     it('should aggregate sets from the same muscle group', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store
+      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
+        if (id === 'exercise-chest-1' || id === 'exercise-chest-2') {
+          return { muscleGroup: 'chest' }
+        }
+        return null
+      })
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'completed',
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest-1',
               sets: [{ weight: 100, reps: 10 }],
             },
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest-2',
               sets: [{ weight: 90, reps: 12 }],
             },
           ],
@@ -675,12 +698,12 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
 
       expect(result).toHaveLength(1)
-      expect(result[0].muscle).toBe('Chest')
+      expect(result[0].muscle).toBe('chest')
       expect(result[0].sets).toBe(2)
       expect(result[0].percentage).toBe(100)
     })
@@ -688,21 +711,30 @@ describe('analyticsStore', () => {
     it('should sort by number of sets in descending order', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store
+      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
+        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
+        if (id === 'exercise-legs') return { muscleGroup: 'legs' }
+        if (id === 'exercise-back') return { muscleGroup: 'back' }
+        return null
+      })
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'completed',
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest',
               sets: [{ weight: 100, reps: 10 }],
             },
             {
-              primaryMuscle: 'Legs',
+              exerciseId: 'exercise-legs',
               sets: [{ weight: 150, reps: 8 }, { weight: 150, reps: 8 }, { weight: 150, reps: 8 }],
             },
             {
-              primaryMuscle: 'Back',
+              exerciseId: 'exercise-back',
               sets: [{ weight: 80, reps: 12 }, { weight: 80, reps: 12 }],
             },
           ],
@@ -710,24 +742,29 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
 
-      expect(result[0].muscle).toBe('Legs')
-      expect(result[1].muscle).toBe('Back')
-      expect(result[2].muscle).toBe('Chest')
+      expect(result[0].muscle).toBe('legs')
+      expect(result[1].muscle).toBe('back')
+      expect(result[2].muscle).toBe('chest')
     })
 
-    it('should handle exercises without primaryMuscle', async () => {
+    it('should handle exercises without muscleGroup', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store to return null (exercise not found)
+      vi.spyOn(exerciseStore, 'getExerciseById').mockReturnValue(null)
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'completed',
           exercises: [
             {
+              exerciseId: 'unknown-exercise',
               sets: [{ weight: 100, reps: 10 }],
             },
           ],
@@ -735,24 +772,28 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
 
       expect(result).toHaveLength(1)
-      expect(result[0].muscle).toBe('Unknown')
+      expect(result[0].muscle).toBe('unknown')
     })
 
     it('should filter out non-completed workouts', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store
+      vi.spyOn(exerciseStore, 'getExerciseById').mockReturnValue({ muscleGroup: 'chest' })
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'active',
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest',
               sets: [{ weight: 100, reps: 10 }],
             },
           ],
@@ -760,7 +801,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.muscleDistribution).toEqual([])
     })
@@ -777,7 +818,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
 
@@ -1045,7 +1086,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(3)
     })
@@ -1055,7 +1096,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(0)
     })
@@ -1079,7 +1120,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(2)
     })
@@ -1098,7 +1139,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(1)
     })
@@ -1116,7 +1157,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(0)
     })
@@ -1142,7 +1183,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(2)
     })
@@ -1159,7 +1200,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.currentStreak).toBe(0)
     })
@@ -1177,7 +1218,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.bestWorkout
 
@@ -1190,7 +1231,7 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
 
       fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.bestWorkout).toBeNull()
     })
@@ -1205,7 +1246,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.bestWorkout
 
@@ -1223,7 +1264,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.bestWorkout
 
@@ -1235,50 +1276,69 @@ describe('analyticsStore', () => {
     it('should update the period', () => {
       const analyticsStore = useAnalyticsStore()
 
-      expect(analyticsStore.period).toBe('2weeks')
+      expect(analyticsStore.period).toBe('last30Days')
 
-      analyticsStore.setPeriod('month')
+      analyticsStore.setPeriod('last7Days')
 
-      expect(analyticsStore.period).toBe('month')
+      expect(analyticsStore.period).toBe('last7Days')
     })
 
-    it('should trigger workout refetch with new period', async () => {
+    it('should update volumeByDay when period changes', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
 
-      // Mock fetchWorkouts to track calls
-      const fetchWorkoutsSpy = vi.spyOn(workoutStore, 'fetchWorkouts')
+      // Create workouts: 1 from 3 days ago, 1 from 10 days ago
+      const threeDaysAgo = new Date()
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+      const tenDaysAgo = new Date()
+      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10)
 
-      analyticsStore.setPeriod('week')
+      fetchCollection.mockResolvedValue([
+        createMockWorkout({
+          id: '1',
+          status: 'completed',
+          completedAt: mockTimestamp(threeDaysAgo),
+          totalVolume: 1000
+        }),
+        createMockWorkout({
+          id: '2',
+          status: 'completed',
+          completedAt: mockTimestamp(tenDaysAgo),
+          totalVolume: 2000
+        }),
+      ])
 
-      expect(fetchWorkoutsSpy).toHaveBeenCalledWith('week')
+      await workoutStore.fetchWorkouts('last30Days')
+
+      // Set to last 7 days - should only include workout from 3 days ago
+      analyticsStore.setPeriod('last7Days')
+
+      const result = analyticsStore.volumeByDay
+      const nonZeroDays = result.filter(d => d.volume > 0)
+
+      expect(nonZeroDays).toHaveLength(1)
+      expect(nonZeroDays[0].volume).toBe(1000)
     })
 
-    it('should map 2weeks to month for workout fetch', async () => {
-      const workoutStore = useWorkoutStore()
+    it('should fall back to default period for invalid period', () => {
       const analyticsStore = useAnalyticsStore()
 
-      const fetchWorkoutsSpy = vi.spyOn(workoutStore, 'fetchWorkouts')
+      analyticsStore.setPeriod('invalidPeriod')
 
-      analyticsStore.setPeriod('2weeks')
-
-      expect(fetchWorkoutsSpy).toHaveBeenCalledWith('month')
+      expect(analyticsStore.period).toBe('last30Days')
     })
 
-    it('should handle all period types', async () => {
-      const workoutStore = useWorkoutStore()
+    it('should handle all period types', () => {
       const analyticsStore = useAnalyticsStore()
 
-      const fetchWorkoutsSpy = vi.spyOn(workoutStore, 'fetchWorkouts')
+      analyticsStore.setPeriod('last7Days')
+      expect(analyticsStore.period).toBe('last7Days')
 
-      analyticsStore.setPeriod('week')
-      expect(fetchWorkoutsSpy).toHaveBeenCalledWith('week')
+      analyticsStore.setPeriod('thisMonth')
+      expect(analyticsStore.period).toBe('thisMonth')
 
-      analyticsStore.setPeriod('month')
-      expect(fetchWorkoutsSpy).toHaveBeenCalledWith('month')
-
-      analyticsStore.setPeriod('quarter')
-      expect(fetchWorkoutsSpy).toHaveBeenCalledWith('quarter')
+      analyticsStore.setPeriod('last90Days')
+      expect(analyticsStore.period).toBe('last90Days')
     })
   })
 
@@ -1286,6 +1346,14 @@ describe('analyticsStore', () => {
     it('should calculate muscle progress for current week', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store
+      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
+        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
+        if (id === 'exercise-back') return { muscleGroup: 'back' }
+        return null
+      })
 
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
@@ -1296,11 +1364,11 @@ describe('analyticsStore', () => {
           completedAt: threeDaysAgo,
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest',
               sets: [{ weight: 100, reps: 10 }],
             },
             {
-              primaryMuscle: 'Back',
+              exerciseId: 'exercise-back',
               sets: [{ weight: 80, reps: 12 }],
             },
           ],
@@ -1308,7 +1376,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleProgress
 
@@ -1321,6 +1389,14 @@ describe('analyticsStore', () => {
     it('should calculate percentages based on volume', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
+      const exerciseStore = useExerciseStore()
+
+      // Mock exercise store
+      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
+        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
+        if (id === 'exercise-legs') return { muscleGroup: 'legs' }
+        return null
+      })
 
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
@@ -1331,11 +1407,11 @@ describe('analyticsStore', () => {
           completedAt: threeDaysAgo,
           exercises: [
             {
-              primaryMuscle: 'Chest',
+              exerciseId: 'exercise-chest',
               sets: [{ weight: 100, reps: 10 }], // volume: 1000
             },
             {
-              primaryMuscle: 'Legs',
+              exerciseId: 'exercise-legs',
               sets: [{ weight: 150, reps: 10 }], // volume: 1500
             },
           ],
@@ -1343,13 +1419,13 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleProgress
 
       // Total volume: 2500, Chest: 1000 (40%), Legs: 1500 (60%)
-      const chest = result.find(m => m.muscle === 'Chest')
-      const legs = result.find(m => m.muscle === 'Legs')
+      const chest = result.find(m => m.muscle === 'chest')
+      const legs = result.find(m => m.muscle === 'legs')
 
       expect(chest?.percent).toBe(40)
       expect(legs?.percent).toBe(60)
@@ -1384,7 +1460,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleProgress
 
@@ -1393,17 +1469,18 @@ describe('analyticsStore', () => {
       }
     })
 
-    it('should return empty array when no workouts in current week', async () => {
+    it('should return empty array when no workouts in current period', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
 
-      const twoWeeksAgo = new Date()
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+      // Create a workout from 40 days ago (outside last30Days default period)
+      const fortyDaysAgo = new Date()
+      fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40)
 
       const mockWorkouts = [
         createMockWorkout({
           status: 'completed',
-          completedAt: twoWeeksAgo,
+          completedAt: fortyDaysAgo,
           exercises: [
             {
               primaryMuscle: 'Chest',
@@ -1414,8 +1491,9 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
+      await workoutStore.fetchWorkouts('last30Days')
 
+      // Default period is last30Days, workout is outside this range
       expect(analyticsStore.muscleProgress).toEqual([])
     })
 
@@ -1440,7 +1518,7 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.muscleProgress).toEqual([])
     })
@@ -1461,9 +1539,398 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('week')
+      await workoutStore.fetchWorkouts('last7Days')
 
       expect(analyticsStore.muscleProgress).toEqual([])
+    })
+  })
+
+  describe('avgRpe', () => {
+    it('should calculate average RPE from sets with valid RPE values', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: threeDaysAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 6 },
+                { weight: 100, reps: 10, rpe: 7 },
+              ],
+            },
+            {
+              exerciseId: 'ex2',
+              sets: [
+                { weight: 80, reps: 12, rpe: 8 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Average: (6 + 7 + 8) / 3 = 7.0
+      expect(analyticsStore.avgRpe).toBe(7.0)
+    })
+
+    it('should skip sets without RPE (null/undefined)', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const twoDaysAgo = new Date(now.getTime() - 2 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: twoDaysAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 5 },
+                { weight: 100, reps: 10, rpe: null },
+                { weight: 100, reps: 10 }, // undefined RPE
+                { weight: 100, reps: 10, rpe: 7 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Average: (5 + 7) / 2 = 6.0
+      expect(analyticsStore.avgRpe).toBe(6.0)
+    })
+
+    it('should return 0 when no sets have RPE data', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10 }, // no RPE
+                { weight: 100, reps: 10, rpe: null },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      expect(analyticsStore.avgRpe).toBe(0)
+    })
+
+    it('should only consider workouts from last 7 days', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
+      const tenDaysAgo = new Date(now.getTime() - 10 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: threeDaysAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 8 },
+              ],
+            },
+          ],
+        }),
+        createMockWorkout({
+          status: 'completed',
+          completedAt: tenDaysAgo,
+          exercises: [
+            {
+              exerciseId: 'ex2',
+              sets: [
+                { weight: 80, reps: 12, rpe: 4 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('month') // Fetch wider range
+
+      // Should only count the 3-day-ago workout with RPE 8
+      expect(analyticsStore.avgRpe).toBe(8.0)
+    })
+
+    it('should skip RPE values of 0', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 0 },
+                { weight: 100, reps: 10, rpe: 5 },
+                { weight: 100, reps: 10, rpe: 7 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Average: (5 + 7) / 2 = 6.0 (skip 0)
+      expect(analyticsStore.avgRpe).toBe(6.0)
+    })
+
+    it('should skip RPE values outside 1-10 range', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: -1 },
+                { weight: 100, reps: 10, rpe: 5 },
+                { weight: 100, reps: 10, rpe: 15 },
+                { weight: 100, reps: 10, rpe: 7 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Average: (5 + 7) / 2 = 6.0 (skip -1 and 15)
+      expect(analyticsStore.avgRpe).toBe(6.0)
+    })
+
+    it('should format result to one decimal place', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 6 },
+                { weight: 100, reps: 10, rpe: 7 },
+                { weight: 100, reps: 10, rpe: 8 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Average: (6 + 7 + 8) / 3 = 7.0 (not 7.000000001)
+      expect(analyticsStore.avgRpe).toBe(7.0)
+      expect(typeof analyticsStore.avgRpe).toBe('number')
+    })
+
+    it('should include all set types (normal, warmup, dropset)', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 60, reps: 10, rpe: 4, type: 'warmup' },
+                { weight: 100, reps: 10, rpe: 8, type: 'normal' },
+                { weight: 80, reps: 12, rpe: 9, type: 'dropset' },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Average: (4 + 8 + 9) / 3 = 7.0
+      expect(analyticsStore.avgRpe).toBe(7.0)
+    })
+
+    it('should handle Firebase Timestamp objects', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const twoDaysAgo = new Date(now.getTime() - 2 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: mockTimestamp(twoDaysAgo),
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 7 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      expect(analyticsStore.avgRpe).toBe(7.0)
+    })
+
+    it('should filter out non-completed workouts', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'active',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 5 },
+              ],
+            },
+          ],
+        }),
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex2',
+              sets: [
+                { weight: 100, reps: 10, rpe: 8 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      // Should only count completed workout with RPE 8
+      expect(analyticsStore.avgRpe).toBe(8.0)
+    })
+  })
+
+  describe('quickStats', () => {
+    it('should return weight from userStore', async () => {
+      const analyticsStore = useAnalyticsStore()
+      // Mock userStore with weight
+      const { useUserStore } = await import('../userStore')
+      const userStore = useUserStore()
+
+      // Mock currentWeight getter
+      vi.spyOn(userStore, 'currentWeight', 'get').mockReturnValue(75.5)
+
+      expect(analyticsStore.quickStats.weight).toBe(75.5)
+    })
+
+    it('should return null when userStore has no weight', async () => {
+      const analyticsStore = useAnalyticsStore()
+      const { useUserStore } = await import('../userStore')
+      const userStore = useUserStore()
+
+      // Mock currentWeight getter as null
+      vi.spyOn(userStore, 'currentWeight', 'get').mockReturnValue(null)
+
+      expect(analyticsStore.quickStats.weight).toBe(null)
+    })
+
+    it('should include avgRpe in quickStats', async () => {
+      const workoutStore = useWorkoutStore()
+      const analyticsStore = useAnalyticsStore()
+
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 1 * 86400000)
+
+      const mockWorkouts = [
+        createMockWorkout({
+          status: 'completed',
+          completedAt: oneDayAgo,
+          exercises: [
+            {
+              exerciseId: 'ex1',
+              sets: [
+                { weight: 100, reps: 10, rpe: 7 },
+              ],
+            },
+          ],
+        }),
+      ]
+
+      fetchCollection.mockResolvedValue(mockWorkouts)
+      await workoutStore.fetchWorkouts('last7Days')
+
+      expect(analyticsStore.quickStats.avgRpe).toBe(7.0)
     })
   })
 })

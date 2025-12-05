@@ -13,13 +13,13 @@ import {
 
 const { t, locale } = useI18n()
 const analyticsStore = useAnalyticsStore()
-const { weekComparison } = storeToRefs(analyticsStore)
+const { periodComparison, periodConfig, hasTrend, period } = storeToRefs(analyticsStore)
 
 // Format comparison data for visualization
 const comparisonData = computed(() => {
-  const current = weekComparison.value.currentWeek
-  const previous = weekComparison.value.previousWeek
-  const change = weekComparison.value.change
+  const current = periodComparison.value.currentPeriod
+  const previous = periodComparison.value.previousPeriod
+  const change = periodComparison.value.change
 
   // Calculate max values for each metric for scaling
   const maxVolume = Math.max(current.volume, previous.volume)
@@ -58,6 +58,30 @@ const comparisonData = computed(() => {
     },
   ]
 })
+
+// Dynamic labels based on selected period
+const currentPeriodLabel = computed(() => {
+  return t(`dashboard.stats.periods.${periodConfig.value.id}`)
+})
+
+const previousPeriodLabel = computed(() => {
+  if (!hasTrend.value) return ''
+
+  // Map comparison type to translation key
+  const comparisonType = periodConfig.value.comparisonType
+  switch (comparisonType) {
+    case 'rolling':
+      return t('dashboard.charts.comparisonPrevious', { period: currentPeriodLabel.value })
+    case 'previousMonth':
+      return t('dashboard.stats.periods.lastMonth')
+    case 'monthBeforeLast':
+      return t('dashboard.stats.periods.monthBeforeLast')
+    case 'previousYear':
+      return t('dashboard.stats.periods.lastYear')
+    default:
+      return t('dashboard.charts.previousPeriod')
+  }
+})
 </script>
 
 <template>
@@ -69,7 +93,7 @@ const comparisonData = computed(() => {
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="space-y-6">
+      <div class="space-y-6" :key="`comparison-chart-${period}`">
         <!-- Each metric comparison -->
         <div
           v-for="(item, index) in comparisonData"
@@ -127,20 +151,20 @@ const comparisonData = computed(() => {
         <div class="flex gap-6 pt-4 border-t">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded bg-muted" />
-            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.previousWeek') }}</span>
+            <span class="text-xs text-muted-foreground">{{ previousPeriodLabel }}</span>
           </div>
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded bg-gradient-to-r from-primary to-primary/70" />
-            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.currentWeek') }}</span>
+            <span class="text-xs text-muted-foreground">{{ currentPeriodLabel }}</span>
           </div>
         </div>
 
         <!-- Summary cards -->
         <div class="grid grid-cols-2 gap-4 pt-4">
           <div class="p-4 rounded-lg bg-muted/20 space-y-1">
-            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.currentWeek') }}</p>
+            <p class="text-xs text-muted-foreground">{{ currentPeriodLabel }}</p>
             <p class="text-2xl font-bold">
-              {{ weekComparison.currentWeek.workouts }}
+              {{ periodComparison.currentPeriod.workouts }}
             </p>
             <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.workouts') }}</p>
           </div>
@@ -149,14 +173,14 @@ const comparisonData = computed(() => {
             <p
               :class="[
                 'text-2xl font-bold',
-                weekComparison.change.volumePercentage >= 0
+                periodComparison.change.volumePercentage >= 0
                   ? 'text-green-500'
                   : 'text-red-500',
               ]"
             >
-              {{ weekComparison.change.volumePercentage >= 0 ? '+' : '' }}{{ weekComparison.change.volumePercentage }}%
+              {{ periodComparison.change.volumePercentage >= 0 ? '+' : '' }}{{ periodComparison.change.volumePercentage }}%
             </p>
-            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.vsLastWeek') }}</p>
+            <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.vsPreviousPeriod') }}</p>
           </div>
         </div>
       </div>

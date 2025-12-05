@@ -19,7 +19,7 @@ import {
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
-const { frequencyHeatmap } = storeToRefs(analyticsStore)
+const { frequencyHeatmap, period } = storeToRefs(analyticsStore)
 
 // Days of week labels
 const daysOfWeek = computed(() => [
@@ -97,7 +97,7 @@ const displayHours = [6, 9, 12, 15, 18, 21]
       <div v-if="heatmapData.length > 0" class="space-y-4">
         <TooltipProvider>
           <!-- Heatmap grid -->
-          <div class="space-y-1">
+          <div class="space-y-1" :key="`frequency-heatmap-${period}`">
             <div
               v-for="(dayData, dayIndex) in heatmapData"
               :key="dayIndex"
