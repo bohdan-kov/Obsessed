@@ -30,7 +30,7 @@
             {{ stats.personalRecord.value?.formatted || t('exercises.stats.noData') }}
           </div>
           <div v-if="stats.personalRecord.value" class="text-xs text-muted-foreground">
-            {{ stats.personalRecord.value.reps }} {{ t('workout.reps') }} •
+            {{ t('workout.session.reps', { count: stats.personalRecord.value.reps }) }} •
             {{ formatDate(stats.personalRecord.value.date) }}
           </div>
         </div>
@@ -44,8 +44,8 @@
             {{ stats.estimated1RM.value?.formatted || t('exercises.stats.noData') }}
           </div>
           <div v-if="stats.estimated1RM.value" class="text-xs text-muted-foreground">
-            {{ t('common.based') }} {{ stats.estimated1RM.value.basedOn.weight }}
-            x {{ stats.estimated1RM.value.basedOn.reps }}
+            {{ t('common.based') }} {{ stats.estimated1RM.value.basedOn.weight }} x
+            {{ stats.estimated1RM.value.basedOn.reps }}
           </div>
         </div>
 
@@ -68,7 +68,7 @@
             {{ stats.timesPerformed.value }}
           </div>
           <div class="text-xs text-muted-foreground">
-            {{ stats.totalSets.value }} {{ t('workout.sets') }}
+            {{ t('workout.session.sets', { count: stats.totalSets.value }) }}
           </div>
         </div>
 

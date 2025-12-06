@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { Donut } from '@unovis/ts'
@@ -17,18 +17,27 @@ import {
   ChartContainer,
   ChartTooltip,
 } from '@/components/ui/chart'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
-const { muscleDistribution, periodLabel, period } = storeToRefs(analyticsStore)
+const { muscleDistribution, muscleDistributionByVolume, periodLabel, period } = storeToRefs(analyticsStore)
+
+// Toggle state for Sets/Volume display
+const displayMode = ref('sets')
 
 // Top 8 muscles for donut chart with translated names
+// Conditionally uses sets or volume based on displayMode
 // CRITICAL: Each item MUST have `fill: "var(--color-{muscle})"` property
 const chartData = computed(() => {
-  return muscleDistribution.value.slice(0, 8).map((muscle) => ({
+  const source = displayMode.value === 'sets'
+    ? muscleDistribution.value
+    : muscleDistributionByVolume.value
+
+  return source.slice(0, 8).map((muscle) => ({
     muscle: muscle.muscle,
     muscleName: t(`exercises.muscleGroups.${muscle.muscle}`),
-    sets: muscle.sets,
+    value: displayMode.value === 'sets' ? muscle.sets : muscle.value,
     percentage: muscle.percentage,
     fill: `var(--color-${muscle.muscle})`, // CRITICAL: reference to CSS variable
   }))
@@ -38,8 +47,10 @@ const chartData = computed(() => {
 // CRITICAL: color values must be "hsl(var(--chart-X))" format
 const chartConfig = computed(() => {
   const config = {
-    sets: {
-      label: t('dashboard.charts.sets'),
+    value: {
+      label: displayMode.value === 'sets'
+        ? t('dashboard.charts.sets')
+        : t('dashboard.charts.volumeKg'),
       color: undefined,
     },
   }
@@ -55,9 +66,16 @@ const chartConfig = computed(() => {
   return config
 })
 
-// Total sets
-const totalSets = computed(() => {
-  return chartData.value.reduce((sum, muscle) => sum + muscle.sets, 0)
+// Total value (sets or volume depending on mode)
+const totalValue = computed(() => {
+  return chartData.value.reduce((sum, muscle) => sum + muscle.value, 0)
+})
+
+// Label for center of donut and legend
+const valueLabel = computed(() => {
+  return displayMode.value === 'sets'
+    ? t('dashboard.charts.totalSets')
+    : 'kg'
 })
 
 // Tooltip formatter function
@@ -66,14 +84,17 @@ const totalSets = computed(() => {
 const getTooltipContent = (d) => {
   // Extract actual data from Unovis wrapper
   const data = d.data
-  const percentage = ((data.sets / totalSets.value) * 100).toFixed(1)
+  const percentage = ((data.value / totalValue.value) * 100).toFixed(1)
+  const unit = displayMode.value === 'sets'
+    ? t('dashboard.charts.setsShort')
+    : 'kg'
 
   // Use Tailwind classes that work with theme switching
   // The bg-popover, text-popover-foreground, etc. classes will adapt based on theme
   return `
     <div class="bg-popover text-popover-foreground border border-border rounded-lg p-3 shadow-lg min-w-[180px]" data-tooltip-content="true">
       <div class="font-semibold mb-1">${data.muscleName}</div>
-      <div class="text-sm text-muted-foreground">${data.sets} ${t('dashboard.charts.setsShort')} (${percentage}%)</div>
+      <div class="text-sm text-muted-foreground">${Math.round(data.value)} ${unit} (${percentage}%)</div>
     </div>
   `
 }
@@ -82,10 +103,24 @@ const getTooltipContent = (d) => {
 <template>
   <Card class="flex flex-col">
     <CardHeader class="pb-4">
-      <CardTitle>{{ t('dashboard.charts.muscleTitle') }}</CardTitle>
-      <CardDescription>
-        {{ t('dashboard.charts.muscleDescriptionPeriod', { period: t(periodLabel) }) }}
-      </CardDescription>
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1">
+          <CardTitle>{{ t('dashboard.charts.muscleTitle') }}</CardTitle>
+          <CardDescription>
+            {{ t('dashboard.charts.muscleDescriptionPeriod', { period: t(periodLabel) }) }}
+          </CardDescription>
+        </div>
+        <Tabs v-model="displayMode" class="shrink-0">
+          <TabsList>
+            <TabsTrigger value="sets">
+              {{ t('dashboard.charts.muscleModes.sets') }}
+            </TabsTrigger>
+            <TabsTrigger value="volume">
+              {{ t('dashboard.charts.muscleModes.volume') }}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
     </CardHeader>
 
     <CardContent class="flex flex-col pb-6">
@@ -103,17 +138,17 @@ const getTooltipContent = (d) => {
             }"
           >
             <VisSingleContainer
-              :key="`muscle-chart-${period}`"
+              :key="`muscle-chart-${period}-${displayMode}`"
               :data="chartData"
               :margin="{ top: 30, bottom: 30 }"
             >
               <VisDonut
-                :value="(d) => d.sets"
+                :value="(d) => d.value"
                 :color="(d) => chartConfig[d.muscle].color"
                 :arc-width="30"
                 :central-label-offset-y="10"
-                :central-label="totalSets.toString()"
-                :central-sub-label="t('dashboard.charts.totalSets')"
+                :central-label="Math.round(totalValue).toString()"
+                :central-sub-label="valueLabel"
               />
               <ChartTooltip
                 :triggers="{
@@ -139,7 +174,10 @@ const getTooltipContent = (d) => {
               <span class="font-medium">{{ item.muscleName }}</span>
             </div>
             <div class="flex items-center gap-3 text-muted-foreground">
-              <span class="font-mono">{{ item.sets }} {{ t('dashboard.charts.setsShort') }}</span>
+              <span class="font-mono">
+                {{ Math.round(item.value) }}
+                {{ displayMode === 'sets' ? t('dashboard.charts.setsShort') : 'kg' }}
+              </span>
               <span class="font-mono w-12 text-right">{{ item.percentage.toFixed(1) }}%</span>
             </div>
           </div>

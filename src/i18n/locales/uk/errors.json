@@ -17,7 +17,14 @@
     "required": "Потрібна авторизація",
     "invalidCredentials": "Невірний email або пароль",
     "emailNotVerified": "Підтвердіть email адресу",
-    "sessionExpired": "Сесія закінчилась, увійдіть знову"
+    "sessionExpired": "Сесія закінчилась, увійдіть знову",
+    "loginFailed": "Не вдалося увійти",
+    "signupFailed": "Не вдалося зареєструватися",
+    "googleSignInFailed": "Не вдалося увійти через Google",
+    "passwordResetFailed": "Не вдалося скинути пароль",
+    "verificationEmailFailed": "Не вдалося надіслати email підтвердження",
+    "signOutFailed": "Не вдалося вийти",
+    "updateProfileFailed": "Не вдалося оновити профіль"
   },
   "workout": {
     "noActive": "Немає активного тренування",

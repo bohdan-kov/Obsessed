@@ -1,8 +1,7 @@
 <script setup>
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { useContributionHeatmap } from '@/composables/useContributionHeatmap'
 import {
   Card,
   CardContent,
@@ -10,185 +9,488 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Calendar, Info } from 'lucide-vue-next'
+import QuickStatsStrip from './QuickStatsStrip.vue'
 
 const { t } = useI18n()
-const analyticsStore = useAnalyticsStore()
-const { frequencyHeatmap, period } = storeToRefs(analyticsStore)
+const {
+  gridData,
+  monthLabels,
+  dayLabels,
+  legendLevels,
+  isEmpty,
+  totalWeeks,
+  isCappedToYear,
+  getColorClass,
+  formatTooltipText,
+} = useContributionHeatmap()
 
-// Days of week labels
-const daysOfWeek = computed(() => [
-  t('dashboard.charts.daysOfWeek.mon'),
-  t('dashboard.charts.daysOfWeek.tue'),
-  t('dashboard.charts.daysOfWeek.wed'),
-  t('dashboard.charts.daysOfWeek.thu'),
-  t('dashboard.charts.daysOfWeek.fri'),
-  t('dashboard.charts.daysOfWeek.sat'),
-  t('dashboard.charts.daysOfWeek.sun'),
-])
+// Grid sizing: Define a 7-row × N-column grid where N = totalWeeks
+// Rows = 7 days (Mon-Sun), Columns = number of weeks in the period
+// Each cell is explicitly sized to 0.875rem (14px) for perfect alignment
+const gridColumnsStyle = computed(() => ({
+  gridTemplateColumns: `repeat(${totalWeeks.value}, 0.875rem)`,
+  gridTemplateRows: 'repeat(7, 0.875rem)',
+}))
 
-// Convert heatmap object to array format for rendering
-const heatmapData = computed(() => {
-  const days = Object.keys(frequencyHeatmap.value)
-  if (days.length === 0) return []
+const monthLabelsStyle = computed(() => ({
+  gridTemplateColumns: `repeat(${totalWeeks.value}, 0.875rem)`,
+}))
 
-  // Get max value for normalization
-  const maxValue = Math.max(
-    ...days.map((day) => Math.max(...frequencyHeatmap.value[day]))
-  )
+// Refs for scroll synchronization
+const monthLabelsScrollRef = ref(null)
+const heatmapContainerRef = ref(null)
 
-  return days.map((day, dayIndex) => ({
-    day,
-    dayLabel: daysOfWeek.value[dayIndex] || day.slice(0, 2),
-    hours: frequencyHeatmap.value[day].map((count, hour) => ({
-      hour,
-      count,
-      level: getLevel(count, maxValue),
-      tooltip: `${day} ${hour}:00 - ${count} ${count === 1 ? t('dashboard.charts.workout') : t('dashboard.charts.workouts')}`,
-    })),
-  }))
+// Tooltip state
+const activeCell = ref(null)
+const showTooltip = ref(false)
+const tooltipPosition = ref({ x: 0, y: 0 })
+
+// Performance optimization: Prevent infinite scroll loops and throttle updates
+let isScrolling = false
+let rafId = null
+
+/**
+ * Synchronize scroll between month labels and heatmap grid
+ * Optimized with requestAnimationFrame to prevent layout thrashing
+ */
+function syncScroll(event) {
+  // Prevent infinite loop (if we just set scrollLeft, don't trigger again)
+  if (isScrolling) return
+
+  const source = event.target
+  const isMonthLabels = source === monthLabelsScrollRef.value
+  const target = isMonthLabels ? heatmapContainerRef.value : monthLabelsScrollRef.value
+
+  if (!target) return
+
+  // Cancel previous frame if user is still scrolling
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+  }
+
+  // Batch DOM update to next animation frame for 60fps performance
+  rafId = requestAnimationFrame(() => {
+    isScrolling = true // Set lock before update
+    target.scrollLeft = source.scrollLeft
+
+    // Release lock after the next frame to ensure propagation is complete
+    requestAnimationFrame(() => {
+      isScrolling = false
+      rafId = null
+    })
+  })
+}
+
+/**
+ * Handle cell hover (desktop)
+ */
+function handleCellHover(cell, event) {
+  activeCell.value = cell
+  showTooltip.value = true
+
+  const rect = event.target.getBoundingClientRect()
+  tooltipPosition.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.top - 8,
+  }
+}
+
+/**
+ * Handle cell leave
+ */
+function handleCellLeave() {
+  showTooltip.value = false
+  activeCell.value = null
+}
+
+/**
+ * Handle cell click (mobile)
+ */
+function handleCellClick(cell, event) {
+  if (activeCell.value === cell && showTooltip.value) {
+    showTooltip.value = false
+    activeCell.value = null
+  } else {
+    handleCellHover(cell, event)
+  }
+}
+
+/**
+ * Setup scroll synchronization on mount
+ * Using passive listeners for better scroll performance
+ */
+onMounted(() => {
+  if (monthLabelsScrollRef.value) {
+    monthLabelsScrollRef.value.addEventListener('scroll', syncScroll, { passive: true })
+  }
+  if (heatmapContainerRef.value) {
+    heatmapContainerRef.value.addEventListener('scroll', syncScroll, { passive: true })
+  }
 })
 
-// Calculate intensity level (0-5)
-function getLevel(count, maxValue) {
-  if (count === 0) return 0
-  if (maxValue === 0) return 0
+/**
+ * Cleanup scroll listeners and pending RAF on unmount
+ */
+onUnmounted(() => {
+  // Cancel any pending animation frame
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+  }
 
-  const percentage = (count / maxValue) * 100
-
-  if (percentage <= 20) return 1
-  if (percentage <= 40) return 2
-  if (percentage <= 60) return 3
-  if (percentage <= 80) return 4
-  return 5
-}
-
-// Get color based on level
-function getColor(level) {
-  const colors = [
-    'bg-muted/30', // 0 - no workout
-    'bg-primary/20', // 1 - very light
-    'bg-primary/40', // 2 - light
-    'bg-primary/60', // 3 - medium
-    'bg-primary/80', // 4 - high
-    'bg-primary', // 5 - very high
-  ]
-  return colors[level] || colors[0]
-}
-
-// Hours to display (simplified, showing 6 AM to 10 PM)
-const displayHours = [6, 9, 12, 15, 18, 21]
+  if (monthLabelsScrollRef.value) {
+    monthLabelsScrollRef.value.removeEventListener('scroll', syncScroll, { passive: true })
+  }
+  if (heatmapContainerRef.value) {
+    heatmapContainerRef.value.removeEventListener('scroll', syncScroll, { passive: true })
+  }
+})
 </script>
 
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>{{ t('dashboard.charts.frequencyTitle') }}</CardTitle>
+      <CardTitle>{{ t('dashboard.charts.heatmap.title') }}</CardTitle>
       <CardDescription>
-        {{ t('dashboard.charts.frequencyDescription') }}
+        {{ t('dashboard.charts.heatmap.description') }}
       </CardDescription>
+      <!-- 365-Day Cap Indicator -->
+      <div
+        v-if="isCappedToYear"
+        class="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground"
+      >
+        <Info class="w-3.5 h-3.5" />
+        <span>{{ t('dashboard.charts.heatmap.cappedToYear') }}</span>
+      </div>
     </CardHeader>
     <CardContent>
-      <div v-if="heatmapData.length > 0" class="space-y-4">
-        <TooltipProvider>
-          <!-- Heatmap grid -->
-          <div class="space-y-1" :key="`frequency-heatmap-${period}`">
-            <div
-              v-for="(dayData, dayIndex) in heatmapData"
-              :key="dayIndex"
-              class="flex items-center gap-2"
-            >
-              <!-- Day label -->
-              <div class="w-8 text-xs text-muted-foreground font-medium">
-                {{ dayData.dayLabel }}
-              </div>
-
-              <!-- Hour cells -->
-              <div class="flex gap-1 flex-1">
-                <Tooltip
-                  v-for="hourData in dayData.hours.filter((h) =>
-                    displayHours.includes(h.hour)
-                  )"
-                  :key="hourData.hour"
-                >
-                  <TooltipTrigger as-child>
-                    <div
-                      :class="[
-                        'w-full h-8 rounded-sm cursor-pointer transition-all hover:scale-110 hover:ring-2 hover:ring-primary/50',
-                        getColor(hourData.level),
-                      ]"
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p class="font-medium">{{ dayData.day }}</p>
-                    <p class="text-sm">
-                      {{ hourData.hour }}:00 - {{ hourData.hour + 1 }}:00
-                    </p>
-                    <p class="text-xs text-muted-foreground">
-                      {{ hourData.count }}
-                      {{ hourData.count === 1 ? t('dashboard.charts.workout') : t('dashboard.charts.workouts') }}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
-
-          <!-- Hour labels -->
-          <div class="flex items-center gap-2">
-            <div class="w-8" />
-            <div class="flex gap-1 flex-1 justify-between text-xs text-muted-foreground">
-              <span v-for="hour in displayHours" :key="hour">
-                {{ hour }}:00
-              </span>
-            </div>
-          </div>
-        </TooltipProvider>
-
-        <!-- Legend -->
-        <div class="flex items-center justify-between pt-4 border-t">
-          <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.intensity') }}</span>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.less') }}</span>
-            <div class="flex gap-1">
-              <div
-                v-for="level in 6"
-                :key="level"
-                :class="['w-3 h-3 rounded-sm', getColor(level - 1)]"
-              />
-            </div>
-            <span class="text-xs text-muted-foreground">{{ t('dashboard.charts.more') }}</span>
-          </div>
-        </div>
+      <!-- Empty State -->
+      <div
+        v-if="isEmpty"
+        class="flex flex-col items-center justify-center py-12 text-muted-foreground"
+      >
+        <Calendar class="w-12 h-12 mb-2 opacity-50" />
+        <p class="text-sm font-medium">{{ t('dashboard.charts.heatmap.noData') }}</p>
+        <p class="text-xs mt-1">{{ t('dashboard.charts.heatmap.noDataSubtitle') }}</p>
       </div>
 
-      <!-- Empty state -->
-      <div
-        v-else
-        class="h-[300px] flex flex-col items-center justify-center text-muted-foreground"
-      >
-        <svg
-          class="w-12 h-12 mb-2 opacity-50"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-        <p class="text-sm">{{ t('dashboard.charts.noFrequencyData') }}</p>
-        <p class="text-xs mt-1">{{ t('dashboard.charts.noFrequencyDataSubtitle') }}</p>
+      <!-- Heatmap Grid -->
+      <div v-else class="heatmap-with-stats">
+        <!-- Left side: Heatmap grid and legend -->
+        <div class="contribution-heatmap">
+          <!-- Month Labels Row -->
+          <div class="month-labels-row">
+            <div class="day-label-spacer"></div>
+            <div ref="monthLabelsScrollRef" class="month-labels-scroll">
+              <div class="month-labels" :style="monthLabelsStyle">
+                <span
+                  v-for="(label, index) in monthLabels"
+                  :key="index"
+                  :style="{ gridColumnStart: label.weekIndex + 1 }"
+                  class="month-label"
+                >
+                  {{ label.label }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Grid -->
+          <div ref="heatmapContainerRef" class="heatmap-container">
+            <!-- Day Labels Column -->
+            <div class="day-labels">
+              <span v-for="(label, index) in dayLabels" :key="index" class="day-label">
+                {{ label }}
+              </span>
+            </div>
+
+            <!-- Weeks Grid: 2D grid with cells as direct children -->
+            <div class="weeks-grid" :style="gridColumnsStyle">
+              <template v-for="(week, weekIndex) in gridData" :key="weekIndex">
+                <div
+                  v-for="(cell, dayIndex) in week"
+                  :key="`${weekIndex}-${dayIndex}`"
+                  :class="[
+                    'day-cell',
+                    cell.colorClass,
+                    {
+                      'is-today': cell.isToday,
+                      'is-out-of-period': !cell.isInPeriod,
+                    },
+                  ]"
+                  :aria-label="formatTooltipText(cell)"
+                  tabindex="0"
+                  @mouseenter="handleCellHover(cell, $event)"
+                  @mouseleave="handleCellLeave"
+                  @click="handleCellClick(cell, $event)"
+                  @focus="handleCellHover(cell, $event)"
+                  @blur="handleCellLeave"
+                />
+              </template>
+            </div>
+          </div>
+
+          <!-- Legend -->
+          <div class="legend">
+            <span class="text-xs text-muted-foreground">
+              {{ t('dashboard.charts.heatmap.legend.less') }}
+            </span>
+            <div class="legend-colors">
+              <div
+                v-for="level in legendLevels"
+                :key="level"
+                :class="['legend-cell', getColorClass(level)]"
+              />
+            </div>
+            <span class="text-xs text-muted-foreground">
+              {{ t('dashboard.charts.heatmap.legend.more') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Right side: Stats sidebar (desktop) / Below heatmap (mobile) -->
+        <QuickStatsStrip class="stats-sidebar" />
+
+        <!-- Tooltip -->
+        <Teleport to="body">
+          <div
+            v-if="showTooltip && activeCell"
+            class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full"
+            :style="{
+              left: `${tooltipPosition.x}px`,
+              top: `${tooltipPosition.y}px`,
+            }"
+          >
+            <div class="bg-popover text-popover-foreground border border-border rounded-lg p-3 shadow-lg min-w-[140px] text-center whitespace-pre-line text-sm">
+              {{ formatTooltipText(activeCell) }}
+            </div>
+          </div>
+        </Teleport>
       </div>
     </CardContent>
   </Card>
 </template>
+
+<style scoped>
+/* Wrapper: Flexbox container for heatmap + stats sidebar */
+.heatmap-with-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.contribution-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0; /* Allow shrinking */
+  overflow: hidden; /* Establish scroll container context */
+  width: 100%; /* Ensure full width usage */
+}
+
+.stats-sidebar {
+  flex-shrink: 0;
+  width: 160px;
+}
+
+/* Month Labels */
+.month-labels-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.day-label-spacer {
+  width: 2rem;
+  flex-shrink: 0;
+}
+
+.month-labels-scroll {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.month-labels-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.month-labels {
+  display: grid;
+  gap: 0.125rem;
+  /* Width is set by gridTemplateColumns inline style */
+  min-width: fit-content;
+}
+
+.month-label {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  text-align: left;
+  padding-left: 0.25rem;
+}
+
+/* Main Grid Container */
+.heatmap-container {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  width: 100%; /* Ensure container can expand */
+}
+
+/* Day Labels */
+.day-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 2rem;
+  flex-shrink: 0;
+  padding-top: 0.125rem;
+}
+
+.day-label {
+  height: 0.875rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  display: flex;
+  align-items: center;
+}
+
+/* Weeks Grid - 2D CSS Grid layout */
+/* Cells are placed column-by-column (week by week) filling 7 rows */
+.weeks-grid {
+  display: grid;
+  /* gridTemplateColumns and gridTemplateRows set via inline style */
+  grid-auto-flow: column; /* Fill columns first (top to bottom, then next column) */
+  gap: 0.125rem;
+  flex: 1;
+}
+
+/* Day Cells */
+.day-cell {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 0.125rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+  border: 1px solid transparent;
+}
+
+.day-cell:hover,
+.day-cell:focus {
+  transform: scale(1.15);
+  outline: none;
+  ring: 2px;
+  ring-color: hsl(var(--primary) / 0.5);
+}
+
+.day-cell.is-today {
+  border-color: hsl(var(--primary));
+  ring: 1px;
+  ring-color: hsl(var(--primary));
+}
+
+/* Phase 2: Out-of-period cells shown with low opacity */
+.day-cell.is-out-of-period {
+  opacity: 0.15;
+  cursor: default;
+}
+
+.day-cell.is-out-of-period:hover,
+.day-cell.is-out-of-period:focus {
+  transform: none;
+  ring: none;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(var(--border));
+  margin-top: 0.5rem;
+}
+
+.legend-colors {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.legend-cell {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 0.125rem;
+  border: 1px solid hsl(var(--border) / 0.3);
+}
+
+
+/* Responsive Breakpoint: Stack stats below heatmap on smaller screens */
+@media (max-width: 1024px) {
+  .heatmap-with-stats {
+    flex-direction: column;
+  }
+
+  .stats-sidebar {
+    width: 100%;
+  }
+
+  /* Ensure heatmap takes full width on tablet */
+  .contribution-heatmap {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  /* Phase 2: Enable touch scrolling and sticky day labels */
+  .heatmap-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .month-labels-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .day-labels {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: hsl(var(--background));
+    width: 1.5rem;
+  }
+
+  .day-cell,
+  .legend-cell {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  .day-label-spacer {
+    width: 1.5rem;
+  }
+
+  .month-label {
+    font-size: 0.625rem;
+  }
+
+  .day-label {
+    font-size: 0.625rem;
+    height: 0.625rem;
+  }
+}
+
+/* Accessibility - Touch targets */
+@media (hover: none) {
+  .day-cell {
+    padding: 0.75rem;
+    width: auto;
+    height: auto;
+  }
+}
+</style>

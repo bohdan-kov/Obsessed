@@ -149,7 +149,9 @@ import ExerciseEmptyState from './components/ExerciseEmptyState.vue'
 import ExerciseFormDialog from './components/ExerciseFormDialog.vue'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { useExerciseLibraryStore } from '@/stores/exerciseLibraryStore'
+import { useWorkoutStore } from '@/stores/workoutStore'
 import { useDynamicPagination } from '@/composables/useDynamicPagination'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 import { useI18n } from 'vue-i18n'
 import { CONFIG } from '@/constants/config'
 
@@ -157,6 +159,8 @@ const { t } = useI18n()
 const router = useRouter()
 const exerciseStore = useExerciseStore()
 const exerciseLibraryStore = useExerciseLibraryStore()
+const workoutStore = useWorkoutStore()
+const { handleError } = useErrorHandler()
 
 // Dynamic pagination based on viewport height
 const { itemsPerPage: dynamicItemsPerPage } = useDynamicPagination({
@@ -288,20 +292,23 @@ function handlePageChange(page) {
  */
 onMounted(async () => {
   try {
-    // Load exercises if not already loaded
-    if (exerciseStore.exercises.length === 0) {
-      await exerciseStore.fetchExercises()
-    }
-
-    // Load custom exercises
-    await exerciseStore.fetchCustomExercises()
+    await Promise.all([
+      // Load exercises if not already loaded
+      exerciseStore.exercises.length === 0
+        ? exerciseStore.fetchExercises()
+        : Promise.resolve(),
+      // Load custom exercises
+      exerciseStore.fetchCustomExercises(),
+      // Load workout data for exercise stats
+      workoutStore.ensureDataLoaded({ period: 'month', subscribe: true }),
+    ])
 
     // Subscribe to custom exercises for real-time updates
     exerciseStore.subscribeToCustom()
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('Error loading exercises:', error)
-    }
+    handleError(error, t('errors.loadExercises'), {
+      context: 'ExercisesView.onMounted',
+    })
   }
 })
 </script>

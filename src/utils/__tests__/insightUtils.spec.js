@@ -10,7 +10,7 @@ import {
   formatTrendValue,
   getTrendDirection,
   createTrendObject,
-} from '../insightUtils'
+} from '@/utils/insightUtils'
 
 describe('insightUtils', () => {
   describe('generateRestDaysInsight', () => {

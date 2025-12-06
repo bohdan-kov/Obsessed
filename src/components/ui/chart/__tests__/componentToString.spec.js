@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { componentToString } from '../index'
+import { componentToString } from '@/components/ui/chart/index'
 
 describe('componentToString', () => {
   it('should generate HTML tooltip for data with multiple fields', () => {

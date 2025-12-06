@@ -1,0 +1,795 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { useExerciseStats } from '@/composables/useExerciseStats'
+import { useWorkoutStore } from '@/stores/workoutStore'
+import { useAuthStore } from '@/stores/authStore'
+
+// Mock Firebase modules
+vi.mock('@/firebase/firestore', () => ({
+  fetchCollection: vi.fn(),
+  createDocument: vi.fn(),
+  updateDocument: vi.fn(),
+  subscribeToCollection: vi.fn(),
+  serverTimestamp: vi.fn(() => new Date()),
+  fetchDocument: vi.fn(),
+  setDocument: vi.fn(),
+  subscribeToDocument: vi.fn(),
+  COLLECTIONS: {
+    USERS: 'users',
+    WORKOUTS: 'workouts',
+  },
+}))
+
+vi.mock('@/firebase/auth', () => ({
+  onAuthChange: vi.fn(() => vi.fn()),
+  signOut: vi.fn(),
+}))
+
+vi.mock('@/composables/useErrorHandler', () => ({
+  useErrorHandler: () => ({
+    handleError: vi.fn(),
+  }),
+}))
+
+describe('useExerciseStats', () => {
+  let workoutStore
+  let authStore
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    workoutStore = useWorkoutStore()
+    authStore = useAuthStore()
+
+    // Set authenticated user
+    authStore.$patch({
+      user: { uid: 'test-user-123', email: 'test@test.com', emailVerified: true },
+      initializing: false,
+      loading: false,
+    })
+  })
+
+  describe('personalRecord', () => {
+    it('should calculate max weight from all sets', () => {
+      // Setup workout data with exercise history
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 80, reps: 10 },
+                  { weight: 100, reps: 8 },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'w2',
+            startedAt: new Date('2025-01-05'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 120, reps: 5 }, // PR
+                  { weight: 110, reps: 6 },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.personalRecord.value).toBeDefined()
+      expect(stats.personalRecord.value.weight).toBe(120) // kg (fromStorageUnit is pass-through in tests)
+      expect(stats.personalRecord.value.reps).toBe(5)
+    })
+
+    it('should return null for empty exercise history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.personalRecord.value).toBeNull()
+    })
+
+    it('should convert weight from storage unit (kg) to display unit', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'squat',
+                sets: [{ weight: 150, reps: 5 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('squat')
+
+      // useUnits is globally mocked with pass-through conversion
+      expect(stats.personalRecord.value.weight).toBe(150)
+      expect(stats.personalRecord.value.formatted).toBeDefined()
+    })
+  })
+
+  describe('estimated1RM', () => {
+    it('should calculate 1RM using Brzycki formula', () => {
+      // Brzycki formula: 1RM = weight × (36 / (37 - reps))
+      // For 100kg × 10 reps: 1RM = 100 × (36 / (37 - 10)) = 100 × (36/27) = 133.33kg
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.estimated1RM.value).toBeDefined()
+      expect(stats.estimated1RM.value.value).toBeCloseTo(133.33, 1)
+      expect(stats.estimated1RM.value.basedOn.weight).toBe(100)
+      expect(stats.estimated1RM.value.basedOn.reps).toBe(10)
+    })
+
+    it('should find the set with highest estimated 1RM', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10 }, // 1RM ≈ 133.33
+                  { weight: 120, reps: 3 }, // 1RM ≈ 127.06
+                  { weight: 90, reps: 12 }, // 1RM ≈ 129.6
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      // Should select 100kg × 10 reps as it has highest 1RM
+      expect(stats.estimated1RM.value.basedOn.weight).toBe(100)
+      expect(stats.estimated1RM.value.basedOn.reps).toBe(10)
+    })
+
+    it('should only consider reps in valid range (1-36)', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 0 }, // Invalid
+                  { weight: 100, reps: 40 }, // Invalid (> 36)
+                  { weight: 80, reps: 10 }, // Valid
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      // Should only use the valid set
+      expect(stats.estimated1RM.value).toBeDefined()
+      expect(stats.estimated1RM.value.basedOn.weight).toBe(80)
+      expect(stats.estimated1RM.value.basedOn.reps).toBe(10)
+    })
+
+    it('should return null when no valid sets exist', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 50 }], // Invalid reps
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.estimated1RM.value).toBeNull()
+    })
+
+    it('should return null for empty exercise history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.estimated1RM.value).toBeNull()
+    })
+  })
+
+  describe('progressData', () => {
+    it('should return last 10 sessions sorted by date', () => {
+      const workouts = []
+      for (let i = 0; i < 15; i++) {
+        workouts.push({
+          id: `w${i}`,
+          startedAt: new Date(`2025-01-${String(i + 1).padStart(2, '0')}`),
+          exercises: [
+            {
+              exerciseId: 'deadlift',
+              sets: [{ weight: 100 + i * 10, reps: 5 }],
+            },
+          ],
+        })
+      }
+
+      workoutStore.$patch({ workouts })
+
+      const stats = useExerciseStats('deadlift')
+
+      // Should only return last 10 sessions
+      expect(stats.progressData.value).toHaveLength(10)
+
+      // Should be sorted ascending by date
+      const dates = stats.progressData.value.map((s) => s.date.getTime())
+      expect(dates).toEqual([...dates].sort((a, b) => a - b))
+
+      // Should start from session 5 (0-indexed, so 6th workout)
+      expect(stats.progressData.value[0].maxWeight).toBe(150) // 100 + 5*10
+    })
+
+    it('should aggregate volume for each session', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'squat',
+                sets: [
+                  { weight: 100, reps: 10 }, // volume: 1000
+                  { weight: 110, reps: 8 }, // volume: 880
+                  { weight: 120, reps: 6 }, // volume: 720
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('squat')
+
+      expect(stats.progressData.value).toHaveLength(1)
+      expect(stats.progressData.value[0].volume).toBe(2600) // 1000 + 880 + 720
+      expect(stats.progressData.value[0].maxWeight).toBe(120)
+      expect(stats.progressData.value[0].sets).toBe(3)
+    })
+
+    it('should return empty array when no exercise history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.progressData.value).toEqual([])
+    })
+
+    it('should handle Firebase Timestamp objects', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: {
+              toDate: () => new Date('2025-01-01'),
+            },
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.progressData.value).toHaveLength(1)
+      expect(stats.progressData.value[0].date).toEqual(new Date('2025-01-01'))
+    })
+  })
+
+  describe('totalVolume', () => {
+    it('should sum all weight × reps across all sets', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10 }, // 1000
+                  { weight: 110, reps: 8 }, // 880
+                ],
+              },
+            ],
+          },
+          {
+            id: 'w2',
+            startedAt: new Date('2025-01-05'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 120, reps: 5 }], // 600
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.totalVolume.value.value).toBe(2480) // 1000 + 880 + 600
+    })
+
+    it('should return zero for empty exercise history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.totalVolume.value.value).toBe(0)
+    })
+  })
+
+  describe('timesPerformed', () => {
+    it('should count number of workout sessions', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'squat',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+          {
+            id: 'w2',
+            startedAt: new Date('2025-01-05'),
+            exercises: [
+              {
+                exerciseId: 'squat',
+                sets: [{ weight: 110, reps: 8 }],
+              },
+            ],
+          },
+          {
+            id: 'w3',
+            startedAt: new Date('2025-01-10'),
+            exercises: [
+              {
+                exerciseId: 'squat',
+                sets: [{ weight: 120, reps: 6 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('squat')
+
+      expect(stats.timesPerformed.value).toBe(3)
+    })
+
+    it('should return zero for exercises never performed', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('deadlift')
+
+      expect(stats.timesPerformed.value).toBe(0)
+    })
+  })
+
+  describe('averageWeight', () => {
+    it('should calculate average weight across all sets', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10 },
+                  { weight: 110, reps: 8 },
+                  { weight: 120, reps: 6 },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageWeight.value.value).toBe(110) // (100 + 110 + 120) / 3
+    })
+
+    it('should return null for empty exercise history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageWeight.value).toBeNull()
+    })
+  })
+
+  describe('averageReps', () => {
+    it('should calculate average reps and round to nearest integer', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10 },
+                  { weight: 100, reps: 8 },
+                  { weight: 100, reps: 9 },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageReps.value).toBe(9) // (10 + 8 + 9) / 3 = 9
+    })
+
+    it('should return null for empty exercise history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageReps.value).toBeNull()
+    })
+  })
+
+  describe('averageRPE', () => {
+    it('should calculate average RPE from sets with RPE values', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10, rpe: 7 },
+                  { weight: 110, reps: 8, rpe: 8 },
+                  { weight: 120, reps: 6, rpe: 9 },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageRPE.value).toBe('8.0') // (7 + 8 + 9) / 3
+    })
+
+    it('should ignore sets without RPE values', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10, rpe: 8 },
+                  { weight: 110, reps: 8 }, // No RPE
+                  { weight: 120, reps: 6, rpe: 10 },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageRPE.value).toBe('9.0') // (8 + 10) / 2
+    })
+
+    it('should return null when no sets have RPE', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.averageRPE.value).toBeNull()
+    })
+  })
+
+  describe('lastPerformed', () => {
+    it('should return the most recent workout date', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+          {
+            id: 'w2',
+            startedAt: new Date('2025-01-10'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 110, reps: 8 }],
+              },
+            ],
+          },
+          {
+            id: 'w3',
+            startedAt: new Date('2025-01-05'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 105, reps: 9 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.lastPerformed.value).toEqual(new Date('2025-01-10'))
+    })
+
+    it('should return null for exercises never performed', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.lastPerformed.value).toBeNull()
+    })
+  })
+
+  describe('hasData', () => {
+    it('should return true when exercise has history', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.hasData.value).toBe(true)
+    })
+
+    it('should return false when exercise has no history', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.hasData.value).toBe(false)
+    })
+  })
+
+  describe('totalSets', () => {
+    it('should count all sets across all workouts', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 100, reps: 10 },
+                  { weight: 110, reps: 8 },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'w2',
+            startedAt: new Date('2025-01-05'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [
+                  { weight: 120, reps: 6 },
+                  { weight: 100, reps: 10 },
+                  { weight: 110, reps: 8 },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.totalSets.value).toBe(5)
+    })
+
+    it('should return zero for exercises never performed', () => {
+      workoutStore.$patch({ workouts: [] })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.totalSets.value).toBe(0)
+    })
+  })
+
+  describe('Edge cases', () => {
+    it('should handle workouts with empty exercises array', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.hasData.value).toBe(false)
+      expect(stats.totalSets.value).toBe(0)
+    })
+
+    it('should handle exercises with empty sets array', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.hasData.value).toBe(false)
+      expect(stats.totalSets.value).toBe(0)
+    })
+
+    it('should handle workouts with null exercises', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: null,
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      expect(stats.hasData.value).toBe(false)
+    })
+
+    it('should handle multiple exercises in same workout', () => {
+      workoutStore.$patch({
+        workouts: [
+          {
+            id: 'w1',
+            startedAt: new Date('2025-01-01'),
+            exercises: [
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 100, reps: 10 }],
+              },
+              {
+                exerciseId: 'squat',
+                sets: [{ weight: 150, reps: 8 }],
+              },
+              {
+                exerciseId: 'bench-press',
+                sets: [{ weight: 110, reps: 8 }],
+              },
+            ],
+          },
+        ],
+      })
+
+      const stats = useExerciseStats('bench-press')
+
+      // Should only count the first occurrence of bench-press
+      expect(stats.totalSets.value).toBe(1)
+    })
+  })
+})

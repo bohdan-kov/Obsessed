@@ -77,6 +77,10 @@
     "muscleTitle": "Muscle Distribution",
     "muscleDescription": "Number of sets by muscle groups",
     "muscleDescriptionPeriod": "Number of sets by muscle groups for {period}",
+    "muscleModes": {
+      "sets": "Sets",
+      "volume": "Volume"
+    },
     "frequencyTitle": "Training Frequency",
     "frequencyDescription": "When you typically train (day of week and time)",
     "comparisonTitle": "Period Comparison",
@@ -116,6 +120,34 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
+    },
+    "heatmap": {
+      "title": "Training Frequency",
+      "description": "Your workout consistency over time",
+      "noData": "No workouts recorded",
+      "noDataSubtitle": "Start training to see your activity",
+      "cappedToYear": "Showing last 365 days",
+      "tooltip": {
+        "workouts": "{count} workout | {count} workouts",
+        "noWorkout": "No workout"
+      },
+      "legend": {
+        "less": "Less",
+        "more": "More"
+      },
+      "dayLabels": {
+        "mon": "Mon",
+        "wed": "Wed",
+        "fri": "Fri"
+      },
+      "quickStats": {
+        "bestStreak": "Best Streak",
+        "avgPerWeek": "Avg/Week",
+        "mostActiveDay": "Most Active",
+        "days": "{count} day | {count} days",
+        "perWeek": "{value}/week",
+        "noData": "--"
+      }
     }
   },
   "volumeChart": {
@@ -142,6 +174,12 @@
     "description": "Training volume distribution for the week",
     "noMuscleData": "No muscle group data",
     "startTraining": "Start training to track progress",
+    "avgRpe": "Avg RPE",
+    "weight": "Weight"
+  },
+  "personalStats": {
+    "title": "Personal Stats",
+    "description": "RPE and weight for selected period",
     "avgRpe": "Avg RPE",
     "weight": "Weight"
   }

@@ -164,7 +164,11 @@ export const useAuthStore = defineStore('auth', () => {
       return result
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.handleSignInWithGoogle'
+      throw enhancedError
     } finally {
       loading.value = false
     }
@@ -182,7 +186,11 @@ export const useAuthStore = defineStore('auth', () => {
       return result
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.handleSignInWithEmail'
+      throw enhancedError
     } finally {
       loading.value = false
     }
@@ -201,7 +209,11 @@ export const useAuthStore = defineStore('auth', () => {
       return result
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.signUp'
+      throw enhancedError
     } finally {
       loading.value = false
     }
@@ -215,6 +227,13 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      // Import workoutStore dynamically to avoid circular dependency
+      const { useWorkoutStore } = await import('./workoutStore')
+      const workoutStore = useWorkoutStore()
+
+      // Clear workout data and unsubscribe from real-time updates
+      workoutStore.clearData()
+
       await firebaseSignOut()
       user.value = null
       userProfile.value = null
@@ -225,7 +244,11 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.signOut'
+      throw enhancedError
     } finally {
       loading.value = false
     }
@@ -242,7 +265,11 @@ export const useAuthStore = defineStore('auth', () => {
       await resetPassword(email)
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.sendPasswordReset'
+      throw enhancedError
     } finally {
       loading.value = false
     }
@@ -259,7 +286,11 @@ export const useAuthStore = defineStore('auth', () => {
       await sendVerificationEmail()
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.sendEmailVerification'
+      throw enhancedError
     } finally {
       loading.value = false
     }
@@ -270,7 +301,9 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function updateProfile(updates) {
     if (!uid.value) {
-      throw new Error('No user is currently signed in')
+      const err = new Error('No user is currently signed in')
+      err.context = 'authStore.updateProfile'
+      throw err
     }
 
     loading.value = true
@@ -281,7 +314,11 @@ export const useAuthStore = defineStore('auth', () => {
       // Real-time listener will update userProfile.value
     } catch (err) {
       error.value = err.message
-      throw err
+      // Re-throw with error context for component-level error handling
+      const enhancedError = new Error(err.message)
+      enhancedError.code = err.code
+      enhancedError.context = 'authStore.updateProfile'
+      throw enhancedError
     } finally {
       loading.value = false
     }

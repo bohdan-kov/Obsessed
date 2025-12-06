@@ -17,7 +17,14 @@
     "required": "Authentication required",
     "invalidCredentials": "Invalid email or password",
     "emailNotVerified": "Please verify your email address",
-    "sessionExpired": "Session expired, please log in again"
+    "sessionExpired": "Session expired, please log in again",
+    "loginFailed": "Login failed",
+    "signupFailed": "Sign up failed",
+    "googleSignInFailed": "Google sign in failed",
+    "passwordResetFailed": "Password reset failed",
+    "verificationEmailFailed": "Failed to send verification email",
+    "signOutFailed": "Sign out failed",
+    "updateProfileFailed": "Failed to update profile"
   },
   "workout": {
     "noActive": "No active workout",

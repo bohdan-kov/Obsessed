@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { setActivePinia, createPinia, defineStore } from 'pinia'
 import { nextTick, ref } from 'vue'
-import ExerciseTable from '../ExerciseTable.vue'
+import ExerciseTable from '@/pages/dashboard/components/ExerciseTable.vue'
 
 // Create reactive mock refs for the store - these will be used to control test state
 const mockActiveWorkout = ref(null)

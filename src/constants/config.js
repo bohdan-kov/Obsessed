@@ -64,11 +64,20 @@ export const CONFIG = {
     DROPSET: 'dropset',
   },
 
-  // RPE color thresholds
+  // RPE (Rate of Perceived Exertion) Configuration
   rpe: {
-    LOW_MAX: 4, // 1-4 = green
-    MEDIUM_MAX: 7, // 5-7 = yellow
-    // 8-10 = red
+    // Intensity thresholds
+    LOW_MAX: 4, // RPE 1-4: Light intensity
+    MEDIUM_MAX: 7, // RPE 5-7: Moderate intensity
+    // RPE 8-10: High intensity
+
+    // Color scheme for UI components
+    COLORS: {
+      NONE: { bg: 'bg-muted/50', text: 'text-muted-foreground' },
+      LOW: { bg: 'bg-green-500/10', text: 'text-green-500' }, // RPE 1-4
+      MEDIUM: { bg: 'bg-yellow-500/10', text: 'text-yellow-500' }, // RPE 5-7
+      HIGH: { bg: 'bg-red-500/10', text: 'text-red-500' }, // RPE 8-10
+    },
   },
 
   // Analytics Configuration
@@ -79,9 +88,31 @@ export const CONFIG = {
     MAX_RECENT_WORKOUTS_DISPLAY: 10,
     MAX_EXERCISES_DISPLAY: 8,
 
-    // Heatmap
+    // Heatmap (legacy - old frequency heatmap)
     HEATMAP_WEEKS: 8,
     HEATMAP_HOURS_DISPLAY: [6, 9, 12, 15, 18, 21], // Which hours to show
+
+    // Contribution Heatmap Configuration
+    heatmap: {
+      DEFAULT_WEEKS: 52, // Full year view
+      MOBILE_WEEKS: 13, // ~3 months on mobile
+      CELL_SIZE_DESKTOP: 14, // px
+      CELL_SIZE_MOBILE: 10, // px
+      CELL_GAP: 3, // px between cells
+      GRID_DAYS: 365, // Phase 2: Always show full year grid
+      OUT_OF_PERIOD_OPACITY: 0.15, // Phase 2: Opacity for out-of-period cells
+
+      // Workout count thresholds for color levels
+      LEVEL_THRESHOLDS: [0, 1, 2, 3],
+
+      // Color classes per level (Tailwind)
+      LEVEL_COLORS: [
+        'bg-muted/30', // Level 0: no workouts
+        'bg-primary/30', // Level 1: 1 workout
+        'bg-primary/50', // Level 2: 2 workouts
+        'bg-primary/80', // Level 3: 3+ workouts
+      ],
+    },
 
     // SVG Chart dimensions
     DONUT_CHART: {
@@ -198,6 +229,26 @@ export const CONFIG = {
     ITEM_HEIGHT: 180, // px - height of ExerciseListItem card
     PAGINATION_MAX_ITEMS: 30, // Dynamic pagination max items
     PAGE_HEADER_OFFSET: 240, // px - header + filters offset for pagination
+  },
+
+  // Exercise History Configuration
+  EXERCISE_HISTORY: {
+    // Session list display
+    SESSION_LIST_MAX_HEIGHT_DESKTOP: 400, // px
+    SESSION_LIST_MAX_HEIGHT_MOBILE: 320, // px
+    SESSIONS_VISIBLE_COUNT: 4, // Number of sessions visible before scroll
+    FADE_INDICATOR_HEIGHT: 40, // px - bottom gradient height
+
+    // Scroll container
+    SCROLLBAR_WIDTH: 6, // px
+    SCROLLBAR_THUMB_OPACITY: 0.3, // default opacity
+    SCROLLBAR_THUMB_HOVER_OPACITY: 0.4, // hover opacity
+
+    // Empty state
+    EMPTY_STATE_ICON_SIZE: 48, // px (h-12 w-12)
+    EMPTY_STATE_TITLE_MAX_WIDTH: 300, // px
+    EMPTY_STATE_DESCRIPTION_MAX_WIDTH: 350, // px
+    EMPTY_STATE_TRANSITION_DURATION: 100, // ms - fade in
   },
 
   // Performance Configuration

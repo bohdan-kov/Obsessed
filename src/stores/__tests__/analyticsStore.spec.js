@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useAnalyticsStore } from '../analyticsStore'
-import { useWorkoutStore } from '../workoutStore'
-import { useAuthStore } from '../authStore'
-import { useExerciseStore } from '../exerciseStore'
+import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { useWorkoutStore } from '@/stores/workoutStore'
+import { useAuthStore } from '@/stores/authStore'
+import { useExerciseStore } from '@/stores/exerciseStore'
 import { fetchCollection } from '@/firebase/firestore'
 
 // Mock Firebase modules
@@ -581,30 +581,33 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store to return muscle groups
-      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
-        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
-        if (id === 'exercise-back') return { muscleGroup: 'back' }
-        return null
+      // Mock fetchExercises to populate exercises for exerciseMap
+      fetchCollection.mockImplementation((collection) => {
+        if (collection === 'exercises') {
+          return Promise.resolve([
+            { id: 'exercise-chest', name: 'Bench Press', muscleGroup: 'chest' },
+            { id: 'exercise-back', name: 'Pull-up', muscleGroup: 'back' },
+          ])
+        }
+        // For workouts collection
+        return Promise.resolve([
+          createMockWorkout({
+            status: 'completed',
+            exercises: [
+              {
+                exerciseId: 'exercise-chest',
+                sets: [{ weight: 100, reps: 10 }, { weight: 100, reps: 10 }],
+              },
+              {
+                exerciseId: 'exercise-back',
+                sets: [{ weight: 80, reps: 12 }],
+              },
+            ],
+          }),
+        ])
       })
 
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          exercises: [
-            {
-              exerciseId: 'exercise-chest',
-              sets: [{ weight: 100, reps: 10 }, { weight: 100, reps: 10 }],
-            },
-            {
-              exerciseId: 'exercise-back',
-              sets: [{ weight: 80, reps: 12 }],
-            },
-          ],
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
+      await exerciseStore.fetchExercises()
       await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
@@ -619,13 +622,12 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store
-      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
-        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
-        if (id === 'exercise-back') return { muscleGroup: 'back' }
-        if (id === 'exercise-legs') return { muscleGroup: 'legs' }
-        return null
-      })
+      // Set up exercises array for exerciseMap to use
+      exerciseStore.exercises = [
+        { id: 'exercise-chest', muscleGroup: 'chest' },
+        { id: 'exercise-back', muscleGroup: 'back' },
+        { id: 'exercise-legs', muscleGroup: 'legs' },
+      ]
 
       const mockWorkouts = [
         createMockWorkout({
@@ -673,13 +675,11 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store
-      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
-        if (id === 'exercise-chest-1' || id === 'exercise-chest-2') {
-          return { muscleGroup: 'chest' }
-        }
-        return null
-      })
+      // Set up exercises array for exerciseMap to use
+      exerciseStore.exercises = [
+        { id: 'exercise-chest-1', muscleGroup: 'chest' },
+        { id: 'exercise-chest-2', muscleGroup: 'chest' },
+      ]
 
       const mockWorkouts = [
         createMockWorkout({
@@ -713,13 +713,12 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store
-      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
-        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
-        if (id === 'exercise-legs') return { muscleGroup: 'legs' }
-        if (id === 'exercise-back') return { muscleGroup: 'back' }
-        return null
-      })
+      // Set up exercises array for exerciseMap to use
+      exerciseStore.exercises = [
+        { id: 'exercise-chest', muscleGroup: 'chest' },
+        { id: 'exercise-legs', muscleGroup: 'legs' },
+        { id: 'exercise-back', muscleGroup: 'back' },
+      ]
 
       const mockWorkouts = [
         createMockWorkout({
@@ -757,7 +756,8 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Mock exercise store to return null (exercise not found)
-      vi.spyOn(exerciseStore, 'getExerciseById').mockReturnValue(null)
+      // Set up empty exercises array (exercise not found scenario)
+      exerciseStore.exercises = []
 
       const mockWorkouts = [
         createMockWorkout({
@@ -785,8 +785,10 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store
-      vi.spyOn(exerciseStore, 'getExerciseById').mockReturnValue({ muscleGroup: 'chest' })
+      // Set up exercises array for exerciseMap to use
+      exerciseStore.exercises = [
+        { id: 'exercise-chest', muscleGroup: 'chest' },
+      ]
 
       const mockWorkouts = [
         createMockWorkout({
@@ -826,246 +828,7 @@ describe('analyticsStore', () => {
     })
   })
 
-  describe('weekComparison', () => {
-    it('should compare current week with previous week', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000) // 2 days ago
-      const prevWeekDate = new Date(now.getTime() - 10 * 86400000) // 10 days ago
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate,
-          totalVolume: 2000,
-        }),
-        createMockWorkout({
-          status: 'completed',
-          completedAt: prevWeekDate,
-          totalVolume: 1500,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.currentWeek.workouts).toBe(1)
-      expect(result.currentWeek.volume).toBe(2000)
-      expect(result.previousWeek.workouts).toBe(1)
-      expect(result.previousWeek.volume).toBe(1500)
-    })
-
-    it('should calculate volume change percentage', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000)
-      const prevWeekDate = new Date(now.getTime() - 10 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate,
-          totalVolume: 3000,
-        }),
-        createMockWorkout({
-          status: 'completed',
-          completedAt: prevWeekDate,
-          totalVolume: 2000,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      // (3000 - 2000) / 2000 * 100 = 50%
-      expect(result.change.volumePercentage).toBe(50)
-    })
-
-    it('should handle division by zero when previous week has no volume', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate,
-          totalVolume: 2000,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.change.volumePercentage).toBe(0)
-    })
-
-    it('should calculate average volume per workout for each week', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate1 = new Date(now.getTime() - 2 * 86400000)
-      const currentWeekDate2 = new Date(now.getTime() - 3 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate1,
-          totalVolume: 2000,
-        }),
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate2,
-          totalVolume: 3000,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.currentWeek.avgVolume).toBe(2500) // (2000 + 3000) / 2
-    })
-
-    it('should return 0 for avgVolume when no workouts in week', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      fetchCollection.mockResolvedValue([])
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.currentWeek.avgVolume).toBe(0)
-      expect(result.previousWeek.avgVolume).toBe(0)
-    })
-
-    it('should calculate workout count difference', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000)
-      const prevWeekDate1 = new Date(now.getTime() - 10 * 86400000)
-      const prevWeekDate2 = new Date(now.getTime() - 11 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate,
-          totalVolume: 2000,
-        }),
-        createMockWorkout({
-          status: 'completed',
-          completedAt: prevWeekDate1,
-          totalVolume: 1500,
-        }),
-        createMockWorkout({
-          status: 'completed',
-          completedAt: prevWeekDate2,
-          totalVolume: 1500,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.change.workouts).toBe(-1) // 1 - 2 = -1
-    })
-
-    it('should filter out non-completed workouts', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'active',
-          completedAt: currentWeekDate,
-          totalVolume: 2000,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.currentWeek.workouts).toBe(0)
-    })
-
-    it('should handle Firebase Timestamp objects', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: mockTimestamp(currentWeekDate),
-          totalVolume: 2000,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      expect(result.currentWeek.workouts).toBe(1)
-    })
-
-    it('should handle negative volume change', async () => {
-      const workoutStore = useWorkoutStore()
-      const analyticsStore = useAnalyticsStore()
-
-      const now = new Date()
-      const currentWeekDate = new Date(now.getTime() - 2 * 86400000)
-      const prevWeekDate = new Date(now.getTime() - 10 * 86400000)
-
-      const mockWorkouts = [
-        createMockWorkout({
-          status: 'completed',
-          completedAt: currentWeekDate,
-          totalVolume: 1000,
-        }),
-        createMockWorkout({
-          status: 'completed',
-          completedAt: prevWeekDate,
-          totalVolume: 2000,
-        }),
-      ]
-
-      fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month')
-
-      const result = analyticsStore.weekComparison
-
-      // (1000 - 2000) / 2000 * 100 = -50%
-      expect(result.change.volumePercentage).toBe(-50)
-      expect(result.change.volume).toBe(-1000)
-    })
-  })
+  // weekComparison tests removed - deprecated in favor of periodComparison
 
   describe('currentStreak', () => {
     it('should calculate current workout streak', async () => {
@@ -1348,12 +1111,11 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store
-      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
-        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
-        if (id === 'exercise-back') return { muscleGroup: 'back' }
-        return null
-      })
+      // Set up exercises array for exerciseMap to use
+      exerciseStore.exercises = [
+        { id: 'exercise-chest', muscleGroup: 'chest' },
+        { id: 'exercise-back', muscleGroup: 'back' },
+      ]
 
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
@@ -1391,12 +1153,11 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store
-      vi.spyOn(exerciseStore, 'getExerciseById').mockImplementation((id) => {
-        if (id === 'exercise-chest') return { muscleGroup: 'chest' }
-        if (id === 'exercise-legs') return { muscleGroup: 'legs' }
-        return null
-      })
+      // Set up exercises array for exerciseMap to use
+      exerciseStore.exercises = [
+        { id: 'exercise-chest', muscleGroup: 'chest' },
+        { id: 'exercise-legs', muscleGroup: 'legs' },
+      ]
 
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)

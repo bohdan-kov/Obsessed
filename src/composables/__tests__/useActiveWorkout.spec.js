@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useActiveWorkout } from '../useActiveWorkout'
+import { useActiveWorkout } from '@/composables/useActiveWorkout'
 import { createPinia, setActivePinia } from 'pinia'
 
 // Mock Firebase
@@ -12,7 +12,7 @@ vi.mock('@/firebase/firestore', () => ({
 }))
 
 // Mock other composables
-vi.mock('../useWorkoutTimer', () => ({
+vi.mock('@/composables/useWorkoutTimer', () => ({
   useWorkoutTimer: vi.fn(() => ({
     elapsed: { value: 0 },
     formattedTime: { value: '00:00' },

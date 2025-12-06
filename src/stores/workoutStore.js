@@ -1,6 +1,8 @@
-import { ref, computed } from 'vue'
+import { ref, computed, readonly } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuthStore } from './authStore'
+import { useUnits } from '@/composables/useUnits'
+import { normalizeDate } from '@/utils/dateUtils'
 import {
   fetchCollection,
   createDocument,
@@ -49,9 +51,21 @@ export const useWorkoutStore = defineStore('workout', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  // Smart loading state
+  const dataState = ref({
+    status: 'idle', // 'idle' | 'loading' | 'loaded' | 'error'
+    period: null,
+    lastFetched: null,
+    isSubscribed: false,
+  })
+
   // Real-time listener cleanup
   let unsubscribeActive = null
   let unsubscribeWorkouts = null
+
+  // Request coalescing
+  let pendingRequest = null
+  const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
   // Getters
   /**
@@ -84,8 +98,8 @@ export const useWorkoutStore = defineStore('workout', () => {
     return workouts.value
       .filter((w) => w.status === 'completed')
       .sort((a, b) => {
-        const dateA = a.completedAt?.toDate ? a.completedAt.toDate() : new Date(a.completedAt)
-        const dateB = b.completedAt?.toDate ? b.completedAt.toDate() : new Date(b.completedAt)
+        const dateA = normalizeDate(a.completedAt)
+        const dateB = normalizeDate(b.completedAt)
         return dateB - dateA
       })
   })
@@ -206,7 +220,7 @@ export const useWorkoutStore = defineStore('workout', () => {
    * Add set to exercise in current workout
    * @param {string} exerciseId - Exercise ID
    * @param {Object} setData - Set data
-   * @param {number} setData.weight - Weight
+   * @param {number} setData.weight - Weight in user's preferred unit (will be converted to kg for storage)
    * @param {number} setData.reps - Reps
    * @param {number} [setData.rpe] - RPE
    * @param {string} [setData.type='normal'] - Set type
@@ -222,6 +236,9 @@ export const useWorkoutStore = defineStore('workout', () => {
     error.value = null
 
     try {
+      // Get unit conversion function
+      const { toStorageUnit } = useUnits()
+
       const exerciseIndex = activeWorkout.value.exercises.findIndex(
         (ex) => ex.exerciseId === exerciseId
       )
@@ -230,8 +247,12 @@ export const useWorkoutStore = defineStore('workout', () => {
         throw new Error('Exercise not found in current workout')
       }
 
+      // Convert weight from user's display unit to storage unit (kg)
+      // All weights are stored in kg in Firestore for consistency
+      const weightInKg = toStorageUnit(weight)
+
       const newSet = {
-        weight,
+        weight: weightInKg,
         reps,
         rpe: rpe || null,
         type,
@@ -526,12 +547,109 @@ export const useWorkoutStore = defineStore('workout', () => {
     error.value = null
   }
 
+  /**
+   * Check if cached data is stale
+   * @param {number|null} lastFetched - Timestamp of last fetch
+   * @returns {boolean} True if data is stale
+   */
+  function isStale(lastFetched) {
+    if (!lastFetched) return true
+    return Date.now() - lastFetched > CACHE_TTL
+  }
+
+  /**
+   * Smart data loading with caching, request coalescing, and subscription management
+   * @param {Object} options - Loading options
+   * @param {'week'|'month'|'quarter'|'year'} options.period - Time period to load
+   * @param {boolean} options.subscribe - Whether to subscribe to real-time updates
+   * @param {boolean} options.force - Force reload even if data is fresh
+   * @returns {Promise<void>}
+   * @throws {Error} If user not authenticated
+   */
+  async function ensureDataLoaded(options = {}) {
+    const { period = 'month', subscribe = true, force = false } = options
+
+    // Check authentication
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated')
+    }
+
+    // Check if fetch is needed
+    const needsFetch =
+      force ||
+      dataState.value.status === 'idle' ||
+      dataState.value.status === 'error' ||
+      dataState.value.period !== period ||
+      isStale(dataState.value.lastFetched)
+
+    if (!needsFetch && dataState.value.status === 'loaded') {
+      return // Data already fresh
+    }
+
+    // Request coalescing - if there's already a pending request with same period, return it
+    if (pendingRequest && dataState.value.period === period) {
+      return pendingRequest
+    }
+
+    // Execute fetch
+    dataState.value.status = 'loading'
+    dataState.value.period = period
+
+    const request = (async () => {
+      try {
+        await fetchWorkouts(period)
+
+        if (subscribe) {
+          if (unsubscribeWorkouts) unsubscribeWorkouts()
+          unsubscribeWorkouts = subscribeToWorkouts(period)
+          dataState.value.isSubscribed = true
+        }
+
+        dataState.value.status = 'loaded'
+        dataState.value.lastFetched = Date.now()
+      } catch (err) {
+        dataState.value.status = 'error'
+        throw err
+      } finally {
+        pendingRequest = null
+      }
+    })()
+
+    pendingRequest = request
+    return request
+  }
+
+  /**
+   * Clear all workout data and unsubscribe from real-time updates
+   * Should be called on logout
+   */
+  function clearData() {
+    if (unsubscribeWorkouts) {
+      unsubscribeWorkouts()
+      unsubscribeWorkouts = null
+    }
+    if (unsubscribeActive) {
+      unsubscribeActive()
+      unsubscribeActive = null
+    }
+    workouts.value = []
+    currentWorkout.value = null
+    dataState.value = {
+      status: 'idle',
+      period: null,
+      lastFetched: null,
+      isSubscribed: false,
+    }
+    pendingRequest = null
+  }
+
   return {
     // State - return refs directly
     currentWorkout,
     workouts,
     loading,
     error,
+    dataState: readonly(dataState),
 
     // Getters - keep as computeds
     todaysWorkout,
@@ -551,5 +669,7 @@ export const useWorkoutStore = defineStore('workout', () => {
     subscribeToWorkouts,
     unsubscribe,
     clearError,
+    ensureDataLoaded,
+    clearData,
   }
 })

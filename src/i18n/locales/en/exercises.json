@@ -92,7 +92,14 @@
     "title": "Exercise History",
     "chart": "Progress Chart",
     "noData": "No history yet",
-    "startTracking": "Start performing this exercise to see your progress here"
+    "startTracking": "Start performing this exercise to see your progress here",
+    "chartTitle": "Weight Progress",
+    "chartDescription": "Maximum weight per session",
+    "weightAxis": "Weight",
+    "dateAxis": "Date",
+    "emptyStateTitle": "Need 2+ workouts to show chart",
+    "emptyStateDescription": "Complete another workout with this exercise to see your progress trend",
+    "sessionCount": "{count} sessions in history"
   },
   "notes": {
     "title": "Notes",
