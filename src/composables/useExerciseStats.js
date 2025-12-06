@@ -15,28 +15,55 @@ export function useExerciseStats(exerciseId) {
 
   /**
    * Get all sets for this exercise from all workouts
+   * Also builds a Map of workout sessions for efficient access
    */
-  const exerciseSets = computed(() => {
+  const exerciseData = computed(() => {
     const sets = []
+    const sessionMap = new Map()
 
     workoutStore.workouts.forEach((workout) => {
       const exercise = workout.exercises?.find((ex) => ex.exerciseId === exerciseId)
 
-      if (exercise) {
+      if (exercise && exercise.sets.length > 0) {
+        const workoutDate = workout.startedAt?.toDate
+          ? workout.startedAt.toDate()
+          : new Date(workout.startedAt)
+
+        // Add sets with workout context
         exercise.sets.forEach((set) => {
           sets.push({
             ...set,
-            workoutDate: workout.startedAt?.toDate
-              ? workout.startedAt.toDate()
-              : new Date(workout.startedAt),
+            workoutId: workout.id,
+            workoutDate,
           })
+        })
+
+        // Build session data for progressData computation
+        const maxWeight = Math.max(...exercise.sets.map((s) => s.weight))
+        const volume = exercise.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
+
+        sessionMap.set(workout.id, {
+          date: workoutDate,
+          maxWeight,
+          volume,
+          sets: exercise.sets.length,
         })
       }
     })
 
-    // Sort by date descending (most recent first)
-    return sets.sort((a, b) => b.workoutDate - a.workoutDate)
+    // Sort sets by date descending (most recent first)
+    const sortedSets = sets.sort((a, b) => b.workoutDate - a.workoutDate)
+
+    return {
+      sets: sortedSets,
+      sessionMap,
+    }
   })
+
+  /**
+   * All sets for this exercise (sorted by date descending)
+   */
+  const exerciseSets = computed(() => exerciseData.value.sets)
 
   /**
    * Personal Record (PR) - Maximum weight lifted
@@ -106,19 +133,9 @@ export function useExerciseStats(exerciseId) {
 
   /**
    * Times performed (number of workout sessions)
+   * Optimized: Reuses exerciseData.sessionMap instead of iterating workouts again
    */
-  const timesPerformed = computed(() => {
-    const workoutIds = new Set()
-
-    workoutStore.workouts.forEach((workout) => {
-      const hasExercise = workout.exercises?.some((ex) => ex.exerciseId === exerciseId)
-      if (hasExercise) {
-        workoutIds.add(workout.id)
-      }
-    })
-
-    return workoutIds.size
-  })
+  const timesPerformed = computed(() => exerciseData.value.sessionMap.size)
 
   /**
    * Average weight per set
@@ -155,36 +172,20 @@ export function useExerciseStats(exerciseId) {
 
   /**
    * Progress data for charting (last 10 sessions)
+   * Optimized: Reuses exerciseData.sessionMap instead of rebuilding from workouts
    */
   const progressData = computed(() => {
-    const sessionMap = new Map()
-
-    // Group sets by workout session
-    workoutStore.workouts.forEach((workout) => {
-      const exercise = workout.exercises?.find((ex) => ex.exerciseId === exerciseId)
-
-      if (exercise && exercise.sets.length > 0) {
-        const date = workout.startedAt?.toDate
-          ? workout.startedAt.toDate()
-          : new Date(workout.startedAt)
-
-        // Calculate max weight and total volume for this session
-        const maxWeight = Math.max(...exercise.sets.map((s) => s.weight))
-        const volume = exercise.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
-
-        sessionMap.set(workout.id, {
-          date,
-          maxWeight: fromStorageUnit(maxWeight),
-          volume: fromStorageUnit(volume),
-          sets: exercise.sets.length,
-        })
-      }
-    })
-
-    // Convert to array and sort by date
-    return Array.from(sessionMap.values())
+    const sessions = Array.from(exerciseData.value.sessionMap.values())
+      .map((session) => ({
+        date: session.date,
+        maxWeight: fromStorageUnit(session.maxWeight),
+        volume: fromStorageUnit(session.volume),
+        sets: session.sets,
+      }))
       .sort((a, b) => a.date - b.date)
       .slice(-10) // Last 10 sessions
+
+    return sessions
   })
 
   /**

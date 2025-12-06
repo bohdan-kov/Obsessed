@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useWorkoutBackup } from '../useWorkoutBackup'
+import { useWorkoutBackup } from '@/composables/useWorkoutBackup'
 
 describe('useWorkoutBackup', () => {
   beforeEach(() => {

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useExerciseLibraryStore } from '../exerciseLibraryStore'
-import { useAuthStore } from '../authStore'
-import { useExerciseStore } from '../exerciseStore'
-import { useUserStore } from '../userStore'
+import { useExerciseLibraryStore } from '@/stores/exerciseLibraryStore'
+import { useAuthStore } from '@/stores/authStore'
+import { useExerciseStore } from '@/stores/exerciseStore'
+import { useUserStore } from '@/stores/userStore'
 import { fetchDocument, setDocument, updateDocument, deleteDocument } from '@/firebase/firestore'
 
 // Mock Firebase Firestore

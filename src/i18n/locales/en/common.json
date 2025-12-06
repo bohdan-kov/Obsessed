@@ -12,6 +12,7 @@
     "retry": "Retry"
   },
   "more": "more",
+  "based": "based on",
   "status": {
     "loading": "Loading...",
     "saving": "Saving...",
@@ -102,5 +103,9 @@
     "month": "Month",
     "quarter": "Quarter",
     "year": "Year"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next"
   }
 }

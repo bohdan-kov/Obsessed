@@ -57,7 +57,7 @@ vi.mock('@/stores/exerciseStore', () => ({
 }))
 
 // Now import the component
-import QuickLogSheet from '../QuickLogSheet.vue'
+import QuickLogSheet from '@/components/QuickLogSheet.vue'
 
 // Mock lucide-vue-next icons
 vi.mock('lucide-vue-next', () => ({

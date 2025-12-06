@@ -10,7 +10,7 @@ import { useUnits } from '@/composables/useUnits'
 import StatCard from './components/StatCard.vue'
 import ChartSection from './components/ChartSection.vue'
 import ExerciseTable from './components/ExerciseTable.vue'
-import MuscleProgress from './components/MuscleProgress.vue'
+import PersonalStatsCard from './components/PersonalStatsCard.vue'
 import GlobalPeriodSelector from './components/GlobalPeriodSelector.vue'
 
 const { t } = useI18n()
@@ -36,6 +36,9 @@ const {
   workoutsInsight,
   volumeInsight,
 } = storeToRefs(analyticsStore)
+
+// Track Firebase subscription for cleanup
+let unsubscribeWorkouts = null
 
 // Stat cards configuration
 const stats = computed(() => {
@@ -75,9 +78,6 @@ const stats = computed(() => {
   ]
 })
 
-// Subscription cleanup function
-let unsubscribeWorkouts = null
-
 /**
  * Fetch workout data and subscribe to real-time updates
  */
@@ -86,9 +86,13 @@ onMounted(async () => {
   analyticsStore.initializePeriod()
 
   try {
-    await workoutStore.fetchWorkouts('month')
-    // Subscribe to real-time updates and store unsubscribe function
-    unsubscribeWorkouts = workoutStore.subscribeToWorkouts('month')
+    // ensureDataLoaded returns the unsubscribe function when subscribe: true
+    const unsubscribe = await workoutStore.ensureDataLoaded({ period: 'month', subscribe: true })
+
+    // Store unsubscribe function for cleanup
+    if (typeof unsubscribe === 'function') {
+      unsubscribeWorkouts = unsubscribe
+    }
   } catch (error) {
     handleError(error, t('dashboard.errors.loadFailed'), {
       context: 'DashboardView.onMounted',
@@ -97,7 +101,7 @@ onMounted(async () => {
 })
 
 /**
- * Cleanup subscriptions on component unmount
+ * Clean up Firebase subscriptions to prevent memory leaks
  */
 onUnmounted(() => {
   if (unsubscribeWorkouts) {
@@ -144,7 +148,7 @@ onUnmounted(() => {
       <div class="lg:col-span-2">
         <ExerciseTable />
       </div>
-      <MuscleProgress />
+      <PersonalStatsCard />
     </div>
   </div>
 </template>

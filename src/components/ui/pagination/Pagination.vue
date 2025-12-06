@@ -11,10 +11,10 @@
       size="icon"
       :disabled="currentPage === 1"
       @click="$emit('update:currentPage', currentPage - 1)"
-      class="min-h-11 min-w-11"
+      class="min-h-11 min-w-11 text-foreground border-border hover:border-accent"
     >
       <ChevronLeft class="h-4 w-4" />
-      <span class="sr-only">{{ t('pagination.previous') }}</span>
+      <span class="sr-only">{{ t('common.pagination.previous') }}</span>
     </Button>
 
     <!-- Page numbers -->
@@ -22,9 +22,13 @@
       <!-- First page (always show on desktop, mobile only if current) -->
       <Button
         v-if="visiblePages.includes(1) || !isMobile"
-        variant="outline"
+        :variant="currentPage === 1 ? 'default' : 'outline'"
         size="icon"
-        :class="currentPage === 1 ? 'bg-primary text-primary-foreground' : ''"
+        :class="
+          currentPage === 1
+            ? 'border-primary'
+            : 'text-foreground border-border hover:border-accent'
+        "
         @click="$emit('update:currentPage', 1)"
         class="min-h-11 min-w-11"
       >
@@ -38,9 +42,13 @@
       <Button
         v-for="page in middlePages"
         :key="page"
-        variant="outline"
+        :variant="currentPage === page ? 'default' : 'outline'"
         size="icon"
-        :class="currentPage === page ? 'bg-primary text-primary-foreground' : ''"
+        :class="
+          currentPage === page
+            ? 'border-primary'
+            : 'text-foreground border-border hover:border-accent'
+        "
         @click="$emit('update:currentPage', page)"
         class="min-h-11 min-w-11"
       >
@@ -53,9 +61,13 @@
       <!-- Last page (always show on desktop, mobile only if current) -->
       <Button
         v-if="totalPages > 1 && (visiblePages.includes(totalPages) || !isMobile)"
-        variant="outline"
+        :variant="currentPage === totalPages ? 'default' : 'outline'"
         size="icon"
-        :class="currentPage === totalPages ? 'bg-primary text-primary-foreground' : ''"
+        :class="
+          currentPage === totalPages
+            ? 'border-primary'
+            : 'text-foreground border-border hover:border-accent'
+        "
         @click="$emit('update:currentPage', totalPages)"
         class="min-h-11 min-w-11"
       >
@@ -69,10 +81,10 @@
       size="icon"
       :disabled="currentPage === totalPages"
       @click="$emit('update:currentPage', currentPage + 1)"
-      class="min-h-11 min-w-11"
+      class="min-h-11 min-w-11 text-foreground border-border hover:border-accent"
     >
       <ChevronRight class="h-4 w-4" />
-      <span class="sr-only">{{ t('pagination.next') }}</span>
+      <span class="sr-only">{{ t('common.pagination.next') }}</span>
     </Button>
   </nav>
 </template>

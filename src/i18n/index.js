@@ -52,6 +52,53 @@ function getInitialLocale() {
 }
 
 /**
+ * Date and time formatting configuration
+ * Defines formats for use with the d() function
+ */
+const datetimeFormats = {
+  uk: {
+    short: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    },
+    long: {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    },
+    medium: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    },
+  },
+  en: {
+    short: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    },
+    long: {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    },
+    medium: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    },
+  },
+}
+
+/**
  * Create and configure i18n instance
  * Uses Composition API mode for <script setup> compatibility
  */
@@ -61,6 +108,7 @@ const i18n = createI18n({
   locale: getInitialLocale(),
   fallbackLocale: FALLBACK_LOCALE,
   messages: { uk, en },
+  datetimeFormats,
   missingWarn: import.meta.env.DEV, // Warn in dev only
   fallbackWarn: import.meta.env.DEV, // Warn in dev only
   silentTranslationWarn: !import.meta.env.DEV,

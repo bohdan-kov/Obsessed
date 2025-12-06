@@ -21,7 +21,7 @@ import {
   getMonthBeforeLastRange,
   getAllTimeRange,
   formatDate,
-} from '../dateUtils'
+} from '@/utils/dateUtils'
 
 describe('dateUtils', () => {
   beforeEach(() => {

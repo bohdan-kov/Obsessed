@@ -171,7 +171,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-vue-next'
@@ -187,6 +187,8 @@ import ExerciseFormDialog from './components/ExerciseFormDialog.vue'
 import DeleteExerciseDialog from './components/DeleteExerciseDialog.vue'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { useExerciseLibraryStore } from '@/stores/exerciseLibraryStore'
+import { useWorkoutStore } from '@/stores/workoutStore'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 import { useI18n } from 'vue-i18n'
 import { MUSCLE_GROUPS } from '@/shared/config/constants'
 
@@ -204,9 +206,14 @@ const { t, locale } = useI18n()
 const router = useRouter()
 const exerciseStore = useExerciseStore()
 const exerciseLibraryStore = useExerciseLibraryStore()
+const workoutStore = useWorkoutStore()
+const { handleError } = useErrorHandler()
 
 const { loading } = storeToRefs(exerciseStore)
 const { favorites } = storeToRefs(exerciseLibraryStore)
+
+// Track Firebase subscription for cleanup
+let unsubscribeWorkouts = null
 
 // Local state
 const showEditDialog = ref(false)
@@ -335,15 +342,40 @@ function handleExerciseDeleted() {
  * Load exercise on mount
  */
 onMounted(async () => {
-  // Select this exercise in the store
-  exerciseLibraryStore.selectExercise(props.id)
+  try {
+    // Select this exercise in the store
+    exerciseLibraryStore.selectExercise(props.id)
 
-  // Load exercises if not already loaded
-  if (exerciseStore.exercises.length === 0) {
-    await exerciseStore.fetchExercises()
+    const results = await Promise.all([
+      // Load exercises if not already loaded
+      exerciseStore.exercises.length === 0
+        ? exerciseStore.fetchExercises()
+        : Promise.resolve(),
+      // Load custom exercises
+      exerciseStore.fetchCustomExercises(),
+      // Load workout data for exercise stats
+      workoutStore.ensureDataLoaded({ period: 'month', subscribe: true }),
+    ])
+
+    // Store unsubscribe function from ensureDataLoaded (3rd promise result)
+    const unsubscribe = results[2]
+    if (typeof unsubscribe === 'function') {
+      unsubscribeWorkouts = unsubscribe
+    }
+  } catch (error) {
+    handleError(error, t('errors.loadExercises'), {
+      context: 'ExerciseDetailView.onMounted',
+    })
   }
+})
 
-  // Load custom exercises
-  await exerciseStore.fetchCustomExercises()
+/**
+ * Clean up Firebase subscriptions to prevent memory leaks
+ */
+onUnmounted(() => {
+  if (unsubscribeWorkouts) {
+    unsubscribeWorkouts()
+    unsubscribeWorkouts = null
+  }
 })
 </script>

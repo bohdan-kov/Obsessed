@@ -49,8 +49,8 @@ import {
 import { onAuthChange } from '@/firebase/auth'
 
 // Import stores after all mocks are set up
-import { useWorkoutStore } from '../workoutStore'
-import { useAuthStore } from '../authStore'
+import { useWorkoutStore } from '@/stores/workoutStore'
+import { useAuthStore } from '@/stores/authStore'
 
 // Mock Firebase Timestamp for date handling
 const mockTimestamp = (date) => ({

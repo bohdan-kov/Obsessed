@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import WorkoutHistoryCard from '../WorkoutHistoryCard.vue'
+import WorkoutHistoryCard from '@/pages/workouts/components/history/WorkoutHistoryCard.vue'
 
 describe('WorkoutHistoryCard', () => {
   const mockWorkout = {

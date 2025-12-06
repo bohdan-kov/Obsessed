@@ -77,6 +77,10 @@
     "muscleTitle": "Розподіл по м'язах",
     "muscleDescription": "Кількість підходів по групах м'язів",
     "muscleDescriptionPeriod": "Кількість підходів по групах м'язів за {period}",
+    "muscleModes": {
+      "sets": "Підходи",
+      "volume": "Обсяг"
+    },
     "frequencyTitle": "Частота тренувань",
     "frequencyDescription": "Коли ви зазвичай тренуєтесь (день тижня та час)",
     "comparisonTitle": "Порівняння періодів",
@@ -116,6 +120,34 @@
       "fri": "Пт",
       "sat": "Сб",
       "sun": "Нд"
+    },
+    "heatmap": {
+      "title": "Частота тренувань",
+      "description": "Ваша послідовність тренувань з часом",
+      "noData": "Немає записаних тренувань",
+      "noDataSubtitle": "Почніть тренування, щоб побачити активність",
+      "cappedToYear": "Показані останні 365 днів",
+      "tooltip": {
+        "workouts": "{count} тренування | {count} тренувань",
+        "noWorkout": "Без тренування"
+      },
+      "legend": {
+        "less": "Менше",
+        "more": "Більше"
+      },
+      "dayLabels": {
+        "mon": "Пн",
+        "wed": "Ср",
+        "fri": "Пт"
+      },
+      "quickStats": {
+        "bestStreak": "Найкраща серія",
+        "avgPerWeek": "Сер./тижд.",
+        "mostActiveDay": "Найактивніший",
+        "days": "{count} день | {count} дні | {count} днів",
+        "perWeek": "{value}/тижд.",
+        "noData": "--"
+      }
     }
   },
   "volumeChart": {
@@ -142,6 +174,12 @@
     "description": "Розподіл обсягу тренувань за тиждень",
     "noMuscleData": "Немає даних про м'язові групи",
     "startTraining": "Почніть тренування для відстеження прогресу",
+    "avgRpe": "Середній RPE",
+    "weight": "Вага"
+  },
+  "personalStats": {
+    "title": "Особисті показники",
+    "description": "RPE та вага за обраний період",
     "avgRpe": "Середній RPE",
     "weight": "Вага"
   }

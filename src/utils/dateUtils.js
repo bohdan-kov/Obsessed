@@ -275,3 +275,101 @@ export function formatDate(dateInput, locale = 'uk') {
     day: 'numeric',
   }).format(date)
 }
+
+/**
+ * Converts a date to local date string in YYYY-MM-DD format
+ * @param {Date|Object} date - Date object or Firebase Timestamp
+ * @returns {string} Date string in YYYY-MM-DD format
+ */
+export function toLocalDateString(date) {
+  const normalized = normalizeDate(date)
+  const year = normalized.getFullYear()
+  const month = String(normalized.getMonth() + 1).padStart(2, '0')
+  const day = String(normalized.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Gets the first Monday on or before the given date
+ * @param {Date} date - Input date
+ * @returns {Date} First Monday on or before date
+ */
+export function getFirstMondayOnOrBefore(date) {
+  const result = new Date(date)
+  const dayOfWeek = result.getDay()
+  const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  result.setDate(result.getDate() - daysToSubtract)
+  return getStartOfDay(result)
+}
+
+/**
+ * Gets the last Sunday on or after the given date
+ * @param {Date} date - Input date
+ * @returns {Date} Last Sunday on or after date
+ */
+export function getLastSundayOnOrAfter(date) {
+  const result = new Date(date)
+  const dayOfWeek = result.getDay()
+  const daysToAdd = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
+  result.setDate(result.getDate() + daysToAdd)
+  return getStartOfDay(result)
+}
+
+/**
+ * Gets month boundaries for a date range
+ * @param {Date} startDate - Range start (should be a Monday from getFirstMondayOnOrBefore)
+ * @param {Date} endDate - Range end (should be a Sunday from getLastSundayOnOrAfter)
+ * @returns {Array<{month: number, year: number, firstWeek: number}>}
+ */
+export function getMonthBoundaries(startDate, endDate) {
+  const boundaries = []
+  const current = new Date(startDate)
+  let weekIndex = 0
+  let lastSeenMonth = null
+
+  while (current <= endDate) {
+    // Check if this week contains the start of a new month
+    // by checking if any day in the week (Mon-Sun) is day 1-7 AND is a different month
+    const weekStart = new Date(current)
+    const weekEnd = new Date(current)
+    weekEnd.setDate(weekEnd.getDate() + 6) // Sunday of this week
+
+    const currentMonth = weekStart.getMonth()
+    const currentYear = weekStart.getFullYear()
+
+    // Iterate through the 7 days of this week
+    let containsMonthStart = false
+    const checkDate = new Date(weekStart)
+
+    for (let i = 0; i < 7; i++) {
+      if (checkDate.getDate() === 1) {
+        // This week contains the 1st day of a month
+        const monthStartMonth = checkDate.getMonth()
+        const monthStartYear = checkDate.getFullYear()
+
+        // Only add if we haven't seen this month yet
+        if (
+          lastSeenMonth === null ||
+          lastSeenMonth.month !== monthStartMonth ||
+          lastSeenMonth.year !== monthStartYear
+        ) {
+          boundaries.push({
+            month: monthStartMonth,
+            year: monthStartYear,
+            firstWeek: weekIndex,
+          })
+          lastSeenMonth = { month: monthStartMonth, year: monthStartYear }
+          containsMonthStart = true
+          break
+        }
+      }
+      checkDate.setDate(checkDate.getDate() + 1)
+    }
+
+    // Move to next week
+    current.setDate(current.getDate() + 7)
+    weekIndex++
+  }
+
+  return boundaries
+}

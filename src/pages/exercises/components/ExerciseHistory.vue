@@ -19,36 +19,63 @@
 
       <!-- Progress chart -->
       <div v-else class="space-y-4">
-        <!-- Chart placeholder - lazy load Chart.js when needed -->
-        <div class="h-[300px] bg-muted/30 rounded-lg flex items-center justify-center">
-          <p class="text-sm text-muted-foreground">
-            {{ t('exercises.history.chart') }}
-          </p>
-          <!-- TODO: Integrate Chart.js in Phase 7 for visual progress chart -->
-        </div>
+        <!-- Weight progression chart -->
+        <ExerciseProgressChart :data="stats.progressData.value" />
 
-        <!-- Session list -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-semibold">{{ t('workout.recentSessions') }}</h4>
-          <div class="space-y-2">
+        <!-- Recent sessions with scroll -->
+        <div class="space-y-4">
+          <h4 class="text-sm font-semibold">{{ t('workout.session.recentSessions') }}</h4>
+
+          <!-- Scroll container wrapper -->
+          <div class="relative">
+            <!-- Scrollable session list -->
             <div
-              v-for="(session, index) in stats.progressData.value"
-              :key="index"
-              class="flex items-center justify-between p-3 bg-muted/30 rounded-lg text-sm"
+              role="region"
+              :aria-label="t('workout.session.recentSessions')"
+              aria-describedby="session-count"
+              tabindex="0"
+              class="max-h-[320px] sm:max-h-[400px] overflow-y-auto
+                     scrollbar-thin scrollbar-thumb-muted-foreground/30
+                     scrollbar-track-transparent rounded-lg
+                     focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none
+                     pr-2 space-y-2"
             >
-              <div>
-                <div class="font-medium">{{ formatDate(session.date) }}</div>
-                <div class="text-xs text-muted-foreground">
-                  {{ session.sets }} {{ t('workout.sets') }}
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="font-semibold">{{ formatWeight(session.maxWeight) }}</div>
-                <div class="text-xs text-muted-foreground">
-                  {{ formatWeight(session.volume) }} {{ t('workout.volume') }}
+              <!-- Screen reader session count -->
+              <span id="session-count" class="sr-only">
+                {{ t('exercises.history.sessionCount', { count: stats.progressData.value.length }) }}
+              </span>
+
+              <!-- Session cards -->
+              <div
+                v-for="(session, index) in stats.progressData.value"
+                :key="index"
+                class="rounded-lg border bg-card p-3 text-card-foreground"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <Calendar class="h-4 w-4 text-muted-foreground" />
+                    <span class="text-sm text-muted-foreground">
+                      {{ formatDate(session.date) }}
+                    </span>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-lg font-semibold">{{ formatWeight(session.maxWeight) }}</div>
+                    <div class="text-xs text-muted-foreground">
+                      {{ t('workout.session.sets', { count: session.sets }) }} •
+                      {{ t('workout.session.volume') }}: {{ formatWeight(session.volume) }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Fade indicator (only show when more than 4 sessions) -->
+            <div
+              v-if="stats.progressData.value.length > 4"
+              class="absolute bottom-0 left-0 right-0 h-10
+                     bg-gradient-to-t from-background/60 to-transparent
+                     pointer-events-none rounded-b-lg"
+            />
           </div>
         </div>
       </div>
@@ -57,11 +84,12 @@
 </template>
 
 <script setup>
-import { Activity, LineChart } from 'lucide-vue-next'
+import { Activity, LineChart, Calendar } from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useExerciseStats } from '@/composables/useExerciseStats'
 import { useUnits } from '@/composables/useUnits'
 import { useI18n } from 'vue-i18n'
+import ExerciseProgressChart from './charts/ExerciseProgressChart.vue'
 
 const props = defineProps({
   /**

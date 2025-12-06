@@ -12,13 +12,63 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Workout data validation functions
+    function isValidWeight(weight) {
+      return weight is number && weight >= 0 && weight <= 1000; // Max 1000kg (from CONFIG.workout.MAX_WEIGHT)
+    }
+
+    function isValidReps(reps) {
+      return reps is number && reps >= 1 && reps <= 100; // 1-100 reps (from CONFIG.workout.MAX_REPS)
+    }
+
+    function isValidRPE(rpe) {
+      return rpe == null || (rpe is number && rpe >= 1 && rpe <= 10); // 1-10 or null (from CONFIG.workout.RPE_MIN/MAX)
+    }
+
+    function isValidSet(set) {
+      return set.keys().hasAll(['weight', 'reps']) &&
+             isValidWeight(set.weight) &&
+             isValidReps(set.reps) &&
+             isValidRPE(set.get('rpe', null));
+    }
+
+    function isValidExercise(exercise) {
+      return exercise.keys().hasAll(['exerciseId', 'sets']) &&
+             exercise.exerciseId is string &&
+             exercise.sets is list &&
+             exercise.sets.size() > 0 &&
+             exercise.sets.size() <= 50; // Max 50 sets per exercise (reasonable limit)
+    }
+
+    function hasValidSets(exercise) {
+      // Check all sets in the exercise are valid
+      return exercise.sets.size() == 0 ||
+             exercise.sets.hasOnly(isValidSet);
+    }
+
+    function isValidWorkout(workout) {
+      return workout.keys().hasAll(['userId', 'exercises']) &&
+             workout.userId == request.auth.uid &&
+             workout.exercises is list &&
+             workout.exercises.size() >= 0 &&
+             workout.exercises.size() <= 20; // Max 20 exercises per workout (reasonable limit)
+    }
+
     // Users collection - users can read/write their own data
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // Nested workouts subcollection
+      // Nested workouts subcollection with data validation
       match /workouts/{workoutId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+
+        // Validate workout data on create and update
+        allow create, update: if isOwner(userId) &&
+                                 isValidWorkout(request.resource.data) &&
+                                 request.resource.data.exercises.hasOnly(isValidExercise) &&
+                                 request.resource.data.exercises.hasOnly(hasValidSets);
+
+        allow delete: if isOwner(userId);
       }
 
       // Nested custom exercises subcollection

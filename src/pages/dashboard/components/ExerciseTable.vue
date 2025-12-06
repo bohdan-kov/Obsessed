@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useUnits } from '@/composables/useUnits'
+import { normalizeDate } from '@/utils/dateUtils'
 import {
   Card,
   CardContent,
@@ -145,7 +146,7 @@ function getStatusLabel(status) {
 // Format date
 function formatDate(date) {
   if (!date) return '-'
-  const d = date.toDate ? date.toDate() : new Date(date)
+  const d = normalizeDate(date)
   return d.toLocaleDateString('uk-UA', {
     day: 'numeric',
     month: 'short',

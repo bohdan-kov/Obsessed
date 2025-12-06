@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
-import StatCard from '../StatCard.vue'
+import StatCard from '@/pages/dashboard/components/StatCard.vue'
 
 // Mock lucide-vue-next icons
 vi.mock('lucide-vue-next', () => ({

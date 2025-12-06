@@ -160,5 +160,14 @@
     "weight": "Weight",
     "noData": "No muscle group data",
     "noDataSubtitle": "Start training to track progress"
+  },
+
+  "session": {
+    "recentSessions": "Recent Sessions",
+    "sets": "{count} sets",
+    "reps": "{count} reps",
+    "volume": "Volume",
+    "maxWeight": "Max Weight",
+    "date": "Date"
   }
 }
