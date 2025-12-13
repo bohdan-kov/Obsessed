@@ -12,7 +12,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex gap-2">
+      <div class="flex flex-col gap-2 sm:flex-row">
         <Button
           variant="outline"
           class="h-11 flex-1"

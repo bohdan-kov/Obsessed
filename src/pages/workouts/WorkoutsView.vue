@@ -22,7 +22,7 @@
 
     <!-- Tabs for Active/History/Plans -->
     <Tabs :default-value="defaultTab" class="w-full">
-      <TabsList class="grid w-full grid-cols-3">
+      <TabsList class="grid w-full grid-cols-1 sm:grid-cols-3">
         <TabsTrigger value="active">
           <div class="flex items-center gap-2">
             {{ t('workout.activeWorkout.title') }}

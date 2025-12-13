@@ -27,14 +27,14 @@ const {
 
 // Grid sizing: Define a 7-row × N-column grid where N = totalWeeks
 // Rows = 7 days (Mon-Sun), Columns = number of weeks in the period
-// Each cell is explicitly sized to 0.875rem (14px) for perfect alignment
+// Cell sizes are CSS variables that adjust per breakpoint for responsive design
 const gridColumnsStyle = computed(() => ({
-  gridTemplateColumns: `repeat(${totalWeeks.value}, 0.875rem)`,
-  gridTemplateRows: 'repeat(7, 0.875rem)',
+  gridTemplateColumns: `repeat(${totalWeeks.value}, var(--cell-size))`,
+  gridTemplateRows: 'repeat(7, var(--cell-size))',
 }))
 
 const monthLabelsStyle = computed(() => ({
-  gridTemplateColumns: `repeat(${totalWeeks.value}, 0.875rem)`,
+  gridTemplateColumns: `repeat(${totalWeeks.value}, var(--cell-size))`,
 }))
 
 // Refs for scroll synchronization
@@ -272,6 +272,12 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* CSS Variables for responsive cell sizing */
+.contribution-heatmap {
+  --cell-size: 0.875rem; /* 14px - Desktop default */
+  --cell-gap: 0.125rem; /* 2px - Gap between cells */
+}
+
 /* Wrapper: Flexbox container for heatmap + stats sidebar */
 .heatmap-with-stats {
   display: flex;
@@ -320,7 +326,7 @@ onUnmounted(() => {
 
 .month-labels {
   display: grid;
-  gap: 0.125rem;
+  gap: var(--cell-gap);
   /* Width is set by gridTemplateColumns inline style */
   min-width: fit-content;
 }
@@ -345,14 +351,14 @@ onUnmounted(() => {
 .day-labels {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: var(--cell-gap);
   width: 2rem;
   flex-shrink: 0;
-  padding-top: 0.125rem;
+  padding-top: var(--cell-gap);
 }
 
 .day-label {
-  height: 0.875rem;
+  height: var(--cell-size);
   font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
   display: flex;
@@ -365,14 +371,15 @@ onUnmounted(() => {
   display: grid;
   /* gridTemplateColumns and gridTemplateRows set via inline style */
   grid-auto-flow: column; /* Fill columns first (top to bottom, then next column) */
-  gap: 0.125rem;
+  gap: var(--cell-gap);
   flex: 1;
 }
 
-/* Day Cells */
+/* Day Cells - Using aspect-ratio to maintain square shape on all screen sizes */
 .day-cell {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  aspect-ratio: 1 / 1; /* Ensure cells stay square */
   border-radius: 0.125rem;
   cursor: pointer;
   transition: all 150ms ease;
@@ -422,8 +429,9 @@ onUnmounted(() => {
 }
 
 .legend-cell {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  aspect-ratio: 1 / 1; /* Ensure legend cells stay square */
   border-radius: 0.125rem;
   border: 1px solid hsl(var(--border) / 0.3);
 }
@@ -448,7 +456,12 @@ onUnmounted(() => {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  /* Phase 2: Enable touch scrolling and sticky day labels */
+  /* Update CSS variable for smaller cell size on mobile */
+  .contribution-heatmap {
+    --cell-size: 0.625rem; /* 10px - Mobile size */
+  }
+
+  /* Enable touch scrolling and sticky day labels */
   .heatmap-container {
     -webkit-overflow-scrolling: touch;
   }
@@ -465,12 +478,6 @@ onUnmounted(() => {
     width: 1.5rem;
   }
 
-  .day-cell,
-  .legend-cell {
-    width: 0.625rem;
-    height: 0.625rem;
-  }
-
   .day-label-spacer {
     width: 1.5rem;
   }
@@ -481,16 +488,6 @@ onUnmounted(() => {
 
   .day-label {
     font-size: 0.625rem;
-    height: 0.625rem;
-  }
-}
-
-/* Accessibility - Touch targets */
-@media (hover: none) {
-  .day-cell {
-    padding: 0.75rem;
-    width: auto;
-    height: auto;
   }
 }
 </style>
