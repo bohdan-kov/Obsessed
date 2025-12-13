@@ -19,7 +19,6 @@ import {
 } from '@/utils/dateUtils'
 import {
   calculateCurrentStreak,
-  calculateLongestStreak,
 } from '@/utils/streakUtils'
 import {
   createTrendObject,
@@ -149,12 +148,22 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   const restDays = computed(() => {
     if (completedWorkouts.value.length === 0) return 0
 
-    // Find the most recent workout
-    const sortedWorkouts = [...completedWorkouts.value].sort((a, b) => {
-      const dateA = normalizeDate(a.completedAt)
-      const dateB = normalizeDate(b.completedAt)
-      return dateB - dateA // Most recent first
-    })
+    // Find the most recent workout with valid completedAt
+    const sortedWorkouts = [...completedWorkouts.value]
+      .filter((w) => {
+        // Filter out workouts with invalid completedAt dates
+        if (!w.completedAt) return false
+        const date = normalizeDate(w.completedAt)
+        return !isNaN(date.getTime())
+      })
+      .sort((a, b) => {
+        const dateA = normalizeDate(a.completedAt)
+        const dateB = normalizeDate(b.completedAt)
+        return dateB - dateA // Most recent first
+      })
+
+    // If no valid workouts after filtering, return 0
+    if (sortedWorkouts.length === 0) return 0
 
     const lastWorkout = sortedWorkouts[0]
     const lastWorkoutDate = normalizeDate(lastWorkout.completedAt)
@@ -611,7 +620,9 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   const periodWorkouts = computed(() => {
     const range = currentRange.value
     return completedWorkouts.value.filter((w) => {
+      if (!w.completedAt) return false
       const date = normalizeDate(w.completedAt)
+      if (isNaN(date.getTime())) return false
       return isWithinRange(date, range.start, range.end)
     })
   })
@@ -624,7 +635,9 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     if (!range) return []
 
     return completedWorkouts.value.filter((w) => {
+      if (!w.completedAt) return false
       const date = normalizeDate(w.completedAt)
+      if (isNaN(date.getTime())) return false
       return isWithinRange(date, range.start, range.end)
     })
   })

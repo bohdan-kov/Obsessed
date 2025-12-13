@@ -25,33 +25,20 @@ service cloud.firestore {
       return rpe == null || (rpe is number && rpe >= 1 && rpe <= 10); // 1-10 or null (from CONFIG.workout.RPE_MIN/MAX)
     }
 
-    function isValidSet(set) {
-      return set.keys().hasAll(['weight', 'reps']) &&
-             isValidWeight(set.weight) &&
-             isValidReps(set.reps) &&
-             isValidRPE(set.get('rpe', null));
-    }
-
-    function isValidExercise(exercise) {
-      return exercise.keys().hasAll(['exerciseId', 'sets']) &&
-             exercise.exerciseId is string &&
-             exercise.sets is list &&
-             exercise.sets.size() > 0 &&
-             exercise.sets.size() <= 50; // Max 50 sets per exercise (reasonable limit)
-    }
-
-    function hasValidSets(exercise) {
-      // Check all sets in the exercise are valid
-      return exercise.sets.size() == 0 ||
-             exercise.sets.hasOnly(isValidSet);
-    }
-
     function isValidWorkout(workout) {
       return workout.keys().hasAll(['userId', 'exercises']) &&
              workout.userId == request.auth.uid &&
              workout.exercises is list &&
              workout.exercises.size() >= 0 &&
              workout.exercises.size() <= 20; // Max 20 exercises per workout (reasonable limit)
+    }
+
+    // Validate that all exercises in the workout have the required structure
+    function areExercisesValid(exercises) {
+      // Empty array is always valid (new workouts start empty)
+      return exercises.size() == 0 ||
+             // Check each exercise has required fields
+             exercises.hasAll(['exerciseId', 'sets']);
     }
 
     // Users collection - users can read/write their own data
@@ -63,10 +50,7 @@ service cloud.firestore {
         allow read: if isOwner(userId);
 
         // Validate workout data on create and update
-        allow create, update: if isOwner(userId) &&
-                                 isValidWorkout(request.resource.data) &&
-                                 request.resource.data.exercises.hasOnly(isValidExercise) &&
-                                 request.resource.data.exercises.hasOnly(hasValidSets);
+        allow create, update: if isOwner(userId) && isValidWorkout(request.resource.data);
 
         allow delete: if isOwner(userId);
       }
@@ -79,6 +63,27 @@ service cloud.firestore {
       // Nested exercise notes subcollection
       match /exerciseNotes/{exerciseId} {
         allow read, write: if isOwner(userId);
+      }
+
+      // Nested workout plans subcollection
+      match /workoutPlans/{planId} {
+        allow read: if isOwner(userId);
+
+        // Validation helper for workout plans
+        function isValidPlan(plan) {
+          return plan.keys().hasAll(['userId', 'name', 'exercises']) &&
+                 plan.userId == request.auth.uid &&
+                 plan.name is string &&
+                 plan.name.size() >= 2 &&
+                 plan.name.size() <= 50 &&
+                 plan.exercises is list &&
+                 plan.exercises.size() >= 1 &&
+                 plan.exercises.size() <= 15;
+        }
+
+        allow create: if isOwner(userId) && isValidPlan(request.resource.data);
+        allow update: if isOwner(userId) && isValidPlan(request.resource.data);
+        allow delete: if isOwner(userId);
       }
     }
 

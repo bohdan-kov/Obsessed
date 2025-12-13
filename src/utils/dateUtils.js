@@ -7,8 +7,9 @@
 /**
  * Normalize various date inputs to a Date object
  * Handles Firebase Timestamp, Date objects, ISO strings
- * @param {Date|Object|string} dateInput - Date to normalize
- * @returns {Date} Normalized Date object
+ * @param {Date|Object|string|number} dateInput - Date to normalize
+ * @returns {Date} Normalized Date object (may be Invalid Date if input is invalid)
+ * @note Always validate result with isNaN(date.getTime()) after calling this function
  */
 export function normalizeDate(dateInput) {
   if (!dateInput) {
@@ -27,6 +28,24 @@ export function normalizeDate(dateInput) {
 
   // ISO string or timestamp number
   return new Date(dateInput)
+}
+
+/**
+ * Check if a date value is valid
+ * @param {Date|Object|string|number} dateInput - Date to check
+ * @returns {boolean} True if date is valid
+ */
+export function isValidDate(dateInput) {
+  if (!dateInput) {
+    return false
+  }
+
+  try {
+    const date = normalizeDate(dateInput)
+    return !isNaN(date.getTime())
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -274,6 +293,50 @@ export function formatDate(dateInput, locale = 'uk') {
     month: 'short',
     day: 'numeric',
   }).format(date)
+}
+
+/**
+ * Safely format date with validation and fallback
+ * @param {Date|Object|string} dateInput - Date to format
+ * @param {Object} options - Formatting options
+ * @param {string} options.locale - Locale code (e.g., 'en', 'uk')
+ * @param {Object} options.formatOptions - Intl.DateTimeFormat options
+ * @param {string} options.fallback - Fallback string if date is invalid (default: '-')
+ * @returns {string} Formatted date string or fallback
+ */
+export function safeFormatDate(dateInput, options = {}) {
+  const {
+    locale = 'uk',
+    formatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    },
+    fallback = '-',
+  } = options
+
+  if (!dateInput) {
+    return fallback
+  }
+
+  try {
+    const date = normalizeDate(dateInput)
+
+    // Validate that the date is valid
+    if (isNaN(date.getTime())) {
+      if (import.meta.env.DEV) {
+        console.warn('Invalid date in safeFormatDate:', dateInput)
+      }
+      return fallback
+    }
+
+    return new Intl.DateTimeFormat(locale, formatOptions).format(date)
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('Error formatting date in safeFormatDate:', error, dateInput)
+    }
+    return fallback
+  }
 }
 
 /**

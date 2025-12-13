@@ -174,7 +174,7 @@ function handleClose(open) {
               >
                 <span>{{ getExerciseDisplayName(exercise) }}</span>
                 <span class="ml-auto text-xs text-muted-foreground">
-                  {{ exercise.muscleGroups?.[0] || t('common.unknown') }}
+                  {{ exercise.muscleGroups?.[0] ? t(`exercises.muscleGroups.${exercise.muscleGroups[0]}`) : t('common.unknown') }}
                 </span>
               </CommandItem>
             </CommandGroup>
@@ -189,7 +189,7 @@ function handleClose(open) {
               >
                 <span>{{ getExerciseDisplayName(exercise) }}</span>
                 <span class="ml-auto text-xs text-muted-foreground">
-                  {{ exercise.muscleGroups?.[0] || t('common.unknown') }}
+                  {{ exercise.muscleGroups?.[0] ? t(`exercises.muscleGroups.${exercise.muscleGroups[0]}`) : t('common.unknown') }}
                 </span>
               </CommandItem>
             </CommandGroup>

@@ -144,8 +144,8 @@ onUnmounted(() => {
     <ChartSection />
 
     <!-- Bottom: Table + Progress -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2">
+    <div class="grid grid-cols-1 2xl:grid-cols-3 gap-6">
+      <div class="2xl:col-span-2">
         <ExerciseTable />
       </div>
       <PersonalStatsCard />

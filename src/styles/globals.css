@@ -85,6 +85,10 @@
 }
 
 @theme inline {
+  /* Custom breakpoints */
+  --breakpoint-xxs: 375px;
+
+  /* Color tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -199,5 +203,15 @@
     .scrollbar-thin {
       scroll-behavior: smooth;
     }
+  }
+
+  /* Hide scrollbar utility for horizontal tab scrolling on mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
 }

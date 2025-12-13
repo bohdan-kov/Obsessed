@@ -40,6 +40,42 @@ export const COLLECTIONS = {
   USER_EXERCISES: 'user_exercises',
   PERSONAL_RECORDS: 'personal_records',
   MUSCLE_GROUPS: 'muscle_groups',
+  WORKOUT_PLANS: 'workoutPlans',
+}
+
+/**
+ * Remove undefined values from an object recursively
+ * Firestore's updateDoc does NOT accept undefined values - they must be removed or set to null
+ * @param {Object} obj - Object to clean
+ * @returns {Object} New object without undefined values
+ */
+function removeUndefinedValues(obj) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  // Handle arrays
+  if (Array.isArray(obj)) {
+    return obj.map(removeUndefinedValues)
+  }
+
+  // Handle objects
+  const cleaned = {}
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip undefined values entirely
+    if (value === undefined) {
+      continue
+    }
+
+    // Recursively clean nested objects/arrays
+    if (value !== null && typeof value === 'object') {
+      cleaned[key] = removeUndefinedValues(value)
+    } else {
+      cleaned[key] = value
+    }
+  }
+
+  return cleaned
 }
 
 /**
@@ -206,15 +242,22 @@ export async function setDocument(collectionName, docId, data, options = {}) {
 export async function updateDocument(collectionName, docId, data) {
   try {
     const docRef = getDocRef(collectionName, docId)
-    await updateDoc(docRef, {
+
+    // Remove undefined values from data to prevent Firestore errors
+    // Firestore's updateDoc() does not accept undefined values
+    const sanitizedData = removeUndefinedValues({
       ...data,
       updatedAt: serverTimestamp(),
     })
+
+    await updateDoc(docRef, sanitizedData)
   } catch (error) {
     if (import.meta.env.DEV) {
       console.error(
         `Error updating document ${collectionName}/${docId}:`,
-        error
+        error,
+        'Original data:',
+        data
       )
     }
     throw new Error(`Failed to update document ${collectionName}/${docId}: ${error.message}`)

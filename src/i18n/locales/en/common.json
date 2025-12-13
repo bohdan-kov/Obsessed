@@ -9,7 +9,8 @@
     "close": "Close",
     "confirm": "Confirm",
     "submit": "Submit",
-    "retry": "Retry"
+    "retry": "Retry",
+    "view": "View"
   },
   "more": "more",
   "based": "based on",
@@ -76,7 +77,7 @@
       "name": "Settings",
       "description": "Preferences & settings"
     },
-    "quickLog": "Quick Log",
+    "quickLog": "Add Exercise",
     "mobileMenu": {
       "title": "Navigation Menu",
       "description": "Access dashboard, workouts, analytics and settings"

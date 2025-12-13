@@ -20,9 +20,9 @@
       </Button>
     </div>
 
-    <!-- Tabs for Active/History -->
+    <!-- Tabs for Active/History/Plans -->
     <Tabs :default-value="defaultTab" class="w-full">
-      <TabsList class="grid w-full grid-cols-2">
+      <TabsList class="grid w-full grid-cols-3">
         <TabsTrigger value="active">
           <div class="flex items-center gap-2">
             {{ t('workout.activeWorkout.title') }}
@@ -33,6 +33,9 @@
         </TabsTrigger>
         <TabsTrigger value="history">
           {{ t('workout.history.title') }}
+        </TabsTrigger>
+        <TabsTrigger value="plans">
+          {{ t('plans.title') }}
         </TabsTrigger>
       </TabsList>
 
@@ -63,6 +66,11 @@
       <TabsContent value="history" class="mt-6">
         <WorkoutHistoryList :workouts="recentWorkouts" :loading="loading" />
       </TabsContent>
+
+      <!-- Plans Tab -->
+      <TabsContent value="plans" class="mt-6">
+        <PlansTabView />
+      </TabsContent>
     </Tabs>
   </div>
 </template>
@@ -70,6 +78,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useActiveWorkout } from '@/composables/useActiveWorkout'
 import { useWorkoutStore } from '@/stores/workoutStore'
@@ -80,8 +89,10 @@ import { Badge } from '@/components/ui/badge'
 import { Play, Dumbbell } from 'lucide-vue-next'
 import ActiveWorkoutPanel from './components/active/ActiveWorkoutPanel.vue'
 import WorkoutHistoryList from './components/history/WorkoutHistoryList.vue'
+import PlansTabView from './components/plans/PlansTabView.vue'
 
 const { t } = useI18n()
+const route = useRoute()
 const { activeWorkout, startWorkout } = useActiveWorkout()
 const workoutStore = useWorkoutStore()
 
@@ -91,8 +102,12 @@ const { recentWorkouts, loading } = storeToRefs(workoutStore)
 // Check if there's an active workout
 const hasActiveWorkout = computed(() => !!activeWorkout.value)
 
-// Default tab based on active workout status
+// Default tab based on URL query params or active workout status
 const defaultTab = computed(() => {
+  // If tab query param is provided, use it
+  if (route.query.tab && ['active', 'history', 'plans'].includes(route.query.tab)) {
+    return route.query.tab
+  }
   return hasActiveWorkout.value ? 'active' : 'active'
 })
 

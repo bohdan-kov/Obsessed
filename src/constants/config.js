@@ -88,6 +88,9 @@ export const CONFIG = {
     MAX_RECENT_WORKOUTS_DISPLAY: 10,
     MAX_EXERCISES_DISPLAY: 8,
 
+    // Chart scroll configuration
+    CHART_MIN_POINT_SPACING: 40, // px - minimum spacing between data points for mobile scroll
+
     // Heatmap (legacy - old frequency heatmap)
     HEATMAP_WEEKS: 8,
     HEATMAP_HOURS_DISPLAY: [6, 9, 12, 15, 18, 21], // Which hours to show
@@ -251,6 +254,20 @@ export const CONFIG = {
     EMPTY_STATE_TRANSITION_DURATION: 100, // ms - fade in
   },
 
+  // Workout Plans Configuration
+  plans: {
+    MAX_PLANS_PER_USER: 30,
+    MIN_EXERCISES_PER_PLAN: 1,
+    MAX_EXERCISES_PER_PLAN: 15,
+    NAME_MIN_LENGTH: 2,
+    NAME_MAX_LENGTH: 50,
+    DESCRIPTION_MAX_LENGTH: 200,
+    NOTES_MAX_LENGTH: 200,
+    SUGGESTED_SETS_MIN: 1,
+    SUGGESTED_SETS_MAX: 10,
+    RECENT_PLANS_COUNT: 5, // Number of recent plans to show
+  },
+
   // Performance Configuration
   performance: {
     // Debounce delays
@@ -294,6 +311,9 @@ export const CONFIG = {
     THEME: 'obsessed_theme',
     USER_PREFERENCES: 'obsessed_prefs',
     ANALYTICS_PERIOD: 'obsessed_analytics_period',
+    TABLE_SETTINGS: 'obsessed_table_settings',
+    PLANS_CACHE: 'obsessed_plans_cache',
+    PLANS_SYNC_QUEUE: 'obsessed_plans_sync_queue',
   },
 
   // Date/Time formats

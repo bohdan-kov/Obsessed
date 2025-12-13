@@ -1,0 +1,120 @@
+{
+  "title": "Workout Plans",
+  "list": {
+    "empty": "No workout plans yet",
+    "emptyDescription": "Create a plan to save your favorite workout routines",
+    "createFirst": "Create Your First Plan",
+    "createPlan": "Create Plan",
+    "planCount": "{count} plans",
+    "maxReached": "Maximum plans reached (30)",
+    "lastUsed": "Last used {date}",
+    "neverUsed": "Never used",
+    "exerciseCount": "{count} exercises",
+    "exerciseCountOne": "1 exercise"
+  },
+  "card": {
+    "startWorkout": "Start Workout",
+    "startWorkoutWithPlan": "Start workout with plan {planName}",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "goToWorkouts": "Go to Workouts",
+    "moreActions": "More actions"
+  },
+  "form": {
+    "createTitle": "Create Workout Plan",
+    "createDescription": "Create a new workout plan with your custom set of exercises",
+    "editTitle": "Edit Workout Plan",
+    "editDescription": "Update the details and exercises of your workout plan",
+    "addExerciseDescription": "Select exercises from the list to add to your plan",
+    "name": "Plan Name",
+    "namePlaceholder": "e.g., Push Day, Leg Day, Full Body",
+    "nameRequired": "Plan name is required",
+    "nameMinLength": "Name must be at least 2 characters",
+    "nameMaxLength": "Name must be at most 50 characters",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional description of your plan...",
+    "descriptionMaxLength": "Description must be at most 200 characters",
+    "exercises": "Exercises",
+    "exercisesMinLength": "Plan must have at least 1 exercise",
+    "exercisesMaxLength": "Plan can have at most 15 exercises",
+    "addExercise": "Add Exercise",
+    "noExercises": "No exercises in this plan",
+    "noExercisesHint": "Tap the button above to add exercises",
+    "save": "Save Plan",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "updating": "Updating..."
+  },
+  "exercise": {
+    "suggestions": "Suggestions",
+    "suggestedSets": "Sets",
+    "suggestedWeight": "Weight",
+    "suggestedReps": "Reps",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes for this exercise...",
+    "remove": "Remove",
+    "removeExercise": "Remove exercise",
+    "dragToReorder": "Drag to reorder",
+    "setsPlaceholder": "e.g., 3",
+    "weightPlaceholder": "e.g., 60",
+    "repsPlaceholder": "e.g., 8-12 or AMRAP",
+    "setsRange": "Sets must be between 1 and 10",
+    "weightRange": "Weight must be between 0 and 1000 kg",
+    "notesMaxLength": "Notes must be at most 200 characters"
+  },
+  "details": {
+    "title": "Plan Details",
+    "startWorkout": "Start Workout",
+    "edit": "Edit Plan",
+    "close": "Close",
+    "exercises": "Exercises ({count})",
+    "noDescription": "No description"
+  },
+  "selector": {
+    "title": "Start Workout",
+    "quickStart": "Quick Start",
+    "quickStartDescription": "Start an empty workout",
+    "fromPlan": "From Plan",
+    "fromPlanDescription": "Choose a plan to start with",
+    "search": "Search plans...",
+    "noPlans": "No plans found",
+    "recent": "Recent Plans",
+    "allPlans": "All Plans",
+    "cancel": "Cancel"
+  },
+  "delete": {
+    "title": "Delete Plan?",
+    "message": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "confirm": "Delete Plan",
+    "cancel": "Cancel"
+  },
+  "suggestions": {
+    "badge": "From plan",
+    "sets": "sets",
+    "setsCount": "{count} sets",
+    "weight": "{value} {unit}",
+    "reps": "reps",
+    "repsValue": "{value} reps",
+    "hint": "Suggested: {sets} sets × {reps} reps @ {weight} {unit}"
+  },
+  "toast": {
+    "created": "Plan created successfully",
+    "updated": "Plan updated successfully",
+    "deleted": "Plan deleted",
+    "duplicated": "Plan duplicated",
+    "workoutStarted": "Workout started from plan",
+    "createError": "Failed to create plan",
+    "updateError": "Failed to update plan",
+    "deleteError": "Failed to delete plan",
+    "fetchError": "Failed to load plans",
+    "maxPlansError": "You've reached the maximum of 30 plans"
+  },
+  "errors": {
+    "planNotFound": "Plan not found",
+    "invalidData": "Invalid plan data",
+    "unauthorized": "You don't have permission to modify this plan",
+    "networkError": "Network error. Please check your connection."
+  }
+}

@@ -13,8 +13,17 @@ import { normalizeDate } from '@/utils/dateUtils'
 export function calculateCurrentStreak(workouts, dateKey = 'completedAt') {
   if (!workouts || workouts.length === 0) return 0
 
+  // Filter out workouts with invalid dates
+  const validWorkouts = workouts.filter((w) => {
+    if (!w[dateKey]) return false
+    const date = normalizeDate(w[dateKey])
+    return !isNaN(date.getTime())
+  })
+
+  if (validWorkouts.length === 0) return 0
+
   // Sort workouts descending (newest first) for streak calculation
-  const sortedWorkouts = [...workouts].sort((a, b) => {
+  const sortedWorkouts = [...validWorkouts].sort((a, b) => {
     const dateA = normalizeDate(a[dateKey])
     const dateB = normalizeDate(b[dateKey])
     return dateB - dateA
@@ -58,8 +67,17 @@ export function calculateCurrentStreak(workouts, dateKey = 'completedAt') {
 export function calculateLongestStreak(workouts, dateKey = 'completedAt') {
   if (!workouts || workouts.length === 0) return 0
 
+  // Filter out workouts with invalid dates
+  const validWorkouts = workouts.filter((w) => {
+    if (!w[dateKey]) return false
+    const date = normalizeDate(w[dateKey])
+    return !isNaN(date.getTime())
+  })
+
+  if (validWorkouts.length === 0) return 0
+
   // Sort workouts chronologically (oldest first)
-  const sortedWorkouts = [...workouts].sort((a, b) => {
+  const sortedWorkouts = [...validWorkouts].sort((a, b) => {
     const dateA = normalizeDate(a[dateKey])
     const dateB = normalizeDate(b[dateKey])
     return dateA - dateB
@@ -126,7 +144,9 @@ export function hasActiveStreak(workouts, dateKey = 'completedAt') {
   yesterday.setDate(today.getDate() - 1)
 
   return workouts.some((workout) => {
+    if (!workout[dateKey]) return false
     const workoutDate = normalizeDate(workout[dateKey])
+    if (isNaN(workoutDate.getTime())) return false
     workoutDate.setHours(0, 0, 0, 0)
 
     return (

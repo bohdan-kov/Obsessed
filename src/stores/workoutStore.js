@@ -1,7 +1,6 @@
 import { ref, computed, readonly } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuthStore } from './authStore'
-import { useUnits } from '@/composables/useUnits'
 import { normalizeDate } from '@/utils/dateUtils'
 import {
   fetchCollection,
@@ -116,6 +115,13 @@ export const useWorkoutStore = defineStore('workout', () => {
    */
   const hasActiveWorkout = computed(() => !!activeWorkout.value)
 
+  /**
+   * Get total count of exercises in active workout
+   */
+  const exerciseCount = computed(() => {
+    return activeWorkout.value?.exercises?.length || 0
+  })
+
   // Actions
   /**
    * Start a new workout
@@ -146,6 +152,12 @@ export const useWorkoutStore = defineStore('workout', () => {
         totalSets: 0,
       }
 
+      if (import.meta.env.DEV) {
+        console.log('Creating workout with data:', workoutData)
+        console.log('User ID:', authStore.uid)
+        console.log('Workout path:', `users/${authStore.uid}/workouts`)
+      }
+
       const workoutPath = `users/${authStore.uid}/workouts`
       const workoutId = await createDocument(workoutPath, workoutData)
 
@@ -162,6 +174,81 @@ export const useWorkoutStore = defineStore('workout', () => {
     } catch (err) {
       if (import.meta.env.DEV) {
         console.error('Error starting workout:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Start a workout from a plan template
+   * Creates a new workout and pre-populates it with exercises from the plan
+   * @param {string} planId - Plan ID
+   * @returns {Promise<string>} Workout ID
+   * @throws {Error} If plan not found or active workout exists
+   */
+  async function startWorkoutFromPlan(planId) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated to start workout from plan')
+    }
+
+    if (hasActiveWorkout.value) {
+      throw new Error('Cannot start a new workout while one is active')
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      // Import planStore dynamically to avoid circular dependency
+      const { usePlanStore } = await import('./planStore')
+      const planStore = usePlanStore()
+
+      const plan = planStore.getPlanById(planId)
+      if (!plan) {
+        throw new Error('Plan not found')
+      }
+
+      // Start the workout first
+      const workoutId = await startWorkout()
+
+      // Add exercises from plan with suggestions
+      const workoutPath = `users/${authStore.uid}/workouts`
+      const exercises = plan.exercises.map((planEx, index) => ({
+        exerciseId: planEx.exerciseId,
+        exerciseName: planEx.exerciseName,
+        sets: [],
+        order: index,
+        planSuggestions: {
+          suggestedSets: planEx.suggestedSets || null,
+          suggestedWeight: planEx.suggestedWeight || null, // Already in kg from plan
+          suggestedReps: planEx.suggestedReps || null,
+          notes: planEx.notes || null,
+        },
+      }))
+
+      // Update workout with exercises and source plan reference
+      await updateDocument(workoutPath, workoutId, {
+        exercises,
+        sourcePlanId: planId,
+        lastSavedAt: serverTimestamp(),
+      })
+
+      // Update local state
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = exercises
+        currentWorkout.value.sourcePlanId = planId
+      }
+
+      // Record plan usage
+      await planStore.recordPlanUsage(planId)
+
+      return workoutId
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Error starting workout from plan:', err)
       }
       error.value = err.message
       throw err
@@ -217,10 +304,22 @@ export const useWorkoutStore = defineStore('workout', () => {
   }
 
   /**
+   * Check if an exercise can be deleted
+   * @param {string} exerciseId - Exercise ID to check
+   * @returns {boolean} True if exercise can be deleted
+   */
+  function canDeleteExercise(exerciseId) {
+    if (!activeWorkout.value) return false
+
+    // Cannot delete the last exercise
+    return exerciseCount.value > 1
+  }
+
+  /**
    * Add set to exercise in current workout
    * @param {string} exerciseId - Exercise ID
    * @param {Object} setData - Set data
-   * @param {number} setData.weight - Weight in user's preferred unit (will be converted to kg for storage)
+   * @param {number} setData.weight - Weight in kg (already converted by component)
    * @param {number} setData.reps - Reps
    * @param {number} [setData.rpe] - RPE
    * @param {string} [setData.type='normal'] - Set type
@@ -236,9 +335,6 @@ export const useWorkoutStore = defineStore('workout', () => {
     error.value = null
 
     try {
-      // Get unit conversion function
-      const { toStorageUnit } = useUnits()
-
       const exerciseIndex = activeWorkout.value.exercises.findIndex(
         (ex) => ex.exerciseId === exerciseId
       )
@@ -247,12 +343,11 @@ export const useWorkoutStore = defineStore('workout', () => {
         throw new Error('Exercise not found in current workout')
       }
 
-      // Convert weight from user's display unit to storage unit (kg)
+      // Weight is already in kg (converted by component before calling this action)
       // All weights are stored in kg in Firestore for consistency
-      const weightInKg = toStorageUnit(weight)
 
       const newSet = {
-        weight: weightInKg,
+        weight,
         reps,
         rpe: rpe || null,
         type,
@@ -300,6 +395,413 @@ export const useWorkoutStore = defineStore('workout', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Delete exercise from active workout
+   * @param {string} exerciseId - Exercise ID to delete
+   * @returns {Promise<void>}
+   * @throws {Error} If no active workout, exercise not found, or cannot delete last exercise
+   */
+  async function deleteExercise(exerciseId) {
+    if (!activeWorkout.value) {
+      throw new Error('No active workout')
+    }
+
+    const exerciseIndex = activeWorkout.value.exercises.findIndex(
+      (ex) => ex.exerciseId === exerciseId
+    )
+
+    if (exerciseIndex === -1) {
+      throw new Error('Exercise not found in current workout')
+    }
+
+    if (!canDeleteExercise(exerciseId)) {
+      throw new Error('Cannot delete the last exercise')
+    }
+
+    loading.value = true
+    error.value = null
+
+    // Store original state for rollback
+    const originalExercises = [...activeWorkout.value.exercises]
+    const originalVolume = activeWorkout.value.totalVolume
+    const originalSets = activeWorkout.value.totalSets
+
+    try {
+      // Optimistic update
+      const updatedExercises = activeWorkout.value.exercises.filter(
+        (ex) => ex.exerciseId !== exerciseId
+      )
+
+      // Reorder remaining exercises
+      updatedExercises.forEach((ex, index) => {
+        ex.order = index
+      })
+
+      // Recalculate total volume
+      const totalVolume = updatedExercises.reduce((total, exercise) => {
+        return (
+          total +
+          exercise.sets.reduce((exTotal, set) => {
+            return exTotal + set.weight * set.reps
+          }, 0)
+        )
+      }, 0)
+
+      // Recalculate total sets
+      const totalSets = updatedExercises.reduce((total, exercise) => {
+        return total + exercise.sets.length
+      }, 0)
+
+      // Update Firestore
+      const workoutPath = `users/${authStore.uid}/workouts`
+      await updateDocument(workoutPath, activeWorkout.value.id, {
+        exercises: updatedExercises,
+        totalVolume,
+        totalSets,
+        lastSavedAt: serverTimestamp(),
+      })
+
+      // Update local state
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = updatedExercises
+        currentWorkout.value.totalVolume = totalVolume
+        currentWorkout.value.totalSets = totalSets
+      }
+    } catch (err) {
+      // Rollback on error
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = originalExercises
+        currentWorkout.value.totalVolume = originalVolume
+        currentWorkout.value.totalSets = originalSets
+      }
+
+      if (import.meta.env.DEV) {
+        console.error('Error deleting exercise:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Duplicate exercise in active workout
+   * @param {string} exerciseId - Exercise ID to duplicate
+   * @returns {Promise<void>}
+   * @throws {Error} If no active workout or exercise not found
+   */
+  async function duplicateExercise(exerciseId) {
+    if (!activeWorkout.value) {
+      throw new Error('No active workout')
+    }
+
+    const exerciseIndex = activeWorkout.value.exercises.findIndex(
+      (ex) => ex.exerciseId === exerciseId
+    )
+
+    if (exerciseIndex === -1) {
+      throw new Error('Exercise not found in current workout')
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const originalExercise = activeWorkout.value.exercises[exerciseIndex]
+
+      // Create duplicate with empty sets
+      const duplicatedExercise = {
+        exerciseId: originalExercise.exerciseId,
+        exerciseName: originalExercise.exerciseName,
+        sets: [], // Empty sets array
+        order: originalExercise.order + 1,
+        notes: '',
+        status: 'pending',
+      }
+
+      // Insert duplicate after original
+      const updatedExercises = [...activeWorkout.value.exercises]
+      updatedExercises.splice(exerciseIndex + 1, 0, duplicatedExercise)
+
+      // Reorder subsequent exercises
+      updatedExercises.forEach((ex, index) => {
+        ex.order = index
+      })
+
+      const workoutPath = `users/${authStore.uid}/workouts`
+      await updateDocument(workoutPath, activeWorkout.value.id, {
+        exercises: updatedExercises,
+        lastSavedAt: serverTimestamp(),
+      })
+
+      // Update local state
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = updatedExercises
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Error duplicating exercise:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Calculate total volume from exercises array
+   * @param {Array} exercises - Array of exercises
+   * @returns {number} Total volume in kg
+   */
+  function calculateTotalVolume(exercises) {
+    return exercises.reduce((total, exercise) => {
+      return (
+        total +
+        exercise.sets.reduce((exTotal, set) => {
+          return exTotal + set.weight * set.reps
+        }, 0)
+      )
+    }, 0)
+  }
+
+  /**
+   * Delete multiple exercises in a single Firestore write
+   * @param {string[]} exerciseIds - Array of exercise IDs to delete
+   * @returns {Promise<void>}
+   * @throws {Error} If would delete all exercises
+   */
+  async function deleteExercises(exerciseIds) {
+    if (!activeWorkout.value) {
+      throw new Error('No active workout')
+    }
+
+    // CRITICAL VALIDATION: Cannot delete all exercises
+    const remainingCount = activeWorkout.value.exercises.length - exerciseIds.length
+    if (remainingCount < 1) {
+      throw new Error('Cannot delete all exercises')
+    }
+
+    loading.value = true
+    error.value = null
+
+    // Store original state for rollback
+    const originalExercises = [...activeWorkout.value.exercises]
+    const originalVolume = activeWorkout.value.totalVolume
+    const originalSets = activeWorkout.value.totalSets
+
+    try {
+      // Filter out exercises from activeWorkout.value.exercises
+      const updatedExercises = activeWorkout.value.exercises.filter(
+        (ex) => !exerciseIds.includes(ex.exerciseId)
+      )
+
+      // Recalculate order values for remaining exercises
+      updatedExercises.forEach((ex, index) => {
+        ex.order = index
+      })
+
+      // Calculate new totalVolume and totalSets
+      const newTotalVolume = calculateTotalVolume(updatedExercises)
+      const newTotalSets = updatedExercises.reduce(
+        (sum, ex) => sum + ex.sets.length,
+        0
+      )
+
+      // Optimistic update
+      activeWorkout.value.exercises = updatedExercises
+      activeWorkout.value.totalVolume = newTotalVolume
+      activeWorkout.value.totalSets = newTotalSets
+
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = updatedExercises
+        currentWorkout.value.totalVolume = newTotalVolume
+        currentWorkout.value.totalSets = newTotalSets
+      }
+
+      // Single Firestore write
+      const workoutPath = `users/${authStore.uid}/workouts`
+      await updateDocument(workoutPath, activeWorkout.value.id, {
+        exercises: updatedExercises,
+        totalVolume: newTotalVolume,
+        totalSets: newTotalSets,
+        lastSavedAt: serverTimestamp(),
+      })
+    } catch (err) {
+      // Rollback on error
+      activeWorkout.value.exercises = originalExercises
+      activeWorkout.value.totalVolume = originalVolume
+      activeWorkout.value.totalSets = originalSets
+
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = originalExercises
+        currentWorkout.value.totalVolume = originalVolume
+        currentWorkout.value.totalSets = originalSets
+      }
+
+      if (import.meta.env.DEV) {
+        console.error('Error deleting exercises:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Duplicate multiple exercises in a single Firestore write
+   * @param {string[]} exerciseIds - Array of exercise IDs to duplicate
+   * @returns {Promise<void>}
+   */
+  async function duplicateExercises(exerciseIds) {
+    if (!activeWorkout.value) {
+      throw new Error('No active workout')
+    }
+
+    loading.value = true
+    error.value = null
+
+    // Store original state for rollback
+    const originalExercises = [...activeWorkout.value.exercises]
+
+    try {
+      const newExercises = []
+
+      // Create duplicates and insert after originals
+      activeWorkout.value.exercises.forEach((exercise) => {
+        newExercises.push(exercise)
+
+        if (exerciseIds.includes(exercise.exerciseId)) {
+          // Create duplicate with only defined fields to avoid Firestore errors
+          // Firestore's updateDoc() does not accept undefined values
+          const duplicate = {
+            exerciseId: `${exercise.exerciseId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            exerciseName: exercise.exerciseName,
+            sets: [], // Empty sets (template pattern)
+            notes: '',
+            status: 'pending',
+            order: 0, // Will be recalculated below
+          }
+
+          // Only add optional fields if they exist on the original exercise
+          if (exercise.exerciseType) {
+            duplicate.exerciseType = exercise.exerciseType
+          }
+          if (exercise.muscleGroups) {
+            duplicate.muscleGroups = exercise.muscleGroups
+          }
+
+          newExercises.push(duplicate)
+        }
+      })
+
+      // Recalculate order values
+      newExercises.forEach((ex, index) => {
+        ex.order = index
+      })
+
+      // Optimistic update
+      activeWorkout.value.exercises = newExercises
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = newExercises
+      }
+
+      // Single Firestore write
+      const workoutPath = `users/${authStore.uid}/workouts`
+      await updateDocument(workoutPath, activeWorkout.value.id, {
+        exercises: newExercises,
+        lastSavedAt: serverTimestamp(),
+      })
+    } catch (err) {
+      // Rollback on error
+      activeWorkout.value.exercises = originalExercises
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = originalExercises
+      }
+
+      if (import.meta.env.DEV) {
+        console.error('Error duplicating exercises:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update exercise in active workout (generic helper)
+   * @param {string} exerciseId - Exercise ID to update
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<void>}
+   * @throws {Error} If no active workout or exercise not found
+   */
+  async function updateExercise(exerciseId, updates) {
+    if (!activeWorkout.value) {
+      throw new Error('No active workout')
+    }
+
+    const exerciseIndex = activeWorkout.value.exercises.findIndex(
+      (ex) => ex.exerciseId === exerciseId
+    )
+
+    if (exerciseIndex === -1) {
+      throw new Error('Exercise not found in current workout')
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const updatedExercises = [...activeWorkout.value.exercises]
+      updatedExercises[exerciseIndex] = {
+        ...updatedExercises[exerciseIndex],
+        ...updates,
+      }
+
+      const workoutPath = `users/${authStore.uid}/workouts`
+      await updateDocument(workoutPath, activeWorkout.value.id, {
+        exercises: updatedExercises,
+        lastSavedAt: serverTimestamp(),
+      })
+
+      // Update local state
+      if (currentWorkout.value) {
+        currentWorkout.value.exercises = updatedExercises
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('Error updating exercise:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Update exercise notes
+   * @param {string} exerciseId - Exercise ID
+   * @param {string} notes - Notes text
+   * @returns {Promise<void>}
+   */
+  async function updateExerciseNotes(exerciseId, notes) {
+    return updateExercise(exerciseId, { notes })
+  }
+
+  /**
+   * Update exercise status
+   * @param {string} exerciseId - Exercise ID
+   * @param {string} status - Status ('pending' | 'completed')
+   * @returns {Promise<void>}
+   */
+  async function updateExerciseStatus(exerciseId, status) {
+    return updateExercise(exerciseId, { status })
   }
 
   /**
@@ -657,11 +1159,20 @@ export const useWorkoutStore = defineStore('workout', () => {
     completedWorkouts,
     recentWorkouts,
     hasActiveWorkout,
+    exerciseCount,
 
     // Actions
     startWorkout,
+    startWorkoutFromPlan,
     addExercise,
     addSet,
+    deleteExercise,
+    duplicateExercise,
+    deleteExercises,
+    duplicateExercises,
+    updateExercise,
+    updateExerciseNotes,
+    updateExerciseStatus,
     finishWorkout,
     updateWorkout,
     fetchWorkouts,
@@ -671,5 +1182,8 @@ export const useWorkoutStore = defineStore('workout', () => {
     clearError,
     ensureDataLoaded,
     clearData,
+
+    // Helpers
+    canDeleteExercise,
   }
 })

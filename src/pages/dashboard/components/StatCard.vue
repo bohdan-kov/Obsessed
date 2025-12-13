@@ -119,6 +119,23 @@ const insightAriaLabel = computed(() => {
   const statusText = props.insight.status === 'warning' ? 'Warning: ' : ''
   return `${statusText}${t(props.insight.textKey)}`
 })
+
+// Display value with fallback for invalid numbers
+const displayValue = computed(() => {
+  const val = props.value
+
+  // Handle NaN or invalid numbers
+  if (typeof val === 'number' && isNaN(val)) {
+    return '0'
+  }
+
+  // Handle null/undefined
+  if (val == null) {
+    return '0'
+  }
+
+  return val
+})
 </script>
 
 <template>
@@ -149,7 +166,7 @@ const insightAriaLabel = computed(() => {
     <CardContent>
       <!-- Main Value -->
       <div class="text-3xl font-bold font-mono tracking-tight">
-        {{ value }}
+        {{ displayValue }}
       </div>
 
       <!-- Footer: Period Label + Insight -->

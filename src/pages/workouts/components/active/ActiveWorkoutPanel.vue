@@ -9,8 +9,9 @@
       @cancel="showCancelDialog = true"
     />
 
-    <!-- Exercises List -->
-    <div v-if="activeWorkout && activeWorkout.exercises?.length > 0" class="space-y-4">
+    <!-- Exercises List or Empty State -->
+    <div v-if="activeWorkout" class="space-y-4">
+      <!-- Exercise Cards (shown when exercises exist) -->
       <ExerciseCard
         v-for="exercise in activeWorkout.exercises"
         :key="exercise.exerciseId"
@@ -19,7 +20,21 @@
         @delete-set="handleDeleteSet(exercise.exerciseId, $event)"
       />
 
-      <!-- Add Exercise Button (shown only when exercises exist) -->
+      <!-- Empty State (shown when no exercises exist) -->
+      <div
+        v-if="activeWorkout.exercises?.length === 0"
+        class="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center"
+      >
+        <Dumbbell class="mb-4 h-12 w-12 text-muted-foreground" />
+        <h3 class="mb-2 text-lg font-semibold">
+          {{ t('workout.activeWorkout.exercise.noExercises') }}
+        </h3>
+        <p class="text-sm text-muted-foreground">
+          {{ t('workout.activeWorkout.exercise.noExercisesHint') }}
+        </p>
+      </div>
+
+      <!-- Add Exercise Button (ALWAYS visible at bottom) -->
       <Button
         variant="outline"
         class="h-14 w-full"
@@ -30,29 +45,11 @@
       </Button>
     </div>
 
-    <!-- Empty State (shown when active workout exists but no exercises) -->
-    <div
-      v-else-if="activeWorkout"
-      class="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center"
-    >
-      <Dumbbell class="mb-4 h-12 w-12 text-muted-foreground" />
-      <h3 class="mb-2 text-lg font-semibold">
-        {{ t('workout.activeWorkout.exercise.noExercises') }}
-      </h3>
-      <p class="mb-4 text-sm text-muted-foreground">
-        {{ t('workout.activeWorkout.exercise.noExercisesHint') }}
-      </p>
-      <Button @click="showAddExerciseSheet = true">
-        <Plus class="mr-2 h-4 w-4" />
-        {{ t('workout.activeWorkout.exercise.addExercise') }}
-      </Button>
-    </div>
-
-    <!-- Add Exercise Sheet -->
-    <AddExerciseSheet
+    <!-- Quick Log Sheet -->
+    <QuickLogSheet
       :open="showAddExerciseSheet"
       @update:open="showAddExerciseSheet = $event"
-      @select="handleAddExercise"
+      :title="t('workout.activeWorkout.exercise.addExercise')"
     />
 
     <!-- Add Set Sheet -->
@@ -90,7 +87,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, Dumbbell } from 'lucide-vue-next'
 import ActiveWorkoutHeader from './ActiveWorkoutHeader.vue'
 import ExerciseCard from './ExerciseCard.vue'
-import AddExerciseSheet from '../sheets/AddExerciseSheet.vue'
+import QuickLogSheet from '@/components/QuickLogSheet.vue'
 import AddSetSheet from '../sheets/AddSetSheet.vue'
 import FinishWorkoutSheet from '../sheets/FinishWorkoutSheet.vue'
 import CancelWorkoutDialog from '../sheets/CancelWorkoutDialog.vue'
@@ -98,7 +95,6 @@ import CancelWorkoutDialog from '../sheets/CancelWorkoutDialog.vue'
 const { t } = useI18n()
 const {
   activeWorkout,
-  addExercise,
   addSet,
   deleteSet,
   finishWorkout,
@@ -155,16 +151,6 @@ function handleSetSheetClose(isOpen) {
   }
 }
 
-// Handle add exercise
-async function handleAddExercise(exercise) {
-  try {
-    // AddExerciseSheet emits the full exercise object
-    // Pass the exercise ID (slug) to the composable
-    await addExercise(exercise.id)
-  } catch (error) {
-    // Error already handled by useActiveWorkout with user-friendly toast
-  }
-}
 
 // Handle add set
 async function handleAddSet(setData) {

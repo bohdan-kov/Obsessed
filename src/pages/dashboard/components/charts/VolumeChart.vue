@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { useMediaQuery } from '@vueuse/core'
 import { VisArea, VisAxis, VisLine, VisXYContainer } from '@unovis/vue'
 import {
   Card,
@@ -19,10 +20,17 @@ import {
   componentToString,
 } from '@/components/ui/chart'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { CONFIG } from '@/constants/config'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { volumeByDay, periodLabel, period } = storeToRefs(analyticsStore)
+
+// Mobile detection
+const isMobile = useMediaQuery('(max-width: 640px)')
+
+// Ref for scroll container
+const chartScrollRef = ref(null)
 
 // Chart data from analytics store
 const chartData = computed(() => {
@@ -83,6 +91,47 @@ const formatExerciseAxisValue = computed(() => (value) => {
   const actualValue = (value / (maxVolume.value * 0.3)) * maxExercises.value
   return Math.round(actualValue).toString()
 })
+
+/**
+ * Dynamic chart width calculation for mobile scroll
+ * - On desktop: natural full width
+ * - On mobile: ensure minimum spacing between data points
+ * - For small data sets (< 5 points): let chart fit naturally
+ * - For large data sets (90+ points): reduce spacing to keep reasonable width
+ */
+const chartMinWidth = computed(() => {
+  if (!isMobile.value) return 'auto'
+
+  const dataPointCount = chartData.value.length
+
+  // Small data sets - no scroll needed
+  if (dataPointCount <= 5) return 'auto'
+
+  // Calculate minimum width based on spacing
+  const minSpacing = CONFIG.analytics.CHART_MIN_POINT_SPACING
+
+  // For very large data sets, reduce spacing to avoid excessive width
+  const spacing = dataPointCount > 90 ? minSpacing * 0.7 : minSpacing
+
+  return `${dataPointCount * spacing}px`
+})
+
+/**
+ * Auto-scroll to the latest data (rightmost point) on mount
+ */
+onMounted(async () => {
+  if (isMobile.value && chartScrollRef.value) {
+    // Wait for DOM to settle and chart to render
+    await nextTick()
+
+    // Small delay to ensure chart SVG is fully rendered
+    setTimeout(() => {
+      if (chartScrollRef.value) {
+        chartScrollRef.value.scrollLeft = chartScrollRef.value.scrollWidth
+      }
+    }, 100)
+  }
+})
 </script>
 
 <template>
@@ -98,15 +147,24 @@ const formatExerciseAxisValue = computed(() => (value) => {
 
     <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
       <ChartContainer :config="chartConfig" class="w-full" :cursor="false">
-        <!-- Chart visualization with fixed height -->
-        <div class="aspect-auto h-[300px] w-full">
-          <VisXYContainer
-            :key="`volume-chart-${period}`"
-            :data="chartData"
-            :svg-defs="svgDefs"
-            :margin="{ left: -40, right: 40 }"
-            :y-domain="yDomain"
+        <!-- Scroll wrapper for mobile -->
+        <div
+          ref="chartScrollRef"
+          class="chart-scroll-wrapper"
+          :class="{ 'mobile-scroll': isMobile && chartMinWidth !== 'auto' }"
+        >
+          <!-- Chart visualization with fixed height -->
+          <div
+            class="aspect-auto h-[300px] w-full"
+            :style="{ minWidth: chartMinWidth }"
           >
+            <VisXYContainer
+              :key="`volume-chart-${period}`"
+              :data="chartData"
+              :svg-defs="svgDefs"
+              :margin="{ left: -40, right: 40 }"
+              :y-domain="yDomain"
+            >
             <!-- Volume Area Chart (Primary Y-axis) -->
             <VisArea
               :x="(d) => d.date"
@@ -206,6 +264,13 @@ const formatExerciseAxisValue = computed(() => (value) => {
               }"
             />
           </VisXYContainer>
+          </div>
+
+          <!-- Gradient overlay for scroll indicator (mobile only) -->
+          <div
+            v-if="isMobile && chartMinWidth !== 'auto'"
+            class="scroll-gradient"
+          />
         </div>
 
         <!-- Legend positioned after chart, inside ChartContainer so it can access injected config -->
@@ -214,3 +279,51 @@ const formatExerciseAxisValue = computed(() => (value) => {
     </CardContent>
   </Card>
 </template>
+
+<style scoped>
+/* Chart scroll wrapper */
+.chart-scroll-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Mobile scroll mode */
+.chart-scroll-wrapper.mobile-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Smooth touch scrolling on iOS/Android */
+  -webkit-overflow-scrolling: touch;
+  /* Allow horizontal pan without interfering with tooltips/crosshair */
+  touch-action: pan-x;
+}
+
+.chart-scroll-wrapper.mobile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Gradient overlay to indicate scrollability */
+.scroll-gradient {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60px;
+  background: linear-gradient(
+    to left,
+    hsl(var(--background)) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Ensure gradient doesn't show on desktop */
+@media (min-width: 640px) {
+  .scroll-gradient {
+    display: none;
+  }
+}
+</style>
