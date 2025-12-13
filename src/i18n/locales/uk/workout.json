@@ -103,6 +103,7 @@
       "durationMinutes": "{minutes} хв",
       "durationUnknown": "Невідомо",
       "durationLessThanMinute": "< 1 хв",
+      "dateUnknown": "Невідома дата",
       "exercises": "{count} вправ",
       "sets": "{count} підходів"
     }
@@ -116,6 +117,7 @@
     "reps": "Повтори",
     "rpe": "RPE (опціонально)",
     "submit": "Записати підхід",
+    "setLogged": "Підхід записано",
     "recent": "Останні",
     "allExercises": "Всі вправи",
     "noExercisesFound": "Вправ не знайдено.",
@@ -151,7 +153,61 @@
     "duplicate": "Дублювати",
     "delete": "Видалити",
     "hourShort": "год",
-    "minuteShort": "хв"
+    "minuteShort": "хв",
+    "exerciseAdded": "Вправу додано",
+    "customizeComingSoon": "Скоро: Налаштування таблиці",
+    "workoutStarted": "Тренування розпочато",
+    "addExerciseError": "Не вдалося додати вправу",
+    "exerciseDeleted": "{name} видалено",
+    "exerciseDuplicated": "{name} дубльовано",
+    "exerciseCompleted": "{name} позначено як виконано",
+    "exerciseReopened": "{name} знову відкрито",
+    "deleteError": "Не вдалося видалити вправу",
+    "duplicateError": "Не вдалося дублювати вправу",
+    "saveNotesError": "Не вдалося зберегти нотатки",
+    "statusUpdateError": "Не вдалося оновити статус",
+    "batchActions": {
+      "selectAll": "Вибрати всі",
+      "selected": "{count} вибрано",
+      "clearSelection": "Скасувати вибір",
+      "duplicateSelected": "Дублювати вибрані",
+      "deleteSelected": "Видалити вибрані",
+      "exercisesDeleted": "{count} вправ видалено",
+      "exercisesDuplicated": "{count} вправ дубльовано",
+      "batchDeleteError": "Не вдалося видалити вправи",
+      "batchDuplicateError": "Не вдалося дублювати вправи"
+    },
+    "deleteDialog": {
+      "title": "Видалити вправу?",
+      "message": "Ви впевнені, що хочете видалити \"{name}\"? Ви записали {count} підходів. Цю дію неможливо скасувати.",
+      "lastExerciseWarning": "Неможливо видалити останню вправу. Спочатку додайте іншу вправу.",
+      "confirm": "Видалити вправу",
+      "cancel": "Скасувати"
+    },
+    "batchDeleteDialog": {
+      "title": "Видалити {count} вправ?",
+      "message": "Ви записали {totalSets} підходів у цих вправах. Цю дію неможливо скасувати.",
+      "exerciseList": "Вправи для видалення:",
+      "andMore": "...та ще {count}",
+      "cannotDeleteAll": "Неможливо видалити всі вправи. Спочатку додайте іншу вправу або скасуйте тренування.",
+      "confirm": "Видалити {count} вправ",
+      "cancel": "Скасувати"
+    },
+    "batchDuplicateDialog": {
+      "title": "Дублювати {count} вправ?",
+      "warning": "Буде створено {total} вправ після дублювання. Ви впевнені?",
+      "confirm": "Дублювати",
+      "cancel": "Скасувати"
+    },
+    "editSheet": {
+      "title": "Редагувати вправу",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Додайте нотатки для цієї вправи...",
+      "saving": "Збереження...",
+      "saved": "Збережено",
+      "autoSaveInfo": "Зміни автоматично зберігаються через 2 секунди",
+      "close": "Закрити"
+    }
   },
   "muscleProgress": {
     "title": "Фокус м'язів",
@@ -169,5 +225,40 @@
     "volume": "Об'єм",
     "maxWeight": "Макс. вага",
     "date": "Дата"
+  },
+  "tableSettings": {
+    "title": "Налаштування таблиці",
+    "titleWithTab": "Налаштування таблиці: {tab}",
+    "description": "Налаштуйте, які стовпці відображаються в таблиці вправ",
+    "descriptionWithScope": "Налаштуйте, які стовпці відображаються у вкладці \"{tab}\"",
+    "tabs": {
+      "overview": "Огляд",
+      "history": "Історія",
+      "exercises": "Вправи"
+    },
+    "columns": {
+      "type": "Тип вправи",
+      "status": "Статус",
+      "sets": "Підходи",
+      "reps": "Повтори",
+      "weight": "Вага",
+      "exercises": "Вправи (кількість)",
+      "duration": "Тривалість",
+      "volume": "Обсяг",
+      "lastPerformed": "Останнє виконання",
+      "totalSets": "Всього підходів",
+      "totalVolume": "Загальний обсяг",
+      "timesPerformed": "Разів виконано"
+    },
+    "resetDefaults": "Скинути за замовчуванням",
+    "close": "Закрити",
+    "info": "Назва вправи та дії завжди видимі. Зміни зберігаються автоматично.",
+    "settingsUpdated": "Налаштування таблиці оновлено",
+    "settingsReset": "Налаштування таблиці скинуто за замовчуванням",
+    "updateError": "Не вдалося оновити налаштування таблиці",
+    "resetError": "Не вдалося скинути налаштування таблиці",
+    "validation": {
+      "atLeastOneColumn": "Принаймні одна колонка має залишатися видимою"
+    }
   }
 }

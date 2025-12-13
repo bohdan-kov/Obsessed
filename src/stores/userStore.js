@@ -11,6 +11,16 @@ import { COLLECTIONS } from '@/firebase/firestore'
 import { CONFIG } from '@/constants/config'
 
 /**
+ * @typedef {Object} TableSettings
+ * @property {Object} columns - Column visibility settings
+ * @property {boolean} columns.type - Show exercise type column
+ * @property {boolean} columns.status - Show status column
+ * @property {boolean} columns.sets - Show sets column
+ * @property {boolean} columns.reps - Show reps column
+ * @property {boolean} columns.weight - Show weight column
+ */
+
+/**
  * @typedef {Object} UserSettings
  * @property {number} defaultRestTime - Default rest time in seconds
  * @property {'kg'|'lbs'} weightUnit - Weight unit preference
@@ -21,6 +31,7 @@ import { CONFIG } from '@/constants/config'
  * @property {boolean} soundEnabled - Enable sound effects
  * @property {string[]} [favoriteExercises] - Array of favorite exercise IDs
  * @property {string[]} [recentlyUsedExercises] - Recently used exercise IDs
+ * @property {TableSettings} [tableSettings] - Exercise table customization settings
  */
 
 /**
@@ -51,6 +62,96 @@ import { CONFIG } from '@/constants/config'
  * @property {string} [personalInfo.gender] - Gender
  */
 
+/**
+ * Default table settings - all columns visible by default
+ * Structure: { [tabName]: { columns: { [columnName]: boolean } } }
+ */
+const DEFAULT_TABLE_SETTINGS = {
+  overview: {
+    columns: {
+      type: true,
+      status: true,
+      sets: true,
+      reps: true,
+      weight: true,
+    },
+  },
+  history: {
+    columns: {
+      exercises: true,
+      duration: true,
+      volume: true,
+      status: true,
+    },
+  },
+  exercises: {
+    columns: {
+      lastPerformed: true,
+      totalSets: true,
+      totalVolume: true,
+      timesPerformed: true,
+    },
+  },
+}
+
+/**
+ * Migrate legacy table settings to new tab-specific structure
+ * @param {Object} oldSettings - Legacy settings with flat { columns: { ... } } structure
+ * @returns {Object} New settings with { overview: { columns: ... }, history: { columns: ... }, exercises: { columns: ... } } structure
+ */
+function migrateTableSettings(oldSettings) {
+  // If oldSettings has flat structure (legacy format)
+  if (oldSettings?.columns && !oldSettings.overview) {
+    if (import.meta.env.DEV) {
+      console.log('[userStore] Migrating legacy table settings to tab-specific format')
+    }
+    return {
+      overview: { columns: { ...oldSettings.columns } },
+      history: { columns: { ...DEFAULT_TABLE_SETTINGS.history.columns } },
+      exercises: { columns: { ...DEFAULT_TABLE_SETTINGS.exercises.columns } },
+    }
+  }
+  // Already in new format or no settings
+  return oldSettings
+}
+
+/**
+ * Cache table settings to localStorage for fast initial load
+ * @param {TableSettings} settings - Table settings object with tab-specific structure
+ *
+ * Storage format: { "overview": { "columns": { ... } }, "history": { "columns": { ... } }, ... }
+ * This matches the Firestore structure exactly
+ */
+function cacheTableSettings(settings) {
+  try {
+    localStorage.setItem(CONFIG.storage.TABLE_SETTINGS, JSON.stringify(settings))
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('localStorage save failed:', err)
+  }
+}
+
+/**
+ * Load cached table settings from localStorage
+ * @returns {TableSettings|null} Cached settings object or null if not found/invalid
+ *
+ * Returns: { overview: { columns: { ... } }, history: { columns: { ... } }, ... } or null
+ * This is used during initialization to show correct state before Firestore loads
+ * Automatically migrates legacy format if detected
+ */
+function loadCachedTableSettings() {
+  try {
+    const cached = localStorage.getItem(CONFIG.storage.TABLE_SETTINGS)
+    if (!cached) return null
+
+    const parsed = JSON.parse(cached)
+    // Migrate if legacy format detected
+    return migrateTableSettings(parsed)
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('localStorage read failed:', err)
+    return null
+  }
+}
+
 export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore()
 
@@ -66,6 +167,7 @@ export const useUserStore = defineStore('user', () => {
     soundEnabled: true,
     favoriteExercises: [],
     recentlyUsedExercises: [],
+    tableSettings: DEFAULT_TABLE_SETTINGS,
   })
   const loading = ref(false)
   const error = ref(null)
@@ -127,6 +229,21 @@ export const useUserStore = defineStore('user', () => {
       profile.value.email &&
       profile.value.settings
     )
+  })
+
+  /**
+   * Table settings with default fallback
+   *
+   * Returns the full tableSettings object with tab-specific structure:
+   * { overview: { columns: { ... } }, history: { columns: { ... } }, exercises: { columns: { ... } } }
+   * - If user has custom settings, returns those (merged with defaults by watcher)
+   * - If no settings exist yet, returns DEFAULT_TABLE_SETTINGS (all tabs with all columns visible)
+   *
+   * Note: The watcher already handles merging Firestore data with defaults,
+   * so this computed just returns what's in settings.value.tableSettings
+   */
+  const tableSettings = computed(() => {
+    return settings.value?.tableSettings || DEFAULT_TABLE_SETTINGS
   })
 
   /**
@@ -207,6 +324,7 @@ export const useUserStore = defineStore('user', () => {
           soundEnabled: true,
           favoriteExercises: [],
           recentlyUsedExercises: [],
+          tableSettings: DEFAULT_TABLE_SETTINGS,
         },
         stats: {
           totalWorkouts: 0,
@@ -464,6 +582,72 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
+   * Update table column visibility settings for a specific tab
+   * @param {string} tab - Tab name ('overview', 'history', or 'exercises')
+   * @param {Object} columnSettings - Column visibility settings (flat object: { type: true, status: false, ... })
+   * @returns {Promise<void>}
+   */
+  async function updateTableSettings(tab, columnSettings) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated')
+    }
+
+    // Validate tab parameter
+    if (!['overview', 'history', 'exercises'].includes(tab)) {
+      throw new Error('Invalid tab: must be overview, history, or exercises')
+    }
+
+    // Get current settings for the specific tab
+    const currentTabSettings = settings.value?.tableSettings?.[tab]?.columns || DEFAULT_TABLE_SETTINGS[tab].columns
+
+    // CRITICAL: User input overrides defaults AND existing values
+    // Order: defaults → existing → user input (rightmost wins)
+    const updatedTableSettings = {
+      ...settings.value.tableSettings, // Preserve other tabs
+      [tab]: {
+        columns: {
+          ...DEFAULT_TABLE_SETTINGS[tab].columns, // Ensure all columns have a value
+          ...currentTabSettings,                  // Preserve existing user settings
+          ...columnSettings,                      // Apply new user input (HIGHEST PRIORITY)
+        },
+      },
+    }
+
+    // Update local state immediately for optimistic UI
+    const previousSettings = { ...settings.value }
+    settings.value = {
+      ...settings.value,
+      tableSettings: updatedTableSettings
+    }
+
+    try {
+      // Save to Firestore
+      await updateDocument(COLLECTIONS.USERS, authStore.uid, {
+        settings: settings.value,
+      })
+
+      // Cache to localStorage after successful Firestore write
+      cacheTableSettings(updatedTableSettings)
+    } catch (err) {
+      // Revert local state on error
+      settings.value = previousSettings
+
+      if (import.meta.env.DEV) {
+        console.error('Error updating table settings:', err)
+      }
+      throw err
+    }
+  }
+
+  /**
+   * Reset table settings to defaults
+   * @returns {Promise<void>}
+   */
+  async function resetTableSettings() {
+    await updateSettings({ tableSettings: DEFAULT_TABLE_SETTINGS })
+  }
+
+  /**
    * Subscribe to profile real-time updates
    * @returns {Function|null} Unsubscribe function
    */
@@ -576,12 +760,42 @@ export const useUserStore = defineStore('user', () => {
   /**
    * Initialize userStore - sets up watchers and theme
    * Call this explicitly from App.vue onMounted
+   *
+   * TABLE SETTINGS DATA FLOW:
+   * ========================
+   * 1. INITIAL LOAD (this function):
+   *    - Check localStorage cache for tableSettings
+   *    - If found, load immediately (prevents flash of wrong state)
+   *    - Set up watcher for authStore.userProfile
+   *
+   * 2. FIRESTORE SYNC (watcher below):
+   *    - When Firestore data arrives, merge it with DEFAULT_TABLE_SETTINGS
+   *    - CRITICAL: Firestore data OVERRIDES defaults (not the other way around!)
+   *    - Cache the merged result to localStorage
+   *
+   * 3. USER UPDATES (updateTableSettings action):
+   *    - User clicks toggle in TableSettingsSheet
+   *    - Component calls updateTableSettings({ type: false, ... })
+   *    - Store merges with defaults and saves to Firestore
+   *    - Store caches to localStorage
+   *    - Firestore listener fires → watcher merges → updates settings.value
+   *
+   * MERGE ORDER (CRITICAL):
+   * - In watcher: defaults → Firestore data (Firestore wins)
+   * - In updateTableSettings: defaults → existing → user input (user input wins)
+   * - This ensures user data always takes precedence over defaults
    */
   function initializeUserStore() {
+    // Try localStorage first for fast initial render of table settings
+    const cachedSettings = loadCachedTableSettings()
+    if (cachedSettings) {
+      settings.value.tableSettings = cachedSettings
+    }
+
     // Set up reactive watchers
     watch(
       () => authStore.userProfile,
-      (newProfile) => {
+      async (newProfile) => {
         // Sync full profile from authStore (single source of truth)
         if (newProfile) {
           profile.value = newProfile
@@ -590,9 +804,67 @@ export const useUserStore = defineStore('user', () => {
           if (newProfile.settings) {
             const oldTheme = settings.value.theme
 
+            // DEEP MERGE: Preserve nested objects like tableSettings
+            // CRITICAL: Firestore data (user settings) must override defaults, not the other way around!
+            // Order matters: defaults FIRST, then Firestore data (so Firestore wins)
+
+            // Migrate legacy tableSettings if needed
+            let migratedTableSettings = newProfile.settings.tableSettings
+            if (migratedTableSettings) {
+              migratedTableSettings = migrateTableSettings(migratedTableSettings)
+            }
+
             settings.value = {
               ...settings.value,
               ...newProfile.settings,
+              // Deep merge tableSettings - FIRESTORE DATA OVERRIDES DEFAULTS
+              tableSettings: migratedTableSettings
+                ? {
+                    // Merge each tab's settings
+                    overview: {
+                      columns: {
+                        ...DEFAULT_TABLE_SETTINGS.overview.columns,
+                        ...(migratedTableSettings.overview?.columns || {}),
+                      },
+                    },
+                    history: {
+                      columns: {
+                        ...DEFAULT_TABLE_SETTINGS.history.columns,
+                        ...(migratedTableSettings.history?.columns || {}),
+                      },
+                    },
+                    exercises: {
+                      columns: {
+                        ...DEFAULT_TABLE_SETTINGS.exercises.columns,
+                        ...(migratedTableSettings.exercises?.columns || {}),
+                      },
+                    },
+                  }
+                : DEFAULT_TABLE_SETTINGS, // If no tableSettings in Firestore, use defaults
+            }
+
+            // Update cache with Firestore data (source of truth)
+            if (migratedTableSettings) {
+              cacheTableSettings(settings.value.tableSettings)
+
+              // If migration occurred, save migrated settings back to Firestore
+              if (newProfile.settings.tableSettings !== migratedTableSettings) {
+                try {
+                  await updateDocument(COLLECTIONS.USERS, authStore.uid, {
+                    settings: {
+                      ...newProfile.settings,
+                      tableSettings: settings.value.tableSettings,
+                    },
+                  })
+                  if (import.meta.env.DEV) {
+                    console.log('[userStore] Migrated table settings saved to Firestore')
+                  }
+                } catch (err) {
+                  if (import.meta.env.DEV) {
+                    console.error('[userStore] Failed to save migrated settings:', err)
+                  }
+                }
+              }
             }
 
             // Initialize theme ONCE after Firestore data loads (fixes race condition)
@@ -635,6 +907,7 @@ export const useUserStore = defineStore('user', () => {
     currentStreak,
     isProfileComplete,
     currentWeight,
+    tableSettings,
 
     // Actions
     fetchProfile,
@@ -646,6 +919,8 @@ export const useUserStore = defineStore('user', () => {
     updateStats,
     incrementWorkoutStats,
     updateWeight,
+    updateTableSettings,
+    resetTableSettings,
     subscribeToProfile,
     applyTheme,
     initTheme,

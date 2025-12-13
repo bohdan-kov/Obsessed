@@ -67,18 +67,32 @@ const MAX_EXERCISES_DISPLAY = 3
 
 // Format completed date
 const formattedDate = computed(() => {
-  if (!props.workout.completedAt) return ''
+  if (!props.workout.completedAt) {
+    return t('workout.history.card.dateUnknown', 'Unknown date')
+  }
 
-  const date =
-    props.workout.completedAt?.toDate
-      ? props.workout.completedAt.toDate()
-      : new Date(props.workout.completedAt)
+  try {
+    // Convert Firestore Timestamp or parse date string
+    const date =
+      props.workout.completedAt?.toDate
+        ? props.workout.completedAt.toDate()
+        : new Date(props.workout.completedAt)
 
-  return new Intl.DateTimeFormat(locale.value, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  }).format(date)
+    // Validate that the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date in workout:', props.workout.completedAt)
+      return t('workout.history.card.dateUnknown', 'Unknown date')
+    }
+
+    return new Intl.DateTimeFormat(locale.value, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    }).format(date)
+  } catch (error) {
+    console.error('Error formatting workout date:', error, props.workout.completedAt)
+    return t('workout.history.card.dateUnknown', 'Unknown date')
+  }
 })
 
 // Format duration

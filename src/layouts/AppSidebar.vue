@@ -178,7 +178,11 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
 
       <ScrollArea class="flex-1 px-3 py-4">
         <div class="space-y-1">
-          <!-- Quick Log Button -->
+          <!-- Quick Log Button
+               Note: This button uses the same label as the "Add Exercise" button in ExerciseTable.
+               Both buttons open QuickLogSheet for logging exercises. The unified naming eliminates
+               confusion about different entry points performing the same action.
+          -->
           <Tooltip>
             <TooltipTrigger as-child>
               <Button

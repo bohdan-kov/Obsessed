@@ -6,6 +6,7 @@ import analytics from './analytics.json'
 import settings from './settings.json'
 import errors from './errors.json'
 import exercises from './exercises.json'
+import plans from './plans.json'
 
 export default {
   common,
@@ -16,4 +17,5 @@ export default {
   settings,
   errors,
   exercises,
+  plans,
 }

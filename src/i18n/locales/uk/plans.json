@@ -1,0 +1,120 @@
+{
+  "title": "Плани тренувань",
+  "list": {
+    "empty": "Немає планів тренувань",
+    "emptyDescription": "Створіть план, щоб зберегти улюблені програми тренувань",
+    "createFirst": "Створити перший план",
+    "createPlan": "Створити план",
+    "planCount": "{count} планів",
+    "maxReached": "Досягнуто максимум планів (30)",
+    "lastUsed": "Останнє використання {date}",
+    "neverUsed": "Ніколи не використовувався",
+    "exerciseCount": "{count} вправ",
+    "exerciseCountOne": "1 вправа"
+  },
+  "card": {
+    "startWorkout": "Почати тренування",
+    "startWorkoutWithPlan": "Почати тренування з плану {planName}",
+    "viewDetails": "Деталі",
+    "edit": "Редагувати",
+    "duplicate": "Дублювати",
+    "delete": "Видалити",
+    "goToWorkouts": "Перейти до Тренувань",
+    "moreActions": "Більше дій"
+  },
+  "form": {
+    "createTitle": "Створити план тренування",
+    "createDescription": "Створіть новий план тренування з власним набором вправ",
+    "editTitle": "Редагувати план тренування",
+    "editDescription": "Оновіть деталі та вправи вашого плану тренування",
+    "addExerciseDescription": "Виберіть вправи зі списку для додавання до вашого плану",
+    "name": "Назва плану",
+    "namePlaceholder": "напр., День грудей, День ніг, Все тіло",
+    "nameRequired": "Потрібна назва плану",
+    "nameMinLength": "Назва має містити принаймні 2 символи",
+    "nameMaxLength": "Назва має містити не більше 50 символів",
+    "description": "Опис",
+    "descriptionPlaceholder": "Додатковий опис вашого плану...",
+    "descriptionMaxLength": "Опис має містити не більше 200 символів",
+    "exercises": "Вправи",
+    "exercisesMinLength": "План має містити принаймні 1 вправу",
+    "exercisesMaxLength": "План може містити не більше 15 вправ",
+    "addExercise": "Додати вправу",
+    "noExercises": "Немає вправ у цьому плані",
+    "noExercisesHint": "Натисніть кнопку вище, щоб додати вправи",
+    "save": "Зберегти план",
+    "cancel": "Скасувати",
+    "creating": "Створення...",
+    "updating": "Оновлення..."
+  },
+  "exercise": {
+    "suggestions": "Рекомендації",
+    "suggestedSets": "Підходи",
+    "suggestedWeight": "Вага",
+    "suggestedReps": "Повторення",
+    "notes": "Нотатки",
+    "notesPlaceholder": "Додайте нотатки для цієї вправи...",
+    "remove": "Видалити",
+    "removeExercise": "Видалити вправу",
+    "dragToReorder": "Перетягніть для зміни порядку",
+    "setsPlaceholder": "напр., 3",
+    "weightPlaceholder": "напр., 60",
+    "repsPlaceholder": "напр., 8-12 або AMRAP",
+    "setsRange": "Підходи мають бути від 1 до 10",
+    "weightRange": "Вага має бути від 0 до 1000 кг",
+    "notesMaxLength": "Нотатки мають містити не більше 200 символів"
+  },
+  "details": {
+    "title": "Деталі плану",
+    "startWorkout": "Почати тренування",
+    "edit": "Редагувати план",
+    "close": "Закрити",
+    "exercises": "Вправи ({count})",
+    "noDescription": "Немає опису"
+  },
+  "selector": {
+    "title": "Почати тренування",
+    "quickStart": "Швидкий старт",
+    "quickStartDescription": "Почати порожнє тренування",
+    "fromPlan": "За планом",
+    "fromPlanDescription": "Виберіть план для початку",
+    "search": "Пошук планів...",
+    "noPlans": "Планів не знайдено",
+    "recent": "Останні плани",
+    "allPlans": "Усі плани",
+    "cancel": "Скасувати"
+  },
+  "delete": {
+    "title": "Видалити план?",
+    "message": "Ви впевнені, що хочете видалити \"{name}\"? Цю дію не можна скасувати.",
+    "confirm": "Видалити план",
+    "cancel": "Скасувати"
+  },
+  "suggestions": {
+    "badge": "За планом",
+    "sets": "підходів",
+    "setsCount": "{count} підходів",
+    "weight": "{value} {unit}",
+    "reps": "повт.",
+    "repsValue": "{value} повт.",
+    "hint": "Рекомендовано: {sets} підходів × {reps} повт. @ {weight} {unit}"
+  },
+  "toast": {
+    "created": "План успішно створено",
+    "updated": "План успішно оновлено",
+    "deleted": "План видалено",
+    "duplicated": "План дубльовано",
+    "workoutStarted": "Тренування розпочато за планом",
+    "createError": "Не вдалося створити план",
+    "updateError": "Не вдалося оновити план",
+    "deleteError": "Не вдалося видалити план",
+    "fetchError": "Не вдалося завантажити плани",
+    "maxPlansError": "Ви досягли максимуму з 30 планів"
+  },
+  "errors": {
+    "planNotFound": "План не знайдено",
+    "invalidData": "Невірні дані плану",
+    "unauthorized": "У вас немає дозволу на зміну цього плану",
+    "networkError": "Помилка мережі. Будь ласка, перевірте підключення."
+  }
+}

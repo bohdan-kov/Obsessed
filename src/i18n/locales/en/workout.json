@@ -103,6 +103,7 @@
       "durationMinutes": "{minutes} min",
       "durationUnknown": "Unknown",
       "durationLessThanMinute": "< 1 min",
+      "dateUnknown": "Unknown date",
       "exercises": "{count} exercises",
       "sets": "{count} sets"
     }
@@ -116,6 +117,7 @@
     "reps": "Reps",
     "rpe": "RPE (optional)",
     "submit": "Log Set",
+    "setLogged": "Set logged",
     "recent": "Recent",
     "allExercises": "All Exercises",
     "noExercisesFound": "No exercises found.",
@@ -151,7 +153,61 @@
     "duplicate": "Duplicate",
     "delete": "Delete",
     "hourShort": "h",
-    "minuteShort": "min"
+    "minuteShort": "min",
+    "exerciseAdded": "Exercise added",
+    "customizeComingSoon": "Coming soon: Table customization",
+    "workoutStarted": "Workout started",
+    "addExerciseError": "Failed to add exercise",
+    "exerciseDeleted": "{name} deleted",
+    "exerciseDuplicated": "{name} duplicated",
+    "exerciseCompleted": "{name} marked as complete",
+    "exerciseReopened": "{name} reopened",
+    "deleteError": "Failed to delete exercise",
+    "duplicateError": "Failed to duplicate exercise",
+    "saveNotesError": "Failed to save notes",
+    "statusUpdateError": "Failed to update status",
+    "batchActions": {
+      "selectAll": "Select all",
+      "selected": "{count} selected",
+      "clearSelection": "Clear selection",
+      "duplicateSelected": "Duplicate selected",
+      "deleteSelected": "Delete selected",
+      "exercisesDeleted": "{count} exercises deleted",
+      "exercisesDuplicated": "{count} exercises duplicated",
+      "batchDeleteError": "Failed to delete exercises",
+      "batchDuplicateError": "Failed to duplicate exercises"
+    },
+    "deleteDialog": {
+      "title": "Delete Exercise?",
+      "message": "Are you sure you want to delete \"{name}\"? You have logged {count} sets. This action cannot be undone.",
+      "lastExerciseWarning": "Cannot delete the last exercise. Add another exercise first.",
+      "confirm": "Delete Exercise",
+      "cancel": "Cancel"
+    },
+    "batchDeleteDialog": {
+      "title": "Delete {count} exercises?",
+      "message": "You have logged {totalSets} sets in these exercises. This action cannot be undone.",
+      "exerciseList": "Exercises to delete:",
+      "andMore": "...and {count} more",
+      "cannotDeleteAll": "Cannot delete all exercises. Add another exercise first or cancel the workout.",
+      "confirm": "Delete {count} exercises",
+      "cancel": "Cancel"
+    },
+    "batchDuplicateDialog": {
+      "title": "Duplicate {count} exercises?",
+      "warning": "This will create {total} exercises after duplication. Are you sure?",
+      "confirm": "Duplicate",
+      "cancel": "Cancel"
+    },
+    "editSheet": {
+      "title": "Edit Exercise",
+      "notes": "Notes",
+      "notesPlaceholder": "Add notes for this exercise...",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "autoSaveInfo": "Changes are automatically saved after 2 seconds",
+      "close": "Close"
+    }
   },
   "muscleProgress": {
     "title": "Muscle Focus",
@@ -169,5 +225,40 @@
     "volume": "Volume",
     "maxWeight": "Max Weight",
     "date": "Date"
+  },
+  "tableSettings": {
+    "title": "Table Settings",
+    "titleWithTab": "Table Settings: {tab}",
+    "description": "Customize which columns are visible in the exercise table",
+    "descriptionWithScope": "Configure which columns are displayed in the \"{tab}\" tab",
+    "tabs": {
+      "overview": "Overview",
+      "history": "History",
+      "exercises": "Exercises"
+    },
+    "columns": {
+      "type": "Exercise Type",
+      "status": "Status",
+      "sets": "Sets",
+      "reps": "Reps",
+      "weight": "Weight",
+      "exercises": "Exercises (count)",
+      "duration": "Duration",
+      "volume": "Volume",
+      "lastPerformed": "Last Performed",
+      "totalSets": "Total Sets",
+      "totalVolume": "Total Volume",
+      "timesPerformed": "Times Performed"
+    },
+    "resetDefaults": "Reset to Defaults",
+    "close": "Close",
+    "info": "Exercise name and actions are always visible. Changes are saved automatically.",
+    "settingsUpdated": "Table settings updated",
+    "settingsReset": "Table settings reset to defaults",
+    "updateError": "Failed to update table settings",
+    "resetError": "Failed to reset table settings",
+    "validation": {
+      "atLeastOneColumn": "At least one column must remain visible"
+    }
   }
 }
