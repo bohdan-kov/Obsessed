@@ -1,0 +1,25 @@
+{
+  "title": "Schedule",
+  "subtitle": "Plan your workouts ahead",
+  "empty": {
+    "title": "Schedule is empty",
+    "description": "Start planning your workouts"
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "description": "Soon you'll be able to plan workouts in a calendar, receive reminders, and track schedule adherence."
+  },
+  "calendar": {
+    "today": "Today",
+    "thisWeek": "This Week",
+    "upcoming": "Upcoming"
+  },
+  "features": {
+    "upcoming": "Upcoming Workouts",
+    "upcomingDescription": "Plan workouts in advance",
+    "reminders": "Reminders",
+    "remindersDescription": "Never miss a workout",
+    "timeBlocks": "Time Blocks",
+    "timeBlocksDescription": "Schedule your gym time"
+  }
+}

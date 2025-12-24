@@ -34,6 +34,18 @@ npm run test
 npm run test:run
 ```
 
+## Agent Behavior Rules
+
+**CRITICAL - Code Formatting:**
+
+- **NEVER run `npm run format` or any Prettier command**
+- **NEVER run formatting tools** (prettier, eslint --fix for formatting, etc.)
+- Code formatting is handled exclusively by the developer through their IDE or manual execution
+- Agents may run `npm run lint` for linting checks, but must NOT trigger automatic formatting
+- Write clean, properly-indented code that follows existing patterns, but do not auto-format the codebase
+
+**Rationale:** Automatic formatting by agents can create noisy commits and interfere with the developer's workflow and IDE integration.
+
 ## High-Level Architecture
 
 ### Application Entry & Initialization

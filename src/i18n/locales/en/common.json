@@ -14,6 +14,9 @@
   },
   "more": "more",
   "based": "based on",
+  "volume": "Volume",
+  "kg": "kg",
+  "week": "Week",
   "status": {
     "loading": "Loading...",
     "saving": "Saving...",
@@ -23,7 +26,8 @@
     "error": "Error",
     "completed": "Completed",
     "inProgress": "In Progress",
-    "scheduled": "Scheduled"
+    "scheduled": "Scheduled",
+    "comingSoon": "Coming Soon"
   },
   "saving": "Saving...",
   "loading": "Loading...",
@@ -37,6 +41,10 @@
     "reps": "reps",
     "days": "days"
   },
+  "minutes": "min",
+  "exercises": "exercises",
+  "duration": "Duration",
+  "date": "Date",
   "time": {
     "today": "Today",
     "yesterday": "Yesterday",
@@ -73,11 +81,50 @@
       "name": "Analytics",
       "description": "Charts & insights"
     },
+    "goals": {
+      "name": "Goals",
+      "description": "Track your goals"
+    },
+    "community": {
+      "name": "Community",
+      "description": "Connect with others"
+    },
+    "library": {
+      "label": "Library",
+      "exercises": {
+        "name": "Exercise Library",
+        "description": "Browse all exercises"
+      },
+      "workoutPlans": {
+        "name": "Workout Plans",
+        "description": "Training templates"
+      },
+      "schedule": {
+        "name": "Schedule",
+        "description": "Plan your workouts"
+      },
+      "more": {
+        "name": "More",
+        "description": "Additional features"
+      }
+    },
+    "help": {
+      "name": "Get Help",
+      "description": "Support & FAQ"
+    },
+    "search": {
+      "name": "Search",
+      "description": "Find exercises & workouts"
+    },
+    "profile": {
+      "name": "Profile",
+      "description": "Profile settings"
+    },
     "settings": {
       "name": "Settings",
       "description": "Preferences & settings"
     },
-    "quickLog": "Add Exercise",
+    "quickLog": "Quick Log",
     "mobileMenu": {
       "title": "Navigation Menu",
       "description": "Access dashboard, workouts, analytics and settings"
@@ -108,5 +155,15 @@
   "pagination": {
     "previous": "Previous",
     "next": "Next"
+  },
+  "muscleGroups": {
+    "back": "Back",
+    "chest": "Chest",
+    "legs": "Legs",
+    "shoulders": "Shoulders",
+    "biceps": "Biceps",
+    "triceps": "Triceps",
+    "core": "Core",
+    "calves": "Calves"
   }
 }

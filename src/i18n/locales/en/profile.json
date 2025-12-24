@@ -1,0 +1,93 @@
+{
+  "title": "Profile",
+  "description": "View and manage your profile",
+  "sections": {
+    "accountIdentity": "Account Identity",
+    "aboutMe": "About Me",
+    "myStats": "My Stats",
+    "personalInfo": "Personal Info"
+  },
+  "accountIdentity": {
+    "title": "Account Identity",
+    "description": "Your account information",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "email": "Email",
+    "emailCannotChange": "Email cannot be changed",
+    "memberSince": "Member Since",
+    "editProfile": "Edit Profile",
+    "saveChanges": "Save Changes",
+    "cancelEdit": "Cancel"
+  },
+  "aboutMe": {
+    "title": "About Me",
+    "description": "Tell others about yourself",
+    "bio": "Bio",
+    "bioPlaceholder": "Write a short bio about yourself...",
+    "bioHint": "This will be visible to other users",
+    "noBio": "No bio yet. Click Edit to add one.",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "myStats": {
+    "title": "My Stats",
+    "description": "Your workout achievements",
+    "totalWorkouts": "Total Workouts",
+    "totalVolume": "Total Volume",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak",
+    "lastWorkout": "Last Workout",
+    "totalSets": "Total Sets",
+    "totalDuration": "Total Duration",
+    "workoutsCount": "{count} workout | {count} workouts",
+    "setsCount": "{count} set | {count} sets",
+    "days": "{count} day | {count} days",
+    "hours": "{count} hour | {count} hours",
+    "minutes": "{count} minute | {count} minutes",
+    "never": "Never",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{count} day ago | {count} days ago"
+  },
+  "personalInfo": {
+    "title": "Personal Info",
+    "description": "Your body metrics",
+    "age": "Age",
+    "weight": "Body Weight",
+    "height": "Height",
+    "gender": "Gender",
+    "agePlaceholder": "Enter your age",
+    "weightPlaceholder": "Enter your weight",
+    "heightPlaceholder": "Enter your height",
+    "genderOptions": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "preferNotToSay": "Prefer not to say"
+    },
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "notSet": "Not set"
+  },
+  "validation": {
+    "displayNameRequired": "Display name is required",
+    "displayNameMinLength": "Display name must be at least 2 characters",
+    "displayNameMaxLength": "Display name cannot exceed 50 characters",
+    "bioMaxLength": "Bio cannot exceed 500 characters",
+    "ageMin": "Age must be at least 13",
+    "ageMax": "Age cannot exceed 120",
+    "weightRequired": "Weight is required",
+    "weightMin": "Weight must be at least {min} {unit}",
+    "weightMax": "Weight cannot exceed {max} {unit}",
+    "heightMin": "Height must be at least 100 cm",
+    "heightMax": "Height cannot exceed 250 cm"
+  },
+  "messages": {
+    "profileUpdated": "Profile updated successfully",
+    "bioUpdated": "Bio updated successfully",
+    "personalInfoUpdated": "Personal info updated successfully",
+    "updateFailed": "Failed to update profile"
+  }
+}

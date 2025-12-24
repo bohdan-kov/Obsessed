@@ -1,0 +1,31 @@
+{
+  "title": "Search",
+  "subtitle": "Find exercises, workouts, and more",
+  "placeholder": "Search...",
+  "noResults": "No results found",
+  "searching": "Searching...",
+  "recent": {
+    "title": "Recent Searches",
+    "clear": "Clear"
+  },
+  "suggestions": {
+    "title": "Popular Searches",
+    "exercises": "Exercises",
+    "workouts": "Workouts",
+    "analytics": "Analytics"
+  },
+  "filters": {
+    "all": "All",
+    "exercises": "Exercises",
+    "workouts": "Workouts",
+    "goals": "Goals"
+  },
+  "empty": {
+    "title": "Start typing",
+    "description": "Enter a query to search for exercises, workouts, and other content"
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "description": "We're working on powerful search across all your content."
+  }
+}

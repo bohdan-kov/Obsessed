@@ -1,0 +1,93 @@
+{
+  "title": "Профіль",
+  "description": "Переглядайте та керуйте своїм профілем",
+  "sections": {
+    "accountIdentity": "Дані облікового запису",
+    "aboutMe": "Про мене",
+    "myStats": "Моя статистика",
+    "personalInfo": "Особисті дані"
+  },
+  "accountIdentity": {
+    "title": "Дані облікового запису",
+    "description": "Інформація про ваш обліковий запис",
+    "displayName": "Відображуване ім'я",
+    "displayNamePlaceholder": "Введіть ваше ім'я",
+    "email": "Email",
+    "emailCannotChange": "Email неможливо змінити",
+    "memberSince": "Учасник з",
+    "editProfile": "Редагувати профіль",
+    "saveChanges": "Зберегти зміни",
+    "cancelEdit": "Скасувати"
+  },
+  "aboutMe": {
+    "title": "Про мене",
+    "description": "Розкажіть про себе іншим",
+    "bio": "Біо",
+    "bioPlaceholder": "Напишіть коротко про себе...",
+    "bioHint": "Це буде видно іншим користувачам",
+    "noBio": "Біо ще не додано. Натисніть Редагувати, щоб додати.",
+    "edit": "Редагувати",
+    "save": "Зберегти",
+    "cancel": "Скасувати"
+  },
+  "myStats": {
+    "title": "Моя статистика",
+    "description": "Ваші досягнення в тренуваннях",
+    "totalWorkouts": "Всього тренувань",
+    "totalVolume": "Загальний об'єм",
+    "currentStreak": "Поточна серія",
+    "longestStreak": "Найдовша серія",
+    "lastWorkout": "Останнє тренування",
+    "totalSets": "Всього підходів",
+    "totalDuration": "Загальна тривалість",
+    "workoutsCount": "{count} тренування | {count} тренувань",
+    "setsCount": "{count} підхід | {count} підходів",
+    "days": "{count} день | {count} днів",
+    "hours": "{count} година | {count} годин",
+    "minutes": "{count} хвилина | {count} хвилин",
+    "never": "Ніколи",
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "daysAgo": "{count} день тому | {count} днів тому"
+  },
+  "personalInfo": {
+    "title": "Особисті дані",
+    "description": "Ваші фізичні показники",
+    "age": "Вік",
+    "weight": "Вага тіла",
+    "height": "Зріст",
+    "gender": "Стать",
+    "agePlaceholder": "Введіть ваш вік",
+    "weightPlaceholder": "Введіть вашу вагу",
+    "heightPlaceholder": "Введіть ваш зріст",
+    "genderOptions": {
+      "male": "Чоловік",
+      "female": "Жінка",
+      "other": "Інше",
+      "preferNotToSay": "Не бажаю вказувати"
+    },
+    "edit": "Редагувати",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "notSet": "Не встановлено"
+  },
+  "validation": {
+    "displayNameRequired": "Ім'я обов'язкове",
+    "displayNameMinLength": "Ім'я повинно містити щонайменше 2 символи",
+    "displayNameMaxLength": "Ім'я не може перевищувати 50 символів",
+    "bioMaxLength": "Біо не може перевищувати 500 символів",
+    "ageMin": "Вік повинен бути щонайменше 13",
+    "ageMax": "Вік не може перевищувати 120",
+    "weightRequired": "Вага обов'язкова",
+    "weightMin": "Вага повинна бути щонайменше {min} {unit}",
+    "weightMax": "Вага не може перевищувати {max} {unit}",
+    "heightMin": "Зріст повинен бути щонайменше 100 см",
+    "heightMax": "Зріст не може перевищувати 250 см"
+  },
+  "messages": {
+    "profileUpdated": "Профіль оновлено успішно",
+    "bioUpdated": "Біо оновлено успішно",
+    "personalInfoUpdated": "Особисті дані оновлено успішно",
+    "updateFailed": "Не вдалося оновити профіль"
+  }
+}

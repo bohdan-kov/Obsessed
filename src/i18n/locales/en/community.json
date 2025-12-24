@@ -1,0 +1,25 @@
+{
+  "title": "Community",
+  "subtitle": "Connect and share with other athletes",
+  "empty": {
+    "title": "Community not available yet",
+    "description": "Social features will be available soon",
+    "features": {
+      "intro": "Join the community to:",
+      "connect": "Connect with athletes at your gym",
+      "share": "Share your PRs and celebrate wins",
+      "partners": "Find accountability partners",
+      "learn": "Learn from experienced lifters"
+    }
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "description": "We're preparing the ability for you to share achievements, find workout partners, and motivate each other."
+  },
+  "features": {
+    "findPartners": "Find Workout Partners",
+    "shareAchievements": "Share Achievements",
+    "motivate": "Motivate Each Other",
+    "exchangeTips": "Exchange Tips"
+  }
+}

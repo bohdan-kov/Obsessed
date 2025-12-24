@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
@@ -21,8 +21,6 @@ const { handleError } = useErrorHandler()
 const { formatWeight } = useUnits()
 
 const {
-  totalWorkouts,
-  volumeLoad,
   restDays,
   currentStreak,
   periodWorkouts,
@@ -79,15 +77,49 @@ const stats = computed(() => {
 })
 
 /**
- * Fetch workout data and subscribe to real-time updates
+ * Map analytics period to workout store fetch period
+ * Analytics periods can be longer (90 days, 1 year), so we need to ensure
+ * workoutStore loads enough data to cover the selected analytics period
+ * @param {string} analyticsPeriod - Analytics period ID (e.g., 'last90Days', 'thisYear')
+ * @returns {'week'|'month'|'quarter'|'year'} Workout fetch period
  */
-onMounted(async () => {
-  // Initialize period from localStorage first
-  analyticsStore.initializePeriod()
+function getWorkoutFetchPeriod(analyticsPeriod) {
+  switch (analyticsPeriod) {
+    case 'last7Days':
+    case 'thisWeek':
+      return 'week'
+
+    case 'last14Days':
+    case 'last30Days':
+    case 'thisMonth':
+    case 'lastMonth':
+      return 'month'
+
+    case 'last90Days':
+      return 'quarter'
+
+    case 'thisYear':
+    case 'allTime':
+      return 'year'
+
+    default:
+      return 'month'
+  }
+}
+
+/**
+ * Load workout data based on analytics period
+ */
+async function loadWorkoutData(force = false) {
+  const fetchPeriod = getWorkoutFetchPeriod(analyticsStore.period)
 
   try {
     // ensureDataLoaded returns the unsubscribe function when subscribe: true
-    const unsubscribe = await workoutStore.ensureDataLoaded({ period: 'month', subscribe: true })
+    const unsubscribe = await workoutStore.ensureDataLoaded({
+      period: fetchPeriod,
+      subscribe: true,
+      force, // Force reload when period changes
+    })
 
     // Store unsubscribe function for cleanup
     if (typeof unsubscribe === 'function') {
@@ -95,10 +127,33 @@ onMounted(async () => {
     }
   } catch (error) {
     handleError(error, t('dashboard.errors.loadFailed'), {
-      context: 'DashboardView.onMounted',
+      context: 'DashboardView.loadWorkoutData',
     })
   }
+}
+
+/**
+ * Fetch workout data and subscribe to real-time updates
+ */
+onMounted(async () => {
+  // Initialize period from localStorage first
+  analyticsStore.initializePeriod()
+
+  // Load workout data for the selected period
+  await loadWorkoutData()
 })
+
+/**
+ * Watch for period changes and reload workout data
+ * This ensures workoutStore has enough data to cover the selected analytics period
+ */
+watch(
+  () => analyticsStore.period,
+  async () => {
+    // Reload workout data with new period
+    await loadWorkoutData(true) // Force reload to ensure fresh data
+  }
+)
 
 /**
  * Clean up Firebase subscriptions to prevent memory leaks
