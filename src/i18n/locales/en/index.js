@@ -7,6 +7,13 @@ import settings from './settings.json'
 import errors from './errors.json'
 import exercises from './exercises.json'
 import plans from './plans.json'
+import profile from './profile.json'
+import search from './search.json'
+import help from './help.json'
+import community from './community.json'
+import goals from './goals.json'
+import schedule from './schedule.json'
+import more from './more.json'
 
 export default {
   common,
@@ -18,4 +25,11 @@ export default {
   errors,
   exercises,
   plans,
+  profile,
+  search,
+  help,
+  community,
+  goals,
+  schedule,
+  more,
 }

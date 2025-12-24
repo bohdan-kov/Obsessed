@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Tooltip,
@@ -14,22 +13,19 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
   LayoutDashboard,
   Activity,
-  Dumbbell,
   BarChart3,
+  Target,
+  Users,
+  Dumbbell,
+  FileText,
+  Calendar,
+  MoreHorizontal,
   Settings,
+  HelpCircle,
+  Search,
   PanelLeft,
-  LogOut,
-  User,
   Zap,
 } from 'lucide-vue-next'
 import QuickLogSheet from '@/components/QuickLogSheet.vue'
@@ -45,7 +41,7 @@ const props = defineProps({
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
-const { displayName, email, photoURL, logout } = useAuth()
+const { displayName, email, photoURL } = useAuth()
 
 const STORAGE_KEY = 'obsessed_sidebar_collapsed'
 const userCollapsed = ref(false) // User's manual preference
@@ -54,8 +50,8 @@ const quickLogOpen = ref(false)
 // Actual collapsed state: forced (tablet) or user preference
 const collapsed = computed(() => props.forceCollapsed || userCollapsed.value)
 
-// Navigation items - computed for reactive i18n
-const navItems = computed(() => [
+// Main navigation items - computed for reactive i18n
+const mainNavItems = computed(() => [
   {
     name: t('common.nav.dashboard.name'),
     route: 'Dashboard',
@@ -69,22 +65,78 @@ const navItems = computed(() => [
     description: t('common.nav.workouts.description'),
   },
   {
-    name: t('exercises.title'),
-    route: 'Exercises',
-    icon: Dumbbell,
-    description: t('exercises.subtitle'),
-  },
-  {
     name: t('common.nav.analytics.name'),
     route: 'Analytics',
     icon: BarChart3,
     description: t('common.nav.analytics.description'),
   },
+  {
+    name: t('common.nav.goals.name'),
+    route: 'Goals',
+    icon: Target,
+    description: t('common.nav.goals.description'),
+  },
+  {
+    name: t('common.nav.community.name'),
+    route: 'Community',
+    icon: Users,
+    description: t('common.nav.community.description'),
+  },
+])
+
+// Library section items - computed for reactive i18n
+const libraryItems = computed(() => [
+  {
+    name: t('common.nav.library.exercises.name'),
+    route: 'Exercises',
+    icon: Dumbbell,
+    description: t('common.nav.library.exercises.description'),
+  },
+  {
+    name: t('common.nav.library.workoutPlans.name'),
+    route: 'WorkoutPlans',
+    icon: FileText,
+    description: t('common.nav.library.workoutPlans.description'),
+  },
+  {
+    name: t('common.nav.library.schedule.name'),
+    route: 'Schedule',
+    icon: Calendar,
+    description: t('common.nav.library.schedule.description'),
+  },
+  {
+    name: t('common.nav.library.more.name'),
+    route: 'More',
+    icon: MoreHorizontal,
+    description: t('common.nav.library.more.description'),
+  },
+])
+
+// Footer navigation items - computed for reactive i18n
+const footerItems = computed(() => [
+  {
+    name: t('common.nav.settings.name'),
+    route: 'Settings',
+    icon: Settings,
+    description: t('common.nav.settings.description'),
+  },
+  {
+    name: t('common.nav.help.name'),
+    route: 'Help',
+    icon: HelpCircle,
+    description: t('common.nav.help.description'),
+  },
+  {
+    name: t('common.nav.search.name'),
+    route: 'Search',
+    icon: Search,
+    description: t('common.nav.search.description'),
+  },
 ])
 
 // Get user initials for avatar fallback
 const userInitials = computed(() => {
-  if (!displayName.value) return 'U'
+  if (!displayName.value) return 'OB'
   return displayName.value
     .split(' ')
     .map((n) => n[0])
@@ -117,11 +169,6 @@ function quickLog() {
   quickLogOpen.value = true
 }
 
-// Settings
-function openSettings() {
-  router.push({ name: 'Settings' })
-}
-
 // Load collapse state from localStorage
 onMounted(() => {
   const stored = localStorage.getItem(STORAGE_KEY)
@@ -146,17 +193,19 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
   <TooltipProvider>
     <aside
       :class="[
-        'flex flex-col h-screen bg-card border-r border-border transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64',
+        'flex flex-col h-screen bg-[#0a0a0c] border-r border-white/[0.06] transition-all duration-200',
+        collapsed ? 'w-[68px]' : 'w-[260px]',
       ]"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between h-16 px-4 border-b border-border">
-        <div v-if="!collapsed" class="flex items-center space-x-2">
-          <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500">
-            <Zap class="w-5 h-5 text-white" />
+      <div class="flex items-center justify-between px-3 py-5 border-b border-white/[0.06]">
+        <div v-if="!collapsed" class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-md bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+            <Dumbbell class="w-[18px] h-[18px] text-white" />
           </div>
-          <span class="font-bold text-lg">Obsessed</span>
+          <span class="text-[20px] font-bold tracking-tight bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+            Obsessed
+          </span>
         </div>
 
         <Tooltip>
@@ -165,9 +214,12 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
               variant="ghost"
               size="icon"
               @click="toggleCollapse"
-              class="shrink-0"
+              :class="[
+                'shrink-0 h-8 w-8 border border-white/[0.08] hover:bg-white/[0.04] hover:border-white/[0.12]',
+                collapsed && 'mx-auto',
+              ]"
             >
-              <PanelLeft :class="['w-5 h-5', collapsed && 'rotate-180']" />
+              <PanelLeft :class="['w-4 h-4 text-zinc-500', collapsed && 'rotate-180']" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -176,24 +228,20 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
         </Tooltip>
       </div>
 
-      <ScrollArea class="flex-1 px-3 py-4">
-        <div class="space-y-1">
-          <!-- Quick Log Button
-               Note: This button uses the same label as the "Add Exercise" button in ExerciseTable.
-               Both buttons open QuickLogSheet for logging exercises. The unified naming eliminates
-               confusion about different entry points performing the same action.
-          -->
+      <ScrollArea class="flex-1 px-3 py-5">
+        <div class="space-y-0.5">
+          <!-- Quick Log Button -->
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
                 @click="quickLog"
                 :class="[
-                  'w-full justify-start gap-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg',
-                  collapsed && 'justify-center px-0',
+                  'w-full gap-2 mb-6 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all',
+                  collapsed ? 'justify-center px-2.5 h-10' : 'justify-center px-4 h-10',
                 ]"
               >
-                <Zap class="w-5 h-5 shrink-0" />
-                <span v-if="!collapsed" class="font-semibold">{{ t('common.nav.quickLog') }}</span>
+                <Zap class="w-4 h-4 shrink-0" />
+                <span v-if="!collapsed" class="text-sm font-medium">{{ t('common.nav.quickLog') }}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent v-if="collapsed" side="right">
@@ -201,102 +249,136 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
             </TooltipContent>
           </Tooltip>
 
-          <Separator class="my-4" />
-
-          <!-- Navigation Items -->
-          <div class="space-y-1">
-            <Tooltip v-for="item in navItems" :key="item.route">
+          <!-- Main Navigation Items -->
+          <div class="space-y-0.5 mb-6">
+            <Tooltip v-for="item in mainNavItems" :key="item.route">
               <TooltipTrigger as-child>
                 <Button
-                  :variant="isActive(item.route) ? 'secondary' : 'ghost'"
+                  variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full justify-start gap-3',
-                    collapsed && 'justify-center px-0',
-                    isActive(item.route) && 'bg-secondary',
+                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all',
+                    collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
+                    isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
                 >
-                  <component :is="item.icon" class="w-5 h-5 shrink-0" />
-                  <span v-if="!collapsed">{{ item.name }}</span>
+                  <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />
+                  <span v-if="!collapsed" class="text-sm">{{ item.name }}</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent v-if="collapsed" side="right">
                 <div>
                   <div class="font-medium">{{ item.name }}</div>
-                  <div class="text-xs text-muted-foreground">
-                    {{ item.description }}
-                  </div>
+                  <div class="text-xs text-muted-foreground">{{ item.description }}</div>
                 </div>
               </TooltipContent>
             </Tooltip>
           </div>
 
-          <Separator class="my-4" />
+          <!-- Library Section -->
+          <div v-if="!collapsed" class="space-y-0.5">
+            <div class="px-3 py-2 mb-2">
+              <span class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">
+                {{ t('common.nav.library.label') }}
+              </span>
+            </div>
+            <Tooltip v-for="item in libraryItems" :key="item.route">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  @click="navigateTo(item.route)"
+                  :class="[
+                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all justify-start px-3',
+                    isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
+                  ]"
+                >
+                  <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />
+                  <span class="text-sm">{{ item.name }}</span>
+                </Button>
+              </TooltipTrigger>
+            </Tooltip>
+          </div>
 
-          <!-- Settings -->
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                @click="openSettings"
-                :class="[
-                  'w-full justify-start gap-3',
-                  collapsed && 'justify-center px-0',
-                  isActive('Settings') && 'bg-secondary',
-                ]"
-              >
-                <Settings class="w-5 h-5 shrink-0" />
-                <span v-if="!collapsed">{{ t('common.nav.settings.name') }}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent v-if="collapsed" side="right">
-              {{ t('common.nav.settings.name') }}
-            </TooltipContent>
-          </Tooltip>
+          <!-- Library Section (Collapsed) -->
+          <div v-else class="space-y-0.5">
+            <Tooltip v-for="item in libraryItems" :key="item.route">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  @click="navigateTo(item.route)"
+                  :class="[
+                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all justify-center px-2.5',
+                    isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
+                  ]"
+                >
+                  <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <div>
+                  <div class="font-medium">{{ item.name }}</div>
+                  <div class="text-xs text-muted-foreground">{{ item.description }}</div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </ScrollArea>
 
-      <!-- User Profile Section -->
-      <div class="p-3 border-t border-border">
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              :class="[
-                'w-full h-auto p-2',
-                collapsed ? 'justify-center' : 'justify-start gap-3',
-              ]"
-            >
-              <Avatar class="w-8 h-8 shrink-0">
-                <AvatarImage :src="photoURL" :alt="displayName" />
-                <AvatarFallback>{{ userInitials }}</AvatarFallback>
-              </Avatar>
-
-              <div v-if="!collapsed" class="flex-1 text-left overflow-hidden">
-                <div class="text-sm font-medium truncate">
-                  {{ displayName || t('common.user.defaultName') }}
-                </div>
-                <div class="text-xs text-muted-foreground truncate">
-                  {{ email }}
-                </div>
+      <!-- Footer Section -->
+      <div class="border-t border-white/[0.06]">
+        <div class="px-3 py-2 space-y-0.5">
+          <Tooltip v-for="item in footerItems" :key="item.route">
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                @click="navigateTo(item.route)"
+                :class="[
+                  'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all',
+                  collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
+                  isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
+                ]"
+              >
+                <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />
+                <span v-if="!collapsed" class="text-sm">{{ item.name }}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent v-if="collapsed" side="right">
+              <div>
+                <div class="font-medium">{{ item.name }}</div>
+                <div class="text-xs text-muted-foreground">{{ item.description }}</div>
               </div>
-            </Button>
-          </DropdownMenuTrigger>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-          <DropdownMenuContent align="end" class="w-56">
-            <DropdownMenuLabel>{{ t('common.user.menu.myAccount') }}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem @click="openSettings">
-              <User class="w-4 h-4 mr-2" />
-              {{ t('common.user.menu.profile') }}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem @click="logout" class="text-destructive">
-              <LogOut class="w-4 h-4 mr-2" />
-              {{ t('common.user.menu.signOut') }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <!-- User Profile -->
+        <div class="px-3 pb-3 pt-3 border-t border-white/[0.06]">
+          <Button
+            variant="ghost"
+            @click="navigateTo('Profile')"
+            :class="[
+              'w-full h-auto p-3 hover:bg-white/[0.04] transition-all',
+              collapsed ? 'justify-center' : 'justify-start gap-2.5',
+            ]"
+          >
+            <Avatar class="w-9 h-9 shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-orange-500">
+              <AvatarImage :src="photoURL" :alt="displayName" />
+              <AvatarFallback class="rounded-lg text-xs font-semibold">
+                {{ userInitials }}
+              </AvatarFallback>
+            </Avatar>
+
+            <div v-if="!collapsed" class="flex-1 text-left overflow-hidden min-w-0">
+              <div class="text-sm font-medium truncate">
+                {{ displayName || t('common.user.defaultName') }}
+              </div>
+              <div class="text-xs text-zinc-500 truncate">
+                {{ email }}
+              </div>
+            </div>
+          </Button>
+        </div>
       </div>
     </aside>
 

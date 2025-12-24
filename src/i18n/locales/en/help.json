@@ -1,0 +1,39 @@
+{
+  "title": "Help",
+  "subtitle": "Answers to common questions and support",
+  "sections": {
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "questions": {
+        "howToLog": {
+          "q": "How do I log a workout?",
+          "a": "Click the 'Add Exercise' button or go to the Workouts section."
+        },
+        "howToTrack": {
+          "q": "How do I track my progress?",
+          "a": "Check the Analytics and Dashboard sections for detailed statistics."
+        },
+        "units": {
+          "q": "How do I change weight units?",
+          "a": "Go to Settings > Units of Measurement."
+        },
+        "sync": {
+          "q": "How does data sync work?",
+          "a": "All data automatically syncs to the cloud when you have an internet connection."
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "Need help? We're here to assist.",
+      "email": "Support Email",
+      "feedback": "Send Feedback"
+    },
+    "resources": {
+      "title": "Resources",
+      "gettingStarted": "Getting Started",
+      "userGuide": "User Guide",
+      "tips": "Tips & Tricks"
+    }
+  }
+}

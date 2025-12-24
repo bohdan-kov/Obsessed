@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { useWorkoutStore } from './workoutStore'
 import { useExerciseStore } from './exerciseStore'
@@ -28,6 +28,13 @@ import {
   generateVolumeInsight,
   generatePRInsight,
 } from '@/utils/insightUtils'
+import {
+  calculate1RM,
+  findBestSet,
+  calculateTrend,
+  getProgressStatus,
+  findBestPR,
+} from '@/utils/strengthUtils'
 
 /**
  * @typedef {Object} VolumeDataPoint
@@ -54,6 +61,12 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   const periodInitialized = ref(false)
 
   /**
+   * Loading state - derived from workoutStore
+   * Analytics data depends on workouts being loaded
+   */
+  const loading = computed(() => workoutStore.loading)
+
+  /**
    * Create a Map of exercises by ID for O(1) lookups
    * This prevents N+1 query problem when resolving exercise data in loops
    */
@@ -71,7 +84,8 @@ export const useAnalyticsStore = defineStore('analytics', () => {
    * All other computed properties use this to avoid repeated filtering
    */
   const completedWorkouts = computed(() => {
-    return workoutStore.workouts.filter((w) => w.status === 'completed')
+    const completed = workoutStore.workouts.filter((w) => w.status === 'completed')
+    return completed
   })
 
   /**
@@ -250,6 +264,20 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   })
 
   /**
+   * Daily volume map for VolumeHeatmap component
+   * Returns map of 'YYYY-MM-DD' -> volume in kg
+   */
+  const dailyVolumeMap = computed(() => {
+    const volumeMap = {}
+
+    volumeByDay.value.forEach((day) => {
+      volumeMap[day.date] = day.volume
+    })
+
+    return volumeMap
+  })
+
+  /**
    * Muscle group distribution for donut chart (period-aware)
    * Resolves muscle groups from exercise library
    * Uses periodWorkouts instead of all completedWorkouts
@@ -341,6 +369,376 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         percentage: totalVolume > 0 ? (value / totalVolume) * 100 : 0,
       }))
       .sort((a, b) => b.value - a.value)
+  })
+
+  /**
+   * Muscle volume by day for MuscleVolumeChart (daily aggregation)
+   * Generates daily data points for the selected period range with muscle volume breakdown
+   * Similar to volumeByDay but tracks volume per muscle group instead of total volume
+   * @returns {Array} Array of objects with date and volume per muscle group
+   */
+  const muscleVolumeByDay = computed(() => {
+    const range = currentRange.value
+    const exMap = exerciseMap.value
+    const dailyData = {}
+
+    // All muscle groups to track
+    const MUSCLES = ['back', 'chest', 'legs', 'shoulders', 'biceps', 'triceps', 'core', 'calves']
+
+    // Helper to initialize muscle volumes
+    const createEmptyMuscles = () => {
+      const muscleVolumes = {}
+      MUSCLES.forEach((muscle) => {
+        muscleVolumes[muscle] = 0
+      })
+      return muscleVolumes
+    }
+
+    // Step 1: Initialize all days in the current range with 0 values
+    const currentDate = new Date(range.start)
+    while (currentDate <= range.end) {
+      const dateStr = toLocalDateString(currentDate)
+      dailyData[dateStr] = createEmptyMuscles()
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    // Step 2: Populate days with actual workout data
+    periodWorkouts.value.forEach((workout) => {
+      // Guard: Skip workouts without exercises or completedAt
+      if (!workout.exercises || !Array.isArray(workout.exercises) || !workout.completedAt) return
+
+      const workoutDate = normalizeDate(workout.completedAt)
+      const dateStr = toLocalDateString(workoutDate)
+
+      // Only process if date is in our range
+      if (!dailyData[dateStr]) return
+
+      // Aggregate volume by muscle group for this workout
+      workout.exercises.forEach((exercise) => {
+        const exerciseData = exMap.get(exercise.exerciseId)
+        if (!exerciseData || !exerciseData.muscleGroup) return
+
+        const muscle = exerciseData.muscleGroup
+        if (!MUSCLES.includes(muscle)) return
+
+        const exerciseVolume = exercise.sets?.reduce(
+          (sum, set) => sum + (set.weight || 0) * (set.reps || 0),
+          0
+        ) ?? 0
+
+        dailyData[dateStr][muscle] += exerciseVolume
+      })
+    })
+
+    // Step 3: Convert to array and sort by date
+    const result = Object.entries(dailyData)
+      .map(([date, muscles]) => ({
+        date, // YYYY-MM-DD format string
+        ...muscles, // Spread muscle volumes (back, chest, legs, etc.)
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+
+    return result
+  })
+
+  /**
+   * Muscle volume over time (weekly aggregation for MuscleVolumeChart)
+   * Generates weeks based on selected period range, then populates with workout data
+   * @returns {Array} Array of objects with week label and volume per muscle
+   * @deprecated Use muscleVolumeByDay for consistent daily labeling across Dashboard and Analytics
+   */
+  const muscleVolumeOverTime = computed(() => {
+    const range = currentRange.value
+    const exMap = exerciseMap.value
+    const weeklyData = new Map() // Map<weekKey, { weekStart: Date, muscles: { back: 0, chest: 0, ... } }>
+
+    // All muscle groups to track
+    const MUSCLES = ['back', 'chest', 'legs', 'shoulders', 'biceps', 'triceps', 'core', 'calves']
+
+    // Helper to initialize muscle volumes
+    const createEmptyMuscles = () => {
+      const muscleVolumes = {}
+      MUSCLES.forEach((muscle) => {
+        muscleVolumes[muscle] = 0
+      })
+      return muscleVolumes
+    }
+
+    // Step 1: Generate ALL weeks in the period range (like volumeByDay does for days)
+    // Start from the Monday on or before range.start
+    let currentWeekStart = new Date(range.start)
+    const day = currentWeekStart.getDay()
+    const diff = currentWeekStart.getDate() - day + (day === 0 ? -6 : 1) // Get Monday
+    currentWeekStart.setDate(diff)
+    currentWeekStart.setHours(0, 0, 0, 0)
+
+    // Generate weeks until we pass range.end
+    while (currentWeekStart <= range.end) {
+      const weekKey = currentWeekStart.toISOString().split('T')[0]
+      weeklyData.set(weekKey, {
+        weekStart: new Date(currentWeekStart),
+        muscles: createEmptyMuscles(),
+      })
+
+      // Move to next week (add 7 days)
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7)
+    }
+
+    // Step 2: Populate weeks with actual workout data
+    periodWorkouts.value.forEach((workout) => {
+      // Guard: Skip workouts without exercises or completedAt
+      if (!workout.exercises || !Array.isArray(workout.exercises) || !workout.completedAt) return
+
+      const workoutDate = workout.completedAt?.toDate
+        ? workout.completedAt.toDate()
+        : new Date(workout.completedAt)
+
+      // Get Monday of the week for this workout (ISO week)
+      const weekStart = new Date(workoutDate)
+      const day = weekStart.getDay()
+      const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
+      weekStart.setDate(diff)
+      weekStart.setHours(0, 0, 0, 0)
+
+      const weekKey = weekStart.toISOString().split('T')[0]
+
+      // Get week data (should already exist from Step 1)
+      const weekData = weeklyData.get(weekKey)
+      if (!weekData) {
+        return
+      }
+
+      // Aggregate volume by muscle group for this workout
+      workout.exercises.forEach((exercise) => {
+        const exerciseData = exMap.get(exercise.exerciseId)
+        if (!exerciseData || !exerciseData.muscleGroup) return
+
+        const muscle = exerciseData.muscleGroup
+        if (!MUSCLES.includes(muscle)) return
+
+        const exerciseVolume = exercise.sets?.reduce(
+          (sum, set) => sum + (set.weight || 0) * (set.reps || 0),
+          0
+        ) ?? 0
+
+        weekData.muscles[muscle] += exerciseVolume
+      })
+    })
+
+    // Step 3: Convert Map to array and sort by week start date
+    const sortedWeeks = Array.from(weeklyData.entries())
+      .sort(([, a], [, b]) => a.weekStart - b.weekStart)
+      .map(([weekKey, data], index) => {
+        // Format week label
+        const weekNumber = index + 1
+        const weekLabel = `Week ${weekNumber}` // Will be localized in the component
+
+        return {
+          week: weekLabel,
+          weekStart: data.weekStart,
+          ...data.muscles, // Spread muscle volumes (back, chest, legs, etc.)
+        }
+      })
+
+    return sortedWeeks
+  })
+
+  /**
+   * Weekly volume progression (for ProgressiveOverloadChart)
+   * Groups workouts by week and calculates total volume with change percentage
+   * @returns {Array} Array of weekly volume data with status
+   */
+  const weeklyVolumeProgression = computed(() => {
+    if (!periodWorkouts.value.length) return []
+
+    const weeklyData = new Map() // Map<weekKey, { weekStart: Date, volume: number }>
+
+    periodWorkouts.value.forEach((workout) => {
+      // Guard: Skip workouts without completedAt
+      if (!workout.completedAt) return
+
+      const workoutDate = workout.completedAt?.toDate
+        ? workout.completedAt.toDate()
+        : new Date(workout.completedAt)
+
+      // Get Monday of the week for this workout (ISO week)
+      const weekStart = new Date(workoutDate)
+      const day = weekStart.getDay()
+      const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
+      weekStart.setDate(diff)
+      weekStart.setHours(0, 0, 0, 0)
+
+      const weekKey = weekStart.toISOString().split('T')[0]
+
+      // Initialize week data if not exists
+      if (!weeklyData.has(weekKey)) {
+        weeklyData.set(weekKey, {
+          weekStart,
+          volume: 0,
+        })
+      }
+
+      const weekData = weeklyData.get(weekKey)
+      weekData.volume += calculateWorkoutVolume(workout)
+    })
+
+    // Convert Map to array and sort by week start date
+    const sortedWeeks = Array.from(weeklyData.entries())
+      .sort(([, a], [, b]) => a.weekStart - b.weekStart)
+      .map(([weekKey, data], index, array) => {
+        // Calculate change from previous week
+        let change = 0
+        let status = 'maintaining'
+
+        if (index > 0) {
+          const previousVolume = array[index - 1][1].volume
+          if (previousVolume > 0) {
+            change = ((data.volume - previousVolume) / previousVolume) * 100
+
+            // Determine status based on change
+            if (change >= 5) {
+              status = 'progressing'
+            } else if (change <= -5) {
+              status = 'regressing'
+            } else {
+              status = 'maintaining'
+            }
+          }
+        }
+
+        const weekNumber = index + 1
+        const weekLabel = `Week ${weekNumber}` // Will be localized in the component
+
+        return {
+          week: weekLabel,
+          weekStart: data.weekStart,
+          volume: data.volume,
+          change,
+          status,
+        }
+      })
+
+    return sortedWeeks
+  })
+
+  /**
+   * Progressive overload statistics (for ProgressiveOverloadChart)
+   * Analyzes weekly volume progression to determine overall training progress
+   * @returns {Object|null} Progressive overload stats or null if insufficient data
+   */
+  const progressiveOverloadStats = computed(() => {
+    const weeks = weeklyVolumeProgression.value
+
+    // Need at least 2 weeks to calculate stats
+    if (weeks.length < 2) return null
+
+    // Count weeks with progression (positive change >= 5%)
+    const weeksProgressing = weeks.filter((w) => w.status === 'progressing').length
+    const totalWeeks = weeks.length - 1 // Subtract 1 because first week has no change
+
+    // Calculate progress rate
+    const progressRate = totalWeeks > 0 ? (weeksProgressing / totalWeeks) * 100 : 0
+
+    // Calculate average increase across all weeks (excluding first)
+    const increases = weeks.slice(1).map((w) => w.change)
+    const avgIncrease = increases.length > 0
+      ? increases.reduce((sum, change) => sum + change, 0) / increases.length
+      : 0
+
+    // Determine overall status
+    let overallStatus = 'maintaining'
+    if (progressRate >= 50 && avgIncrease >= 5) {
+      overallStatus = 'on_track'
+    } else if (avgIncrease <= -5) {
+      overallStatus = 'regressing'
+    }
+
+    // Calculate next week target (5% increase from latest week)
+    const latestVolume = weeks[weeks.length - 1].volume
+    const nextWeekTarget = Math.round(latestVolume * 1.05)
+
+    return {
+      weeksProgressing,
+      totalWeeks,
+      progressRate,
+      avgIncrease,
+      overallStatus,
+      nextWeekTarget,
+    }
+  })
+
+  /**
+   * Duration trend data (for DurationTrendChart)
+   * Returns workout data with duration, volume, and exercise count
+   * @returns {Array} Array of workout data points sorted by date
+   */
+  const durationTrendData = computed(() => {
+    if (!periodWorkouts.value.length) return []
+
+    return periodWorkouts.value
+      .filter((workout) => workout.completedAt && workout.duration) // Only include workouts with duration
+      .map((workout) => {
+        const workoutDate = workout.completedAt?.toDate
+          ? workout.completedAt.toDate()
+          : new Date(workout.completedAt)
+
+        const volume = calculateWorkoutVolume(workout)
+        const exerciseCount = workout.exercises?.length || 0
+
+        return {
+          date: workoutDate,
+          duration: Math.round(workout.duration),
+          volume,
+          exerciseCount,
+          id: workout.id,
+        }
+      })
+      .sort((a, b) => a.date - b.date) // Sort chronologically
+  })
+
+  /**
+   * Duration statistics (for DurationTrendChart stats display)
+   * Calculates average, shortest, longest, and trend for workout durations
+   * @returns {Object|null} Duration stats or null if no data
+   */
+  const durationStats = computed(() => {
+    const workoutsWithDuration = periodWorkouts.value.filter(
+      (workout) => workout.duration && workout.duration > 0
+    )
+
+    if (!workoutsWithDuration.length) return null
+
+    // Calculate average (rounded to whole number)
+    const totalDuration = workoutsWithDuration.reduce((sum, w) => sum + w.duration, 0)
+    const average = Math.round(totalDuration / workoutsWithDuration.length)
+
+    // Find shortest and longest (rounded to whole numbers)
+    const sorted = [...workoutsWithDuration].sort((a, b) => a.duration - b.duration)
+    const shortest = {
+      value: Math.round(sorted[0].duration),
+      date: sorted[0].completedAt?.toDate
+        ? sorted[0].completedAt.toDate()
+        : new Date(sorted[0].completedAt),
+    }
+    const longest = {
+      value: Math.round(sorted[sorted.length - 1].duration),
+      date: sorted[sorted.length - 1].completedAt?.toDate
+        ? sorted[sorted.length - 1].completedAt.toDate()
+        : new Date(sorted[sorted.length - 1].completedAt),
+    }
+
+    // Calculate trend (comparing first half vs second half)
+    const trend = calculateTrend(
+      workoutsWithDuration.map((w) => w.duration),
+      5 // Threshold percentage for stable
+    )
+
+    return {
+      average,
+      shortest,
+      longest,
+      trend,
+    }
   })
 
   /**
@@ -572,20 +970,28 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   const currentRange = computed(() => {
     const config = periodConfig.value
 
+    let range
     switch (config.type) {
       case 'rolling':
-        return getRollingRange(config.days)
+        range = getRollingRange(config.days)
+        break
       case 'calendarMonth':
-        return getThisMonthRange()
+        range = getThisMonthRange()
+        break
       case 'previousCalendarMonth':
-        return getLastMonthRange()
+        range = getLastMonthRange()
+        break
       case 'calendarYear':
-        return getThisYearRange()
+        range = getThisYearRange()
+        break
       case 'allTime':
-        return getAllTimeRange()
+        range = getAllTimeRange()
+        break
       default:
-        return getThisMonthRange()
+        range = getThisMonthRange()
     }
+
+    return range
   })
 
   /**
@@ -619,12 +1025,23 @@ export const useAnalyticsStore = defineStore('analytics', () => {
    */
   const periodWorkouts = computed(() => {
     const range = currentRange.value
-    return completedWorkouts.value.filter((w) => {
-      if (!w.completedAt) return false
+
+    const filtered = completedWorkouts.value.filter((w) => {
+      if (!w.completedAt) {
+        return false
+      }
+
       const date = normalizeDate(w.completedAt)
-      if (isNaN(date.getTime())) return false
+
+      // Skip workouts with invalid dates
+      if (isNaN(date.getTime())) {
+        return false
+      }
+
       return isWithinRange(date, range.start, range.end)
     })
+
+    return filtered
   })
 
   /**
@@ -1061,7 +1478,6 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       (p) => p.id === newPeriod
     )
     if (!validPeriod) {
-      console.warn(`Invalid period: ${newPeriod}, using default`)
       newPeriod = CONFIG.analytics.periods.DEFAULT_PERIOD
     }
 
@@ -1071,9 +1487,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     try {
       localStorage.setItem(CONFIG.storage.ANALYTICS_PERIOD, newPeriod)
     } catch (e) {
-      if (import.meta.env.DEV) {
-        console.warn('Failed to persist period to localStorage:', e)
-      }
+      // Silently fail in production
     }
   }
 
@@ -1097,17 +1511,176 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         }
       }
     } catch (e) {
-      if (import.meta.env.DEV) {
-        console.warn('Failed to read period from localStorage:', e)
-      }
+      // Silently fail in production
     }
 
     periodInitialized.value = true
   }
 
+  /**
+   * Exercise Progress Table (Feature 4.1)
+   * Aggregates exercise data across all completed workouts
+   * Calculates 1RM, trends, and progress status for each exercise
+   * @returns {Array<{id: string, name: string, estimated1RM: number, bestPR: object, lastPerformed: Date, trend: object, trendPercentage: number, status: object, history: Array}>}
+   */
+  const exerciseProgressTable = computed(() => {
+    if (completedWorkouts.value.length === 0) return []
+
+    // Group exercises by exerciseId
+    const exerciseGroups = new Map()
+    const exMap = exerciseMap.value
+
+    // Sort workouts chronologically (oldest first) for proper history tracking
+    const sortedWorkouts = [...completedWorkouts.value]
+      .filter((w) => w.completedAt)
+      .sort((a, b) => {
+        const dateA = normalizeDate(a.completedAt)
+        const dateB = normalizeDate(b.completedAt)
+        return dateA - dateB
+      })
+
+    // Build exercise history
+    sortedWorkouts.forEach((workout) => {
+      if (!workout.exercises || !Array.isArray(workout.exercises)) return
+
+      workout.exercises.forEach((exercise) => {
+        if (!exercise.exerciseId) return
+
+        const exerciseId = exercise.exerciseId
+        const exerciseName = exercise.exerciseName || 'Unknown Exercise'
+
+        // Initialize exercise group if not exists
+        if (!exerciseGroups.has(exerciseId)) {
+          exerciseGroups.set(exerciseId, {
+            id: exerciseId,
+            name: exerciseName,
+            history: [],
+          })
+        }
+
+        const group = exerciseGroups.get(exerciseId)
+
+        // Find best set in this workout
+        const bestSet = findBestSet(exercise.sets)
+        if (!bestSet) return
+
+        // Add to history
+        group.history.push({
+          date: normalizeDate(workout.completedAt),
+          sets: exercise.sets,
+          bestSet,
+        })
+      })
+    })
+
+    // Calculate metrics for each exercise
+    const progressTable = []
+
+    exerciseGroups.forEach((group) => {
+      if (group.history.length === 0) return
+
+      // Get most recent entry
+      const lastEntry = group.history[group.history.length - 1]
+      const estimated1RM = calculate1RM(lastEntry.bestSet.weight, lastEntry.bestSet.reps) || 0
+
+      // Find best PR
+      const bestPREntry = findBestPR(group.history)
+      const bestPR = bestPREntry
+        ? {
+            weight: bestPREntry.bestSet.weight,
+            reps: bestPREntry.bestSet.reps,
+            date: bestPREntry.date,
+            estimated1RM: calculate1RM(bestPREntry.bestSet.weight, bestPREntry.bestSet.reps),
+          }
+        : null
+
+      // Calculate trend (need at least 4 workouts for reliable trend)
+      const trend = calculateTrend(group.history)
+      const status = getProgressStatus(trend)
+
+      progressTable.push({
+        id: group.id,
+        name: group.name,
+        estimated1RM: Math.round(estimated1RM),
+        bestPR,
+        lastPerformed: lastEntry.date,
+        trend: trend.direction,
+        trendPercentage: Math.round(trend.percentage * 10) / 10, // 1 decimal place
+        confidence: Math.round(trend.confidence * 100), // 0-100%
+        status,
+        history: group.history.slice(-10), // Last 10 workouts for mini chart
+      })
+    })
+
+    // Sort by most recently performed (descending)
+    return progressTable.sort((a, b) => b.lastPerformed - a.lastPerformed)
+  })
+
+  /**
+   * All PRs (Personal Records) across all exercises
+   * Returns chronologically sorted list of PRs for PR Timeline (Feature 4.2)
+   * @returns {Array<{id: string, exerciseName: string, type: string, weight: number, reps: number, date: Date, estimated1RM: number}>}
+   */
+  const allPRs = computed(() => {
+    if (completedWorkouts.value.length === 0) return []
+
+    const prs = []
+    const exerciseMaxes = new Map() // Track current max for each exercise
+
+    // Sort workouts chronologically (oldest first) to detect PRs properly
+    const sortedWorkouts = [...completedWorkouts.value]
+      .filter((w) => w.completedAt)
+      .sort((a, b) => {
+        const dateA = normalizeDate(a.completedAt)
+        const dateB = normalizeDate(b.completedAt)
+        return dateA - dateB
+      })
+
+    sortedWorkouts.forEach((workout) => {
+      if (!workout.exercises || !Array.isArray(workout.exercises)) return
+
+      workout.exercises.forEach((exercise) => {
+        if (!exercise.exerciseId || !exercise.sets) return
+
+        const exerciseId = exercise.exerciseId
+        const exerciseName = exercise.exerciseName || 'Unknown Exercise'
+
+        // Find best set in this workout
+        const bestSet = findBestSet(exercise.sets)
+        if (!bestSet || !bestSet.weight || !bestSet.reps) return
+
+        const current1RM = calculate1RM(bestSet.weight, bestSet.reps)
+        if (!current1RM) return
+
+        const currentMax = exerciseMaxes.get(exerciseId) || 0
+
+        // Check if this is a new PR
+        if (current1RM > currentMax) {
+          exerciseMaxes.set(exerciseId, current1RM)
+
+          prs.push({
+            id: `${exerciseId}-${workout.id}`,
+            exerciseId,
+            exerciseName,
+            type: 'weight', // Can extend to 'reps' or 'volume' PRs later
+            weight: bestSet.weight,
+            reps: bestSet.reps,
+            date: normalizeDate(workout.completedAt),
+            estimated1RM: Math.round(current1RM),
+            improvement: currentMax > 0 ? Math.round(current1RM - currentMax) : 0,
+          })
+        }
+      })
+    })
+
+    // Return in reverse chronological order (most recent first)
+    return prs.reverse()
+  })
+
   return {
     // State - return ref directly
     period,
+    loading,
 
     // Basic metrics
     totalWorkouts,
@@ -1122,8 +1695,15 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     // Chart data
     volumeByDay,
     dailyWorkoutCounts,
+    dailyVolumeMap,
     muscleDistribution,
     muscleDistributionByVolume,
+    muscleVolumeByDay,
+    muscleVolumeOverTime,
+    weeklyVolumeProgression,
+    progressiveOverloadStats,
+    durationTrendData,
+    durationStats,
     frequencyHeatmap,
     periodComparison, // Period-aware comparison (replaces deprecated weekComparison)
     muscleProgress,
@@ -1165,6 +1745,10 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     longestStreak,
     mostActiveDay,
     averageWorkoutsPerWeek,
+
+    // Exercise Progress (Tab 4)
+    exerciseProgressTable,
+    allPRs,
 
     // Actions
     setPeriod,

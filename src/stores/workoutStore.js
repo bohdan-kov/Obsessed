@@ -8,6 +8,7 @@ import {
   updateDocument,
   subscribeToCollection,
   serverTimestamp,
+  Timestamp,
 } from '@/firebase/firestore'
 
 /**
@@ -150,12 +151,6 @@ export const useWorkoutStore = defineStore('workout', () => {
         duration: 0,
         totalVolume: 0,
         totalSets: 0,
-      }
-
-      if (import.meta.env.DEV) {
-        console.log('Creating workout with data:', workoutData)
-        console.log('User ID:', authStore.uid)
-        console.log('Workout path:', `users/${authStore.uid}/workouts`)
       }
 
       const workoutPath = `users/${authStore.uid}/workouts`
@@ -846,7 +841,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       const workoutPath = `users/${authStore.uid}/workouts`
       await updateDocument(workoutPath, activeWorkout.value.id, {
         status: 'completed',
-        completedAt: completedDate,
+        completedAt: Timestamp.fromDate(completedDate), // ✅ FIX: Use Timestamp.fromDate for proper Firebase serialization
         duration: validDuration,
       })
 

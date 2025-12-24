@@ -1,0 +1,32 @@
+{
+  "title": "More",
+  "subtitle": "Additional tools and utilities",
+  "sections": {
+    "tools": {
+      "title": "Tools",
+      "description": "Helpful utilities for your workouts",
+      "calculator": "1RM Calculator",
+      "timer": "Rest Timer",
+      "notes": "Notes"
+    },
+    "data": {
+      "title": "Data",
+      "description": "Manage your workout data",
+      "export": "Export Data",
+      "import": "Import Data",
+      "backup": "Backup"
+    },
+    "about": {
+      "title": "About",
+      "description": "Information about Obsessed",
+      "version": "Version",
+      "changelog": "Changelog",
+      "privacy": "Privacy",
+      "terms": "Terms of Service"
+    }
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "description": "We're adding useful tools for your training."
+  }
+}

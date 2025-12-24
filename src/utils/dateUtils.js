@@ -6,7 +6,7 @@
 
 /**
  * Normalize various date inputs to a Date object
- * Handles Firebase Timestamp, Date objects, ISO strings
+ * Handles Firebase Timestamp, Date objects, ISO strings, and Proxied Timestamps
  * @param {Date|Object|string|number} dateInput - Date to normalize
  * @returns {Date} Normalized Date object (may be Invalid Date if input is invalid)
  * @note Always validate result with isNaN(date.getTime()) after calling this function
@@ -16,18 +16,64 @@ export function normalizeDate(dateInput) {
     return new Date()
   }
 
-  // Firebase Timestamp object
-  if (dateInput.toDate && typeof dateInput.toDate === 'function') {
-    return dateInput.toDate()
-  }
-
   // Already a Date object
   if (dateInput instanceof Date) {
     return new Date(dateInput)
   }
 
+  // Firebase Timestamp object - check for toDate method FIRST
+  // This handles both raw Timestamps and Proxied Timestamps
+  if (dateInput.toDate && typeof dateInput.toDate === 'function') {
+    try {
+      return dateInput.toDate()
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[normalizeDate] Error calling toDate():', error, dateInput)
+      }
+      return new Date(NaN) // Return invalid date
+    }
+  }
+
+  // Firebase Timestamp object - check for seconds/nanoseconds structure
+  // This handles Timestamps that may be wrapped in Vue Proxies or plain objects
+  if (typeof dateInput === 'object' && dateInput !== null) {
+    // Try to access seconds property (works with Proxies and plain objects)
+    const seconds = dateInput.seconds
+    const nanoseconds = dateInput.nanoseconds
+
+    // Check if we have valid numeric seconds
+    if (typeof seconds === 'number' && !isNaN(seconds)) {
+      // Valid Firestore Timestamp structure
+      const nanos = typeof nanoseconds === 'number' ? nanoseconds : 0
+      return new Date(seconds * 1000 + nanos / 1000000)
+    }
+
+    // Edge case: Proxy wrapping a Timestamp - try to unwrap
+    // Check if the object has a _value or similar internal property
+    if (dateInput._value) {
+      return normalizeDate(dateInput._value)
+    }
+
+    // Log warning for unrecognized object structure in development
+    if (import.meta.env.DEV) {
+      console.warn('[normalizeDate] Unrecognized date object structure:', {
+        type: typeof dateInput,
+        constructor: dateInput?.constructor?.name,
+        keys: Object.keys(dateInput),
+        value: dateInput,
+      })
+    }
+  }
+
   // ISO string or timestamp number
-  return new Date(dateInput)
+  try {
+    return new Date(dateInput)
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[normalizeDate] Error creating Date:', error, dateInput)
+    }
+    return new Date(NaN) // Return invalid date
+  }
 }
 
 /**
@@ -291,6 +337,36 @@ export function formatDate(dateInput, locale = 'uk') {
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'short',
+    day: 'numeric',
+  }).format(date)
+}
+
+/**
+ * Format date in short format for chart labels (locale-aware)
+ * Returns compact format like "Dec 15" or "15 груд" suitable for chart axes
+ * @param {Date|Object|string} dateInput - Date to format
+ * @param {string} locale - Locale code (e.g., 'en', 'uk')
+ * @returns {string} Formatted short date string
+ */
+export function formatDateShort(dateInput, locale = 'uk') {
+  const date = normalizeDate(dateInput)
+  return new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    day: 'numeric',
+  }).format(date)
+}
+
+/**
+ * Format date in medium format (locale-aware)
+ * Returns format like "December 15" or "15 грудня" with full month name
+ * @param {Date|Object|string} dateInput - Date to format
+ * @param {string} locale - Locale code (e.g., 'en', 'uk')
+ * @returns {string} Formatted medium date string
+ */
+export function formatDateMedium(dateInput, locale = 'uk') {
+  const date = normalizeDate(dateInput)
+  return new Intl.DateTimeFormat(locale, {
+    month: 'long',
     day: 'numeric',
   }).format(date)
 }

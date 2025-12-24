@@ -14,6 +14,9 @@
   },
   "more": "ще",
   "based": "на основі",
+  "volume": "Об'єм",
+  "kg": "кг",
+  "week": "Тиждень",
   "status": {
     "loading": "Завантаження...",
     "saving": "Збереження...",
@@ -23,7 +26,8 @@
     "error": "Помилка",
     "completed": "Виконано",
     "inProgress": "В процесі",
-    "scheduled": "Заплановано"
+    "scheduled": "Заплановано",
+    "comingSoon": "Незабаром"
   },
   "saving": "Збереження...",
   "loading": "Завантаження...",
@@ -37,6 +41,10 @@
     "reps": "повтори",
     "days": "дні"
   },
+  "minutes": "хв",
+  "exercises": "вправ",
+  "duration": "Тривалість",
+  "date": "Дата",
   "time": {
     "today": "Сьогодні",
     "yesterday": "Вчора",
@@ -73,11 +81,50 @@
       "name": "Аналітика",
       "description": "Графіки та інсайти"
     },
+    "goals": {
+      "name": "Цілі",
+      "description": "Відстежуйте свої цілі"
+    },
+    "community": {
+      "name": "Спільнота",
+      "description": "Зв'яжіться з іншими"
+    },
+    "library": {
+      "label": "Бібліотека",
+      "exercises": {
+        "name": "Бібліотека вправ",
+        "description": "Переглядайте всі вправи"
+      },
+      "workoutPlans": {
+        "name": "Плани тренувань",
+        "description": "Шаблони тренувань"
+      },
+      "schedule": {
+        "name": "Розклад",
+        "description": "Плануйте тренування"
+      },
+      "more": {
+        "name": "Більше",
+        "description": "Додаткові функції"
+      }
+    },
+    "help": {
+      "name": "Отримати допомогу",
+      "description": "Підтримка та FAQ"
+    },
+    "search": {
+      "name": "Пошук",
+      "description": "Шукайте вправи та тренування"
+    },
+    "profile": {
+      "name": "Профіль",
+      "description": "Налаштування профілю"
+    },
     "settings": {
       "name": "Налаштування",
       "description": "Параметри та вподобання"
     },
-    "quickLog": "Додати вправу",
+    "quickLog": "Quick Log",
     "mobileMenu": {
       "title": "Меню навігації",
       "description": "Доступ до дашборду, тренувань, аналітики та налаштувань"
@@ -108,5 +155,15 @@
   "pagination": {
     "previous": "Попередня",
     "next": "Наступна"
+  },
+  "muscleGroups": {
+    "back": "Спина",
+    "chest": "Груди",
+    "legs": "Ноги",
+    "shoulders": "Плечі",
+    "biceps": "Біцепс",
+    "triceps": "Тріцепс",
+    "core": "Корпус",
+    "calves": "Литки"
   }
 }
