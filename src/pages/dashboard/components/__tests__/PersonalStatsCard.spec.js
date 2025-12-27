@@ -6,6 +6,7 @@ import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useUserStore } from '@/stores/userStore'
 
 // Mock Firebase modules
 vi.mock('@/firebase/firestore', () => ({
@@ -51,6 +52,7 @@ describe('PersonalStatsCard', () => {
   let workoutStore
   let authStore
   let exerciseStore
+  let userStore
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -59,6 +61,7 @@ describe('PersonalStatsCard', () => {
     workoutStore = useWorkoutStore()
     exerciseStore = useExerciseStore()
     analyticsStore = useAnalyticsStore()
+    userStore = useUserStore()
 
     // Set authenticated user
     authStore.$patch({
@@ -242,6 +245,15 @@ describe('PersonalStatsCard', () => {
     it('should display weight with unit conversion', () => {
       const today = new Date()
 
+      // Set user's current weight (path: profile.personalInfo.weight)
+      userStore.$patch({
+        profile: {
+          personalInfo: {
+            weight: 75,
+          },
+        },
+      })
+
       workoutStore.$patch({
         workouts: [
           {
@@ -294,37 +306,19 @@ describe('PersonalStatsCard', () => {
       expect(wrapper.text()).toContain('kg')
     })
 
-    it('should format weight without unit in the number display', () => {
-      const today = new Date()
-
-      workoutStore.$patch({
-        workouts: [
-          {
-            id: 'w1',
-            userId: 'test-user-123',
-            status: 'completed',
-            startedAt: today,
-            completedAt: today,
-            exercises: [
-              {
-                exerciseId: 'bench-press',
-                sets: [{ weight: 100, reps: 10 }],
-              },
-            ],
-          },
-        ],
-      })
-
+    it('should display weight and unit label separately', () => {
+      workoutStore.$patch({ workouts: [] })
       analyticsStore.setPeriod('last30Days')
 
       const wrapper = mount(PersonalStatsCard)
 
-      // Weight value and unit should be separate
+      // Check that weight section shows proper structure
       const weightSection = wrapper.findAll('p.text-lg.font-bold.font-mono')[1]
-      const weightText = weightSection.text()
 
-      // Should have numeric value
-      expect(weightText).toMatch(/\d+/)
+      // When no user weight is set, should show placeholder with unit
+      // The structure includes unit label (kg) as a separate span
+      expect(weightSection.text()).toContain('--')
+      expect(wrapper.text()).toContain('kg')
     })
   })
 
@@ -388,6 +382,15 @@ describe('PersonalStatsCard', () => {
     it('should handle workouts without RPE data', () => {
       const today = new Date()
 
+      // Set user's current weight (path: profile.personalInfo.weight)
+      userStore.$patch({
+        profile: {
+          personalInfo: {
+            weight: 75,
+          },
+        },
+      })
+
       workoutStore.$patch({
         workouts: [
           {
@@ -416,7 +419,7 @@ describe('PersonalStatsCard', () => {
       const rpeValue = wrapper.findAll('p.text-lg.font-bold.font-mono')[0]
       expect(rpeValue.text()).toBe('--')
 
-      // Weight should still be displayed
+      // Weight should still be displayed (from userStore.profile.weight)
       const weightValue = wrapper.findAll('p.text-lg.font-bold.font-mono')[1]
       expect(weightValue.text()).not.toBe('--')
     })

@@ -61,13 +61,13 @@ const lastUsedText = computed(() => {
     // Validate the date is valid
     if (isNaN(date.getTime())) {
       if (import.meta.env.DEV) {
-        console.warn('Invalid lastUsedAt date in PlanCard:', props.plan.lastUsedAt)
+        console.warn('[PlanCard] Invalid lastUsedAt date:', props.plan.lastUsedAt)
       }
       return t('plans.list.neverUsed')
     }
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Error parsing lastUsedAt date in PlanCard:', error, props.plan.lastUsedAt)
+      console.error('[PlanCard] Error parsing lastUsedAt date:', error, props.plan.lastUsedAt)
     }
     return t('plans.list.neverUsed')
   }
@@ -78,7 +78,7 @@ const lastUsedText = computed(() => {
   // Handle edge case where date is in the future (shouldn't happen, but be defensive)
   if (diffInSeconds < 0) {
     if (import.meta.env.DEV) {
-      console.warn('lastUsedAt is in the future:', props.plan.lastUsedAt)
+      console.warn('[PlanCard] lastUsedAt is in the future:', props.plan.lastUsedAt)
     }
     return t('plans.list.neverUsed')
   }

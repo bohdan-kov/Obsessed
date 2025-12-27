@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { ChevronDown, TrendingUp, TrendingDown, Minus } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { ChevronDown, TrendingUp, TrendingDown, Minus, ExternalLink } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { useUnits } from '@/composables/useUnits'
 import ExerciseMiniChart from './ExerciseMiniChart.vue'
@@ -13,6 +14,7 @@ const props = defineProps({
   },
 })
 
+const router = useRouter()
 const { t } = useI18n()
 const { formatWeight } = useUnits()
 
@@ -20,6 +22,20 @@ const isExpanded = ref(false)
 
 function toggleExpanded() {
   isExpanded.value = !isExpanded.value
+}
+
+function viewLastWorkout(event) {
+  event.stopPropagation()
+  if (props.exercise.lastWorkoutId) {
+    router.push({
+      name: 'WorkoutDetail',
+      params: { id: props.exercise.lastWorkoutId },
+      query: {
+        from: 'analytics',
+        tab: 'exercises'  // Include tab to preserve context when navigating back
+      },
+    })
+  }
 }
 
 function formatDate(date) {
@@ -62,7 +78,7 @@ function getStatusColor(status) {
   <div class="exercise-progress-row border-b last:border-0">
     <!-- Main Row (Always Visible) -->
     <div
-      class="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-3 sm:gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+      class="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_165px] gap-3 sm:gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
       @click="toggleExpanded"
     >
       <!-- Exercise Name + Mobile-only chart -->
@@ -120,7 +136,7 @@ function getStatusColor(status) {
       <div class="flex items-center gap-2 justify-end">
         <!-- Desktop: Status badge -->
         <span
-          class="hidden sm:inline-flex px-2 py-1 rounded-full text-xs font-medium"
+          class="hidden sm:inline-flex items-center w-[165px] px-2 py-1 rounded-full text-xs font-medium"
           :class="getStatusColor(exercise.status)"
         >
           {{ t(`analytics.exerciseProgress.statusBadge.${exercise.trend}`) }}
@@ -238,6 +254,14 @@ function getStatusColor(status) {
                   </span>
                 </div>
               </div>
+            </div>
+
+            <!-- View Last Workout Button -->
+            <div v-if="exercise.lastWorkoutId" class="pt-3 border-t">
+              <Button variant="outline" size="sm" class="w-full" @click="viewLastWorkout">
+                <ExternalLink class="w-4 h-4 mr-2" />
+                {{ t('workout.detail.viewDetails') }}
+              </Button>
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import {
   groupConsecutiveIdenticalPoints,
   formatDateRangeLabel,
   MUSCLE_COLORS,
-} from '../chartUtils'
+} from '@/utils/chartUtils'
 
 describe('chartUtils', () => {
   describe('MUSCLE_COLORS', () => {

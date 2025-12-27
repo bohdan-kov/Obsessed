@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useWorkoutBackup } from '@/composables/useWorkoutBackup'
 
 describe('useWorkoutBackup', () => {
@@ -86,6 +86,7 @@ describe('useWorkoutBackup', () => {
   })
 
   it('should handle corrupted backup gracefully', () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { loadBackup } = useWorkoutBackup()
 
     // Manually corrupt localStorage
@@ -93,5 +94,6 @@ describe('useWorkoutBackup', () => {
 
     const loaded = loadBackup()
     expect(loaded).toBeNull()
+    consoleErrorSpy.mockRestore()
   })
 })

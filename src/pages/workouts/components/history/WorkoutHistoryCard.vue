@@ -35,7 +35,7 @@
           :key="index"
           class="text-sm text-muted-foreground"
         >
-          {{ exercise.exerciseName }} - {{ exercise.sets?.length || 0 }} {{ t('workout.activeWorkout.stats.sets').toLowerCase() }}
+          {{ getLocalizedExerciseName(exercise) }} - {{ exercise.sets?.length || 0 }} {{ t('workout.activeWorkout.stats.sets').toLowerCase() }}
         </p>
         <p v-if="remainingExercises > 0" class="text-sm text-muted-foreground">
           +{{ remainingExercises }} {{ t('common.more') }}
@@ -47,8 +47,10 @@
 
 <script setup>
 import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useUnits } from '@/composables/useUnits'
+import { useExerciseStore } from '@/stores/exerciseStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dumbbell, Hash } from 'lucide-vue-next'
@@ -63,7 +65,35 @@ const props = defineProps({
 const { t, locale } = useI18n()
 const { formatWeight } = useUnits()
 
+const exerciseStore = useExerciseStore()
+const { allExercises } = storeToRefs(exerciseStore)
+
 const MAX_EXERCISES_DISPLAY = 3
+
+/**
+ * Get localized exercise name
+ * @param {Object} exercise - Exercise object from workout
+ * @returns {string} Localized exercise name
+ */
+function getLocalizedExerciseName(exercise) {
+  if (!exercise.exerciseId) {
+    return exercise.exerciseName || ''
+  }
+
+  const exerciseData = allExercises.value.find(
+    (ex) => ex.id === exercise.exerciseId || ex.slug === exercise.exerciseId
+  )
+
+  if (!exerciseData) {
+    return exercise.exerciseName || ''
+  }
+
+  if (typeof exerciseData.name === 'object' && exerciseData.name !== null) {
+    return exerciseData.name[locale.value] || exerciseData.name.uk || exerciseData.name.en || exercise.exerciseName || ''
+  }
+
+  return exerciseData.name || exercise.exerciseName || ''
+}
 
 // Format completed date
 const formattedDate = computed(() => {
@@ -80,7 +110,7 @@ const formattedDate = computed(() => {
 
     // Validate that the date is valid
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date in workout:', props.workout.completedAt)
+      console.warn('[WorkoutHistoryCard] Invalid workout date:', props.workout.completedAt)
       return t('workout.history.card.dateUnknown', 'Unknown date')
     }
 
@@ -90,7 +120,7 @@ const formattedDate = computed(() => {
       day: 'numeric',
     }).format(date)
   } catch (error) {
-    console.error('Error formatting workout date:', error, props.workout.completedAt)
+    console.error('[WorkoutHistoryCard] Error formatting workout date:', error, props.workout.completedAt)
     return t('workout.history.card.dateUnknown', 'Unknown date')
   }
 })

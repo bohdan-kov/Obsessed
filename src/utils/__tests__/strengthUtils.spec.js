@@ -6,7 +6,7 @@ import {
   getProgressStatus,
   findBestPR,
   calculateExerciseVolume,
-} from '../strengthUtils'
+} from '@/utils/strengthUtils'
 
 describe('strengthUtils', () => {
   describe('calculate1RM', () => {

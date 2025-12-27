@@ -270,7 +270,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
-import BaseChart from '../shared/BaseChart.vue'
+import BaseChart from '@/pages/analytics/components/shared/BaseChart.vue'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
@@ -332,7 +332,7 @@ const chartData = computed(() => {
 <!-- src/pages/analytics/AnalyticsView.vue -->
 <script setup>
 // ... existing imports ...
-import MyNewChart from './components/[category]/MyNewChart.vue'
+import MyNewChart from '@/pages/analytics/components/[category]/MyNewChart.vue'
 
 // Add to tabs array
 const tabs = [
@@ -362,7 +362,7 @@ const tabs = [
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import MyNewChart from '../MyNewChart.vue'
+import MyNewChart from '@/pages/analytics/components/[category]/MyNewChart.vue'
 
 describe('MyNewChart', () => {
   function createWrapper(initialState = {}) {

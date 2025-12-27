@@ -116,23 +116,7 @@ export function formatAxisValue(value) {
  */
 function areValuesIdentical(pointA, pointB, keys) {
   if (!pointA || !pointB) return false
-
-  const result = keys.every((key) => pointA[key] === pointB[key])
-
-  // Debug: show when points are NOT identical (more interesting)
-  if (!result) {
-    console.log('[DEBUG] areValuesIdentical = FALSE:', {
-      pointA: { date: pointA.date, ...Object.fromEntries(keys.map(k => [k, pointA[k]])) },
-      pointB: { date: pointB.date, ...Object.fromEntries(keys.map(k => [k, pointB[k]])) },
-      differences: keys.filter(k => pointA[k] !== pointB[k]).map(k => ({
-        key: k,
-        a: pointA[k],
-        b: pointB[k]
-      }))
-    })
-  }
-
-  return result
+  return keys.every((key) => pointA[key] === pointB[key])
 }
 
 /**
@@ -147,13 +131,6 @@ export function groupConsecutiveIdenticalPoints(data, keys) {
 
   if (!data || data.length === 0) return groupMap
 
-  console.log('[DEBUG] groupConsecutiveIdenticalPoints called with:', {
-    dataLength: data.length,
-    keys,
-    firstPoint: data[0],
-    lastPoint: data[data.length - 1],
-  })
-
   let i = 0
   while (i < data.length) {
     const current = data[i]
@@ -167,16 +144,8 @@ export function groupConsecutiveIdenticalPoints(data, keys) {
       rangeEnd++
     }
 
-    const rangeLength = rangeEnd - i + 1
-
     // If we found a range (2+ consecutive identical points)
     if (rangeEnd > i) {
-      console.log(`[DEBUG] Found range: indices ${i}-${rangeEnd} (${rangeLength} points)`, {
-        startDate: data[i]?.date,
-        endDate: data[rangeEnd]?.date,
-        values: keys.map((k) => ({ [k]: current[k] })),
-      })
-
       // Mark all indices in the range
       for (let j = i; j <= rangeEnd; j++) {
         groupMap.set(j, {
@@ -187,11 +156,6 @@ export function groupConsecutiveIdenticalPoints(data, keys) {
       }
       i = rangeEnd + 1
     } else {
-      console.log(`[DEBUG] Single point at index ${i}:`, {
-        date: data[i]?.date,
-        values: keys.map((k) => ({ [k]: current[k] })),
-      })
-
       // Single point
       groupMap.set(i, {
         type: 'single',
@@ -201,8 +165,6 @@ export function groupConsecutiveIdenticalPoints(data, keys) {
       i++
     }
   }
-
-  console.log('[DEBUG] Final groupMap size:', groupMap.size)
 
   return groupMap
 }

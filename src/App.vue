@@ -23,7 +23,7 @@ onMounted(async () => {
     await exerciseStore.fetchExercises()
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Failed to load default exercises:', error)
+      console.error('[App] Failed to load default exercises:', error)
     }
   }
 })

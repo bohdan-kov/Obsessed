@@ -133,7 +133,7 @@ export async function fetchDocument(collectionName, docId) {
     return null
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error(`Error fetching document ${collectionName}/${docId}:`, error)
+      console.error('[firebase/firestore] Error fetching document', collectionName + '/' + docId + ':', error)
     }
     throw new Error(`Failed to fetch document ${collectionName}/${docId}: ${error.message}`)
   }
@@ -176,7 +176,7 @@ export async function fetchCollection(collectionName, options = {}) {
     }))
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error(`Error fetching collection ${collectionName}:`, error)
+      console.error('[firebase/firestore] Error fetching collection', collectionName + ':', error)
     }
     throw new Error(`Failed to fetch collection ${collectionName}: ${error.message}`)
   }
@@ -199,7 +199,7 @@ export async function createDocument(collectionName, data) {
     return docRef.id
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error(`Error creating document in ${collectionName}:`, error)
+      console.error('[firebase/firestore] Error creating document in', collectionName + ':', error)
     }
     throw new Error(`Failed to create document in ${collectionName}: ${error.message}`)
   }
@@ -226,7 +226,7 @@ export async function setDocument(collectionName, docId, data, options = {}) {
     )
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error(`Error setting document ${collectionName}/${docId}:`, error)
+      console.error('[firebase/firestore] Error setting document', collectionName + '/' + docId + ':', error)
     }
     throw new Error(`Failed to set document ${collectionName}/${docId}: ${error.message}`)
   }
@@ -254,7 +254,7 @@ export async function updateDocument(collectionName, docId, data) {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.error(
-        `Error updating document ${collectionName}/${docId}:`,
+        `[firebase/firestore] Error updating document ${collectionName}/${docId}:`,
         error,
         'Original data:',
         data
@@ -277,7 +277,7 @@ export async function deleteDocument(collectionName, docId) {
   } catch (error) {
     if (import.meta.env.DEV) {
       console.error(
-        `Error deleting document ${collectionName}/${docId}:`,
+        `[firebase/firestore] Error deleting document ${collectionName}/${docId}:`,
         error
       )
     }
@@ -299,7 +299,7 @@ export function subscribeToDocument(
   callback,
   errorCallback = (error) => {
     if (import.meta.env.DEV) {
-      console.error(error)
+      console.error('[firebase/firestore] Subscription error:', error)
     }
   }
 ) {
@@ -335,7 +335,7 @@ export function subscribeToCollection(
   callback,
   errorCallback = (error) => {
     if (import.meta.env.DEV) {
-      console.error(error)
+      console.error('[firebase/firestore] Collection subscription error:', error)
     }
   }
 ) {

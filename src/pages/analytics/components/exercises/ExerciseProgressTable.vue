@@ -5,8 +5,8 @@ import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useI18n } from 'vue-i18n'
 import { Search } from 'lucide-vue-next'
 import ExerciseProgressRow from './ExerciseProgressRow.vue'
-import EmptyState from '../shared/EmptyState.vue'
-import LoadingSkeleton from '../shared/LoadingSkeleton.vue'
+import EmptyState from '@/pages/analytics/components/shared/EmptyState.vue'
+import LoadingSkeleton from '@/pages/analytics/components/shared/LoadingSkeleton.vue'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -114,7 +114,7 @@ const filterOptions = computed(() => [
 </script>
 
 <template>
-  <div class="exercise-progress-table space-y-4">
+  <div data-testid="exercise-table" class="exercise-progress-table space-y-4">
     <!-- Header -->
     <div class="space-y-2">
       <h2 class="text-2xl font-bold">{{ t('analytics.exerciseProgress.title') }}</h2>
@@ -196,14 +196,14 @@ const filterOptions = computed(() => [
       <div v-else class="border rounded-lg overflow-hidden bg-card">
         <!-- Desktop Header Row -->
         <div
-          class="hidden sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-4 py-3 bg-muted/50 border-b text-sm font-medium text-muted-foreground"
+          class="hidden sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_165px] gap-4 px-4 py-3 bg-muted/50 border-b text-sm font-medium text-muted-foreground"
         >
           <div>{{ t('analytics.exerciseProgress.table.exercise') }}</div>
           <div>{{ t('analytics.exerciseProgress.table.estimated1RM') }}</div>
           <div>{{ t('analytics.exerciseProgress.table.bestPR') }}</div>
           <div>{{ t('analytics.exerciseProgress.table.lastPerformed') }}</div>
           <div>{{ t('analytics.exerciseProgress.table.trend') }}</div>
-          <div class="text-right">{{ t('analytics.exerciseProgress.table.status') }}</div>
+          <div>{{ t('analytics.exerciseProgress.table.status') }}</div>
         </div>
 
         <!-- Exercise Rows -->

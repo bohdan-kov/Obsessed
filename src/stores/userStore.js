@@ -102,9 +102,6 @@ const DEFAULT_TABLE_SETTINGS = {
 function migrateTableSettings(oldSettings) {
   // If oldSettings has flat structure (legacy format)
   if (oldSettings?.columns && !oldSettings.overview) {
-    if (import.meta.env.DEV) {
-      console.log('[userStore] Migrating legacy table settings to tab-specific format')
-    }
     return {
       overview: { columns: { ...oldSettings.columns } },
       history: { columns: { ...DEFAULT_TABLE_SETTINGS.history.columns } },
@@ -126,7 +123,10 @@ function cacheTableSettings(settings) {
   try {
     localStorage.setItem(CONFIG.storage.TABLE_SETTINGS, JSON.stringify(settings))
   } catch (err) {
-    if (import.meta.env.DEV) console.error('localStorage save failed:', err)
+    // Silent fail - localStorage errors are non-critical
+    if (import.meta.env.DEV) {
+      console.error('[userStore] localStorage save failed:', err)
+    }
   }
 }
 
@@ -147,7 +147,10 @@ function loadCachedTableSettings() {
     // Migrate if legacy format detected
     return migrateTableSettings(parsed)
   } catch (err) {
-    if (import.meta.env.DEV) console.error('localStorage read failed:', err)
+    // Silent fail - localStorage errors are non-critical
+    if (import.meta.env.DEV) {
+      console.error('[userStore] localStorage read failed:', err)
+    }
     return null
   }
 }
@@ -283,7 +286,7 @@ export const useUserStore = defineStore('user', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error fetching profile:', err)
+        console.error('[userStore] Error fetching profile:', err)
       }
       error.value = err.message
       throw err
@@ -346,7 +349,7 @@ export const useUserStore = defineStore('user', () => {
       settings.value = profileData.settings
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error creating profile:', err)
+        console.error('[userStore] Error creating profile:', err)
       }
       error.value = err.message
       throw err
@@ -393,7 +396,7 @@ export const useUserStore = defineStore('user', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error updating profile:', err)
+        console.error('[userStore] Error updating profile:', err)
       }
       error.value = err.message
       throw err
@@ -435,7 +438,7 @@ export const useUserStore = defineStore('user', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error updating settings:', err)
+        console.error('[userStore] Error updating settings:', err)
       }
       error.value = err.message
       throw err
@@ -512,7 +515,7 @@ export const useUserStore = defineStore('user', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error updating stats:', err)
+        console.error('[userStore] Error updating stats:', err)
       }
       error.value = err.message
       throw err
@@ -633,7 +636,7 @@ export const useUserStore = defineStore('user', () => {
       settings.value = previousSettings
 
       if (import.meta.env.DEV) {
-        console.error('Error updating table settings:', err)
+        console.error('[userStore] Error updating table settings:', err)
       }
       throw err
     }
@@ -670,7 +673,7 @@ export const useUserStore = defineStore('user', () => {
       },
       (err) => {
         if (import.meta.env.DEV) {
-          console.error('Error in profile subscription:', err)
+          console.error('[userStore] Error in profile subscription:', err)
         }
         error.value = err.message
       }
@@ -856,10 +859,8 @@ export const useUserStore = defineStore('user', () => {
                       tableSettings: settings.value.tableSettings,
                     },
                   })
-                  if (import.meta.env.DEV) {
-                    console.log('[userStore] Migrated table settings saved to Firestore')
-                  }
                 } catch (err) {
+                  // Silent fail - migration is not critical
                   if (import.meta.env.DEV) {
                     console.error('[userStore] Failed to save migrated settings:', err)
                   }

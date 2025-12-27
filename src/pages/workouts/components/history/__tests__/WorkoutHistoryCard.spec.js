@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createTestingPinia } from '@pinia/testing'
 import WorkoutHistoryCard from '@/pages/workouts/components/history/WorkoutHistoryCard.vue'
 
 describe('WorkoutHistoryCard', () => {
@@ -21,29 +22,40 @@ describe('WorkoutHistoryCard', () => {
     ],
   }
 
+  function createWrapper(workout = mockWorkout) {
+    return mount(WorkoutHistoryCard, {
+      props: {
+        workout,
+      },
+      global: {
+        plugins: [
+          createTestingPinia({
+            initialState: {
+              exercise: {
+                allExercises: [],
+              },
+            },
+          }),
+        ],
+      },
+    })
+  }
+
   describe('duration formatting', () => {
     it('should display hours and minutes for durations >= 1 hour', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: 3661, // 1 hour 1 minute 1 second
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: 3661, // 1 hour 1 minute 1 second
       })
 
-      // Should format as "1h 1m" in English or "1год 1хв" in Ukrainian
+      // Should format as "1h 1m" or show translation key with parameters
       expect(wrapper.text()).toMatch(/1/)
     })
 
     it('should display only minutes for durations < 1 hour', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: 1800, // 30 minutes
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: 1800, // 30 minutes
       })
 
       // Should show 30 minutes
@@ -51,13 +63,9 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should handle negative durations gracefully', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: -1101532, // Negative duration (bug scenario)
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: -1101532, // Negative duration (bug scenario)
       })
 
       // Should display "Unknown" or translation key instead of negative time
@@ -69,13 +77,9 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should handle null duration', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: null,
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: null,
       })
 
       // Should display "Unknown" for null duration
@@ -84,13 +88,9 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should handle undefined duration', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: undefined,
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: undefined,
       })
 
       // Should display "Unknown" for undefined duration
@@ -99,28 +99,20 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should display "< 1 min" for very short workouts (< 60 seconds)', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: 45, // 45 seconds
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: 45, // 45 seconds
       })
 
-      // Should show "< 1 min" or translation
+      // Should show "< 1 min" or translation key
       const text = wrapper.text()
       expect(text).toMatch(/< 1|workout\.history\.card\.durationLessThanMinute/)
     })
 
     it('should handle zero duration', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: 0,
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: 0,
       })
 
       // Should show 0 minutes
@@ -129,13 +121,9 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should format 2 hours correctly', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: 7200, // 2 hours exactly
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: 7200, // 2 hours exactly
       })
 
       // Should show translation key with hours=2, minutes=0
@@ -145,13 +133,9 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should format 1.5 hours correctly', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: {
-          workout: {
-            ...mockWorkout,
-            duration: 5400, // 1 hour 30 minutes
-          },
-        },
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        duration: 5400, // 1 hour 30 minutes
       })
 
       // Should show 1 hour 30 minutes
@@ -163,27 +147,21 @@ describe('WorkoutHistoryCard', () => {
 
   describe('workout data display', () => {
     it('should display formatted completion date', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: mockWorkout },
-      })
+      const wrapper = createWrapper()
 
       // Date formatting is locale-aware, so just check it renders
       expect(wrapper.find('.text-lg').exists()).toBe(true)
     })
 
     it('should display total volume with unit', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: mockWorkout },
-      })
+      const wrapper = createWrapper()
 
       // Should show volume (exact format depends on unit conversion)
       expect(wrapper.text()).toMatch(/\d+/)
     })
 
     it('should display exercise count', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: mockWorkout },
-      })
+      const wrapper = createWrapper()
 
       // Should render exercise count (2 exercises in mockWorkout)
       // Check for translation key or actual count
@@ -191,9 +169,7 @@ describe('WorkoutHistoryCard', () => {
     })
 
     it('should display total sets count', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: mockWorkout },
-      })
+      const wrapper = createWrapper()
 
       // Should render total sets (10 in mockWorkout)
       // Check for translation key or actual count
@@ -203,9 +179,7 @@ describe('WorkoutHistoryCard', () => {
 
   describe('exercise list rendering', () => {
     it('should display up to 3 exercises', () => {
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: mockWorkout },
-      })
+      const wrapper = createWrapper()
 
       expect(wrapper.text()).toContain('Bench Press')
       expect(wrapper.text()).toContain('Squat')
@@ -223,9 +197,7 @@ describe('WorkoutHistoryCard', () => {
         ],
       }
 
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: workoutWithManyExercises },
-      })
+      const wrapper = createWrapper(workoutWithManyExercises)
 
       // Should show "+2" for remaining exercises
       expect(wrapper.text()).toMatch(/\+2/)
@@ -237,9 +209,7 @@ describe('WorkoutHistoryCard', () => {
         exercises: [],
       }
 
-      const wrapper = mount(WorkoutHistoryCard, {
-        props: { workout: workoutWithNoExercises },
-      })
+      const wrapper = createWrapper(workoutWithNoExercises)
 
       // Should show 0 exercises
       expect(wrapper.text()).toMatch(/0/)

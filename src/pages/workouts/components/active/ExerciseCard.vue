@@ -3,7 +3,7 @@
     <CardHeader class="pb-3">
       <div class="flex items-center justify-between">
         <div class="flex-1">
-          <CardTitle class="text-lg">{{ exercise.exerciseName }}</CardTitle>
+          <CardTitle class="text-lg">{{ localizedExerciseName }}</CardTitle>
           <CardDescription>
             {{ setCount }}
             {{ t('workout.activeWorkout.stats.sets').toLowerCase() }}
@@ -84,8 +84,10 @@
 
 <script setup>
 import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useUnits } from '@/composables/useUnits'
+import { useExerciseStore } from '@/stores/exerciseStore'
 import {
   Card,
   CardContent,
@@ -112,8 +114,34 @@ const props = defineProps({
 
 defineEmits(['add-set', 'delete-set'])
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { formatWeight } = useUnits()
+
+const exerciseStore = useExerciseStore()
+const { allExercises } = storeToRefs(exerciseStore)
+
+/**
+ * Get localized exercise name
+ */
+const localizedExerciseName = computed(() => {
+  if (!props.exercise.exerciseId) {
+    return props.exercise.exerciseName || ''
+  }
+
+  const exerciseData = allExercises.value.find(
+    (ex) => ex.id === props.exercise.exerciseId || ex.slug === props.exercise.exerciseId
+  )
+
+  if (!exerciseData) {
+    return props.exercise.exerciseName || ''
+  }
+
+  if (typeof exerciseData.name === 'object' && exerciseData.name !== null) {
+    return exerciseData.name[locale.value] || exerciseData.name.uk || exerciseData.name.en || props.exercise.exerciseName || ''
+  }
+
+  return exerciseData.name || props.exercise.exerciseName || ''
+})
 
 const setCount = computed(() => props.exercise.sets?.length || 0)
 

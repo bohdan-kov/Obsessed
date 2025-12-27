@@ -108,7 +108,7 @@ async function handleSubmit() {
     emit('update:open', false)
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Failed to save set:', error)
+      console.error('[QuickLogSheet] Failed to save set:', error)
     }
   } finally {
     saving.value = false

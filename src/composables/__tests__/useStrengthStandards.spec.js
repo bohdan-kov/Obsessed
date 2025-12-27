@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
-import { useStrengthStandards } from '../useStrengthStandards'
+import { useStrengthStandards } from '@/composables/useStrengthStandards'
 
 // Mock userStore with reactive profile
 const mockProfile = ref({

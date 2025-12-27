@@ -1,4 +1,11 @@
 <script setup>
+/**
+ * VolumeHeatmap Component
+ *
+ * Displays a GitHub-style contribution heatmap showing daily training volume over 365 days.
+ * Uses CSS Grid layout with grid-auto-flow: column to render ~52 weeks × 7 days = ~365 cells.
+ * Adapted from the working FrequencyChart.vue pattern.
+ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
@@ -81,29 +88,43 @@ function getVolumeIntensityLevel(volume, maxVolume) {
 }
 
 /**
- * Gets the Tailwind color class for a cell based on volume
- * @param {Object} cell - Cell data from gridData
+ * Gets the Tailwind color class for a level (0-3)
+ * @param {number} level - Intensity level
  * @returns {string} Tailwind class
  */
-function getColorClass(cell) {
-  const dateStr = toLocalDateString(cell.date)
-  const volume = dailyVolumeMap.value?.[dateStr] || 0
-  const level = getVolumeIntensityLevel(volume, maxVolume.value)
-
-  // Use the same color classes as FrequencyChart
+function getColorClass(level) {
   const LEVEL_COLORS = ['bg-muted/30', 'bg-primary/30', 'bg-primary/50', 'bg-primary/80']
   return LEVEL_COLORS[level] || LEVEL_COLORS[0]
 }
 
 /**
+ * Augmented grid data with volume-specific color classes
+ * Enriches the base gridData from useContributionHeatmap with volume-based colors
+ */
+const volumeGridData = computed(() => {
+  return gridData.value.map((week) =>
+    week.map((cell) => {
+      const dateStr = toLocalDateString(cell.date)
+      const volume = dailyVolumeMap.value?.[dateStr] || 0
+      const level = getVolumeIntensityLevel(volume, maxVolume.value)
+
+      return {
+        ...cell,
+        volume,
+        colorClass: getColorClass(level),
+      }
+    })
+  )
+})
+
+/**
  * Format tooltip text for a cell
- * @param {Object} cell - Cell data
+ * @param {Object} cell - Cell data with volume property
  * @returns {string} Tooltip text
  */
 function formatTooltipText(cell) {
   const dateFormatted = formatDate(cell.date, locale.value)
-  const dateStr = toLocalDateString(cell.date)
-  const volume = dailyVolumeMap.value?.[dateStr] || 0
+  const volume = cell.volume || 0
 
   if (volume === 0) {
     return `${dateFormatted}\n${t('analytics.volume.heatmap.noWorkout')}`
@@ -210,7 +231,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card>
+  <Card data-testid="volume-heatmap">
     <CardHeader>
       <CardTitle>{{ t('analytics.volume.heatmap.title') }}</CardTitle>
       <CardDescription>
@@ -237,7 +258,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Heatmap Grid -->
-      <div v-else class="contribution-heatmap">
+      <div v-else class="contribution-heatmap heatmap-entrance">
         <!-- Month Labels Row -->
         <div class="month-labels-row">
           <div class="day-label-spacer"></div>
@@ -259,20 +280,24 @@ onUnmounted(() => {
         <div ref="heatmapContainerRef" class="heatmap-container">
           <!-- Day Labels Column -->
           <div class="day-labels">
-            <span v-for="(label, index) in dayLabels" :key="index" class="day-label">
+            <span
+              v-for="(label, index) in dayLabels"
+              :key="index"
+              class="day-label"
+            >
               {{ label }}
             </span>
           </div>
 
           <!-- Weeks Grid: 2D grid with cells as direct children -->
           <div class="weeks-grid" :style="gridColumnsStyle">
-            <template v-for="(week, weekIndex) in gridData" :key="weekIndex">
+            <template v-for="(week, weekIndex) in volumeGridData" :key="weekIndex">
               <div
                 v-for="(cell, dayIndex) in week"
                 :key="`${weekIndex}-${dayIndex}`"
                 :class="[
                   'day-cell',
-                  getColorClass(cell),
+                  cell.colorClass,
                   {
                     'is-today': cell.isToday,
                     'is-out-of-period': !cell.isInPeriod,
@@ -297,15 +322,9 @@ onUnmounted(() => {
           </span>
           <div class="legend-colors">
             <div
-              v-for="level in legendLevels"
+              v-for="(level, index) in legendLevels"
               :key="level"
-              :class="['legend-cell', 'bg-muted/30']"
-              :style="{
-                background:
-                  level === 0
-                    ? undefined
-                    : `hsl(var(--primary) / ${0.3 + level * 0.166})`,
-              }"
+              :class="['legend-cell', getColorClass(level)]"
             />
           </div>
           <span class="text-xs text-muted-foreground">
@@ -317,7 +336,7 @@ onUnmounted(() => {
         <Teleport to="body">
           <div
             v-if="showTooltip && activeCell"
-            class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full"
+            class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200"
             :style="{
               left: `${tooltipPosition.x}px`,
               top: `${tooltipPosition.y}px`,
@@ -345,6 +364,22 @@ onUnmounted(() => {
   min-width: 0; /* Allow shrinking */
   overflow: hidden; /* Establish scroll container context */
   width: 100%; /* Ensure full width usage */
+}
+
+/* Entrance animation - matches EmptyState pattern but faster */
+.heatmap-entrance {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Month Labels */
@@ -429,22 +464,61 @@ onUnmounted(() => {
   aspect-ratio: 1 / 1; /* Ensure cells stay square */
   border-radius: 0.125rem;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  /* Subtle stagger: Fast cascade effect (20ms per cell max) */
+  animation: cellFadeIn 0.3s ease-out backwards;
+}
+
+/* Very fast stagger based on grid position (column-major order) */
+/* This creates a subtle cascade from top-left to bottom-right */
+.day-cell:nth-child(1) { animation-delay: 0ms; }
+.day-cell:nth-child(2) { animation-delay: 2ms; }
+.day-cell:nth-child(3) { animation-delay: 4ms; }
+.day-cell:nth-child(4) { animation-delay: 6ms; }
+.day-cell:nth-child(5) { animation-delay: 8ms; }
+.day-cell:nth-child(6) { animation-delay: 10ms; }
+.day-cell:nth-child(7) { animation-delay: 12ms; }
+.day-cell:nth-child(n+8) { animation-delay: 14ms; } /* Cap at 14ms for rest */
+
+@keyframes cellFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .day-cell:hover,
 .day-cell:focus {
-  transform: scale(1.15);
+  transform: scale(1.2);
   outline: none;
-  ring: 2px;
-  ring-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3),
+              0 4px 8px -2px hsl(var(--primary) / 0.2);
+  z-index: 10;
+  border-color: hsl(var(--primary) / 0.4);
 }
 
 .day-cell.is-today {
   border-color: hsl(var(--primary));
-  ring: 1px;
-  ring-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary)),
+              0 0 12px -2px hsl(var(--primary) / 0.5);
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Subtle pulse animation for "today" cell */
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 1px hsl(var(--primary)),
+                0 0 12px -2px hsl(var(--primary) / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 1px hsl(var(--primary)),
+                0 0 16px -2px hsl(var(--primary) / 0.7);
+  }
 }
 
 /* Phase 2: Out-of-period cells shown with low opacity */
@@ -456,7 +530,8 @@ onUnmounted(() => {
 .day-cell.is-out-of-period:hover,
 .day-cell.is-out-of-period:focus {
   transform: none;
-  ring: none;
+  box-shadow: none;
+  border-color: transparent;
 }
 
 /* Legend */
@@ -468,6 +543,8 @@ onUnmounted(() => {
   padding-top: 0.75rem;
   border-top: 1px solid hsl(var(--border));
   margin-top: 0.5rem;
+  /* Subtle delayed entrance */
+  animation: fadeIn 0.3s ease-out 0.15s backwards;
 }
 
 .legend-colors {
@@ -481,6 +558,13 @@ onUnmounted(() => {
   aspect-ratio: 1 / 1; /* Ensure legend cells stay square */
   border-radius: 0.125rem;
   border: 1px solid hsl(var(--border) / 0.3);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.legend-cell:hover {
+  transform: scale(1.15);
+  border-color: hsl(var(--border));
+  box-shadow: 0 2px 4px -1px hsl(var(--primary) / 0.15);
 }
 
 /* Mobile Responsive */
@@ -517,6 +601,38 @@ onUnmounted(() => {
 
   .day-label {
     font-size: 0.625rem;
+  }
+
+  .day-cell:hover,
+  .day-cell:focus {
+    transform: scale(1.3); /* Larger touch target feedback */
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable entrance animations */
+  .heatmap-entrance,
+  .day-cell,
+  .legend {
+    animation: none !important;
+  }
+
+  /* Disable transitions but keep basic interactivity */
+  .day-cell,
+  .legend-cell {
+    transition: opacity 100ms ease;
+  }
+
+  .day-cell.is-today {
+    animation: none;
+  }
+
+  /* Keep only essential hover feedback */
+  .day-cell:hover,
+  .day-cell:focus {
+    transform: none;
+    opacity: 0.8;
   }
 }
 </style>

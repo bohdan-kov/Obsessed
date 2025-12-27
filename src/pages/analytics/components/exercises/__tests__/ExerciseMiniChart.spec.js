@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import ExerciseMiniChart from '../ExerciseMiniChart.vue'
+import ExerciseMiniChart from '@/pages/analytics/components/exercises/ExerciseMiniChart.vue'
 
 describe('ExerciseMiniChart', () => {
   const mockHistory = [

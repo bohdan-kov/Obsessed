@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useAnalyticsPeriod, PERIOD_OPTIONS } from '../useAnalyticsPeriod'
+import { useAnalyticsPeriod, PERIOD_OPTIONS } from '@/composables/useAnalyticsPeriod'
 import { subDays } from '@/utils/dateUtils'
 
 // Mock router

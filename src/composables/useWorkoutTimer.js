@@ -71,7 +71,7 @@ export function useWorkoutTimer(startedAtRef) {
       return elapsed >= 0 ? elapsed : 0
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error calculating elapsed time:', error)
+        console.error('[useWorkoutTimer] Error calculating elapsed time:', error)
       }
       return 0
     }

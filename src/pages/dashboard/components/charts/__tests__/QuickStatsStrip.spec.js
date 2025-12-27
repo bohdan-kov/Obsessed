@@ -1,13 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import QuickStatsStrip from '@/pages/dashboard/components/charts/QuickStatsStrip.vue'
-import { useAnalyticsStore } from '@/stores/analyticsStore'
-import { useWorkoutStore } from '@/stores/workoutStore'
-import { useExerciseStore } from '@/stores/exerciseStore'
-import { useAuthStore } from '@/stores/authStore'
+import { ref } from 'vue'
 
-// Mock Firebase modules
+// Mock Firebase modules first (before any store imports)
 vi.mock('@/firebase/firestore', () => ({
   fetchCollection: vi.fn(),
   createDocument: vi.fn(),
@@ -50,43 +46,53 @@ vi.mock('lucide-vue-next', () => ({
   },
 }))
 
+// Create mock refs that can be modified per test
+let mockLongestStreak
+let mockMostActiveDay
+let mockAverageWorkoutsPerWeek
+
+// Mock the analytics store with refs that storeToRefs can destructure
+vi.mock('@/stores/analyticsStore', () => ({
+  useAnalyticsStore: () => ({
+    // storeToRefs expects the store to have reactive properties
+    longestStreak: mockLongestStreak,
+    mostActiveDay: mockMostActiveDay,
+    averageWorkoutsPerWeek: mockAverageWorkoutsPerWeek,
+  }),
+}))
+
+import QuickStatsStrip from '@/pages/dashboard/components/charts/QuickStatsStrip.vue'
+
 describe('QuickStatsStrip', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-
-    // Set up authenticated user
-    const authStore = useAuthStore()
-    vi.spyOn(authStore, 'uid', 'get').mockReturnValue('test-user-id')
-    vi.spyOn(authStore, 'isAuthenticated', 'get').mockReturnValue(true)
+    // Reset refs before each test with default values
+    mockLongestStreak = ref({ days: 0, startDate: null, endDate: null })
+    mockMostActiveDay = ref(null)
+    mockAverageWorkoutsPerWeek = ref(0)
   })
 
   /**
-   * Factory function to mount component with analytics store initialized
+   * Factory function to mount component with mocked analytics store
    */
-  function createWrapper(overrideAnalytics = {}) {
-    const analyticsStore = useAnalyticsStore()
+  function createWrapper(analyticsState = {}) {
+    // Set up Pinia
+    const pinia = createPinia()
+    setActivePinia(pinia)
 
-    // Override default analytics values
-    if (overrideAnalytics.longestStreak !== undefined) {
-      vi.spyOn(analyticsStore, 'longestStreak', 'get').mockReturnValue(
-        overrideAnalytics.longestStreak
-      )
+    // Update the refs with test-specific values
+    if (analyticsState.longestStreak !== undefined) {
+      mockLongestStreak.value = analyticsState.longestStreak
     }
-    if (overrideAnalytics.mostActiveDay !== undefined) {
-      vi.spyOn(analyticsStore, 'mostActiveDay', 'get').mockReturnValue(
-        overrideAnalytics.mostActiveDay
-      )
+    if (analyticsState.mostActiveDay !== undefined) {
+      mockMostActiveDay.value = analyticsState.mostActiveDay
     }
-    if (overrideAnalytics.averageWorkoutsPerWeek !== undefined) {
-      vi.spyOn(analyticsStore, 'averageWorkoutsPerWeek', 'get').mockReturnValue(
-        overrideAnalytics.averageWorkoutsPerWeek
-      )
+    if (analyticsState.averageWorkoutsPerWeek !== undefined) {
+      mockAverageWorkoutsPerWeek.value = analyticsState.averageWorkoutsPerWeek
     }
 
     return mount(QuickStatsStrip, {
       global: {
-        plugins: [createPinia()],
+        plugins: [pinia],
       },
     })
   }
@@ -121,7 +127,6 @@ describe('QuickStatsStrip', () => {
         longestStreak: { days: 7, startDate: '2024-01-01', endDate: '2024-01-07' },
       })
 
-      // The mock $t function returns the key, so we check for the translation key pattern
       expect(wrapper.text()).toContain('dashboard.charts.heatmap.quickStats.days')
     })
 
@@ -146,7 +151,6 @@ describe('QuickStatsStrip', () => {
         longestStreak: { days: 1, startDate: '2024-01-01', endDate: '2024-01-01' },
       })
 
-      // Should show days translation (count: 1)
       expect(wrapper.text()).toContain('dashboard.charts.heatmap.quickStats.days')
     })
   })
@@ -181,7 +185,6 @@ describe('QuickStatsStrip', () => {
         averageWorkoutsPerWeek: 2.7,
       })
 
-      // Should show perWeek translation
       expect(wrapper.text()).toContain('dashboard.charts.heatmap.quickStats.perWeek')
     })
   })
@@ -192,7 +195,6 @@ describe('QuickStatsStrip', () => {
         mostActiveDay: { dayIndex: 1, dayKey: 'mon', count: 5 },
       })
 
-      // Should show the day name via translation key
       expect(wrapper.text()).toContain('dashboard.charts.daysOfWeek.mon')
     })
 
@@ -263,7 +265,6 @@ describe('QuickStatsStrip', () => {
 
       const statItems = wrapper.findAll('.stat-item')
       statItems.forEach((item) => {
-        // Each stat item should have icon and content
         expect(item.find('.stat-icon').exists()).toBe(true)
         expect(item.find('.stat-content').exists()).toBe(true)
         expect(item.find('.stat-label').exists()).toBe(true)
@@ -282,7 +283,6 @@ describe('QuickStatsStrip', () => {
 
       const text = wrapper.text()
 
-      // All label translation keys should be present
       expect(text).toContain('dashboard.charts.heatmap.quickStats.bestStreak')
       expect(text).toContain('dashboard.charts.heatmap.quickStats.avgPerWeek')
       expect(text).toContain('dashboard.charts.heatmap.quickStats.mostActiveDay')
@@ -297,7 +297,6 @@ describe('QuickStatsStrip', () => {
 
       const text = wrapper.text()
 
-      // Should use parameterized translation keys
       expect(text).toContain('dashboard.charts.heatmap.quickStats.days')
       expect(text).toContain('dashboard.charts.heatmap.quickStats.perWeek')
     })
@@ -309,17 +308,15 @@ describe('QuickStatsStrip', () => {
         longestStreak: { days: 365, startDate: '2024-01-01', endDate: '2024-12-31' },
       })
 
-      // Should still render without errors
       expect(wrapper.find('.stats-strip').exists()).toBe(true)
       expect(wrapper.text()).toContain('dashboard.charts.heatmap.quickStats.days')
     })
 
     it('should handle very high workout frequency', () => {
       const wrapper = createWrapper({
-        averageWorkoutsPerWeek: 14.0, // 2 workouts per day
+        averageWorkoutsPerWeek: 14.0,
       })
 
-      // Should still render without errors
       expect(wrapper.find('.stats-strip').exists()).toBe(true)
       expect(wrapper.text()).toContain('dashboard.charts.heatmap.quickStats.perWeek')
     })
@@ -329,7 +326,6 @@ describe('QuickStatsStrip', () => {
         averageWorkoutsPerWeek: 3.14159,
       })
 
-      // Should render without errors (formatting handled by i18n)
       expect(wrapper.find('.stats-strip').exists()).toBe(true)
     })
   })

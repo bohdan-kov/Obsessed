@@ -296,6 +296,11 @@ export const CONFIG = {
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000, // ms
 
+    // ID generation
+    ID_RANDOM_STRING_LENGTH: 9, // Length of random string in generated IDs (after substring)
+    ID_RANDOM_BASE: 36, // Base for random string conversion (0-9, a-z)
+    ID_RANDOM_SUBSTRING_START: 2, // Start index for substring (skip '0.')
+
     // Pagination
     DEFAULT_PAGE_SIZE: 20,
   },

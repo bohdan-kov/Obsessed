@@ -10,6 +10,9 @@ vi.mock('@/firebase/firestore', () => ({
   updateDocument: vi.fn(),
   subscribeToCollection: vi.fn(),
   serverTimestamp: vi.fn(() => new Date()),
+  Timestamp: {
+    fromDate: vi.fn((date) => ({ toDate: () => date })),
+  },
   // authStore uses these:
   fetchDocument: vi.fn(),
   setDocument: vi.fn(),
@@ -848,8 +851,9 @@ describe('workoutStore', () => {
       expect(updateCall.duration).toBeGreaterThanOrEqual(3595) // Allow small timing variance
       expect(updateCall.duration).toBeLessThanOrEqual(3605)
 
-      // completedAt should be the custom date
-      expect(updateCall.completedAt).toEqual(customDate)
+      // completedAt should be a Timestamp that converts to the custom date
+      // The store uses Timestamp.fromDate() which creates a Timestamp-like object
+      expect(updateCall.completedAt.toDate().getTime()).toBeCloseTo(customDate.getTime(), -3)
 
       expect(store.error).toBeNull()
     })
@@ -1002,6 +1006,113 @@ describe('workoutStore', () => {
       store.clearError()
 
       expect(store.error).toBeNull()
+      consoleErrorSpy.mockRestore()
+    })
+  })
+
+  describe('fetchWorkout', () => {
+    it('should fetch workout by ID from Firestore', async () => {
+      const mockWorkout = {
+        id: 'workout-1',
+        userId: 'test-user-id',
+        status: 'completed',
+        exercises: [
+          {
+            exerciseId: 'ex-1',
+            exerciseName: 'Bench Press',
+            sets: [{ weight: 100, reps: 10 }],
+          },
+        ],
+        duration: 3600,
+        completedAt: new Date('2024-12-20'),
+      }
+
+      fetchDocument.mockResolvedValue(mockWorkout)
+
+      const store = useWorkoutStore()
+      const result = await store.fetchWorkout('workout-1')
+
+      expect(fetchDocument).toHaveBeenCalledWith('users/test-user-id/workouts', 'workout-1')
+      expect(result).toEqual(mockWorkout)
+      expect(store.workouts).toContainEqual(mockWorkout)
+    })
+
+    it('should return cached workout if already in store', async () => {
+      const mockWorkout = {
+        id: 'workout-1',
+        userId: 'test-user-id',
+        status: 'completed',
+        exercises: [],
+        duration: 3600,
+      }
+
+      const store = useWorkoutStore()
+
+      // Clear previous authStore fetchDocument calls
+      vi.clearAllMocks()
+
+      store.workouts.push(mockWorkout)
+
+      const result = await store.fetchWorkout('workout-1')
+
+      // fetchDocument should not be called for workout fetching
+      // (it may still be called by authStore during setup)
+      const workoutCalls = fetchDocument.mock.calls.filter(
+        call => call[0] === 'users/test-user-id/workouts'
+      )
+      expect(workoutCalls.length).toBe(0)
+      expect(result).toEqual(mockWorkout)
+    })
+
+    it('should throw error if workout not found', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      fetchDocument.mockResolvedValue(null)
+
+      const store = useWorkoutStore()
+
+      await expect(store.fetchWorkout('invalid-id')).rejects.toThrow('Workout not found')
+      consoleErrorSpy.mockRestore()
+    })
+
+    it('should throw error if user not authenticated', async () => {
+      setAuthUser(null)
+
+      const store = useWorkoutStore()
+
+      await expect(store.fetchWorkout('workout-1')).rejects.toThrow(
+        'User must be authenticated'
+      )
+    })
+
+    it('should set loading state during fetch', async () => {
+      const mockWorkout = {
+        id: 'workout-1',
+        exercises: [],
+      }
+
+      fetchDocument.mockImplementation(async () => {
+        expect(store.loading).toBe(true)
+        return mockWorkout
+      })
+
+      const store = useWorkoutStore()
+      await store.fetchWorkout('workout-1')
+
+      expect(store.loading).toBe(false)
+    })
+
+    it('should handle fetch error gracefully', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const errorMessage = 'Network error'
+
+      fetchDocument.mockRejectedValue(new Error(errorMessage))
+
+      const store = useWorkoutStore()
+
+      await expect(store.fetchWorkout('workout-1')).rejects.toThrow(errorMessage)
+      expect(store.error).toBe(errorMessage)
+      expect(store.loading).toBe(false)
+
       consoleErrorSpy.mockRestore()
     })
   })

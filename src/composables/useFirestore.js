@@ -41,7 +41,7 @@ export function useDocument(collectionName, docId) {
       },
       (err) => {
         if (import.meta.env.DEV) {
-          console.error(`Error in useDocument(${collectionName}/${id}):`, err)
+          console.error(`[useFirestore] Error in useDocument(${collectionName}/${id}):`, err)
         }
         error.value = err.message || 'Failed to load document'
         loading.value = false
@@ -111,7 +111,7 @@ export function useCollection(collectionName, options = {}) {
     },
     (err) => {
       if (import.meta.env.DEV) {
-        console.error(`Error in useCollection(${collectionName}):`, err)
+        console.error(`[useFirestore] Error in useCollection(${collectionName}):`, err)
       }
       error.value = err.message || 'Failed to load collection'
       loading.value = false
@@ -182,7 +182,7 @@ export function useDocuments(collectionName, docIds) {
         (err) => {
           if (import.meta.env.DEV) {
             console.error(
-              `Error loading document ${collectionName}/${id}:`,
+              `[useFirestore] Error loading document ${collectionName}/${id}:`,
               err
             )
           }

@@ -44,7 +44,7 @@ export function useWorkoutBackup() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(backup))
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to save workout backup:', error)
+        console.error('[useWorkoutBackup] Failed to save workout backup:', error)
       }
       // Continue - backup is nice-to-have, not critical
     }
@@ -74,7 +74,7 @@ export function useWorkoutBackup() {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to load workout backup:', error)
+        console.error('[useWorkoutBackup] Failed to load workout backup:', error)
       }
       return null
     }
@@ -88,7 +88,7 @@ export function useWorkoutBackup() {
       localStorage.removeItem(STORAGE_KEY)
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to clear workout backup:', error)
+        console.error('[useWorkoutBackup] Failed to clear workout backup:', error)
       }
     }
   }
@@ -134,7 +134,7 @@ export function useWorkoutBackup() {
       return null
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Failed to convert timestamp to ISO:', error, value)
+        console.error('[useWorkoutBackup] Failed to convert timestamp to ISO:', error, value)
       }
       return null
     }

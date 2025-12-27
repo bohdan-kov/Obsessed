@@ -177,7 +177,7 @@ onUnmounted(() => {
       <!-- Heatmap Grid -->
       <div v-else class="heatmap-with-stats">
         <!-- Left side: Heatmap grid and legend -->
-        <div class="contribution-heatmap">
+        <div class="contribution-heatmap heatmap-entrance">
           <!-- Month Labels Row -->
           <div class="month-labels-row">
             <div class="day-label-spacer"></div>
@@ -276,6 +276,22 @@ onUnmounted(() => {
 .contribution-heatmap {
   --cell-size: 0.875rem; /* 14px - Desktop default */
   --cell-gap: 0.125rem; /* 2px - Gap between cells */
+}
+
+/* Entrance animation - 300ms fade-in with subtle translateY */
+.heatmap-entrance {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Wrapper: Flexbox container for heatmap + stats sidebar */
@@ -382,22 +398,61 @@ onUnmounted(() => {
   aspect-ratio: 1 / 1; /* Ensure cells stay square */
   border-radius: 0.125rem;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  /* Ultra-fast stagger: 2-14ms per cell for snappy cascade effect */
+  animation: cellFadeIn 0.3s ease-out backwards;
+}
+
+/* Very fast stagger based on grid position (column-major order) */
+/* Creates a subtle cascade from top-left to bottom-right */
+.day-cell:nth-child(1) { animation-delay: 0ms; }
+.day-cell:nth-child(2) { animation-delay: 2ms; }
+.day-cell:nth-child(3) { animation-delay: 4ms; }
+.day-cell:nth-child(4) { animation-delay: 6ms; }
+.day-cell:nth-child(5) { animation-delay: 8ms; }
+.day-cell:nth-child(6) { animation-delay: 10ms; }
+.day-cell:nth-child(7) { animation-delay: 12ms; }
+.day-cell:nth-child(n+8) { animation-delay: 14ms; } /* Cap at 14ms for rest */
+
+@keyframes cellFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .day-cell:hover,
 .day-cell:focus {
-  transform: scale(1.15);
+  transform: scale(1.2);
   outline: none;
-  ring: 2px;
-  ring-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3),
+              0 4px 8px -2px hsl(var(--primary) / 0.2);
+  z-index: 10;
+  border-color: hsl(var(--primary) / 0.4);
 }
 
 .day-cell.is-today {
   border-color: hsl(var(--primary));
-  ring: 1px;
-  ring-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1px hsl(var(--primary)),
+              0 0 12px -2px hsl(var(--primary) / 0.5);
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Subtle pulse animation for "today" cell */
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 1px hsl(var(--primary)),
+                0 0 12px -2px hsl(var(--primary) / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 1px hsl(var(--primary)),
+                0 0 16px -2px hsl(var(--primary) / 0.7);
+  }
 }
 
 /* Phase 2: Out-of-period cells shown with low opacity */
@@ -409,7 +464,8 @@ onUnmounted(() => {
 .day-cell.is-out-of-period:hover,
 .day-cell.is-out-of-period:focus {
   transform: none;
-  ring: none;
+  box-shadow: none;
+  border-color: transparent;
 }
 
 /* Legend */
@@ -421,6 +477,8 @@ onUnmounted(() => {
   padding-top: 0.75rem;
   border-top: 1px solid hsl(var(--border));
   margin-top: 0.5rem;
+  /* Delayed entrance: Appears 150ms after heatmap */
+  animation: fadeIn 0.3s ease-out 0.15s backwards;
 }
 
 .legend-colors {
@@ -434,6 +492,13 @@ onUnmounted(() => {
   aspect-ratio: 1 / 1; /* Ensure legend cells stay square */
   border-radius: 0.125rem;
   border: 1px solid hsl(var(--border) / 0.3);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.legend-cell:hover {
+  transform: scale(1.15);
+  border-color: hsl(var(--border));
+  box-shadow: 0 2px 4px -1px hsl(var(--primary) / 0.15);
 }
 
 
@@ -488,6 +553,38 @@ onUnmounted(() => {
 
   .day-label {
     font-size: 0.625rem;
+  }
+
+  .day-cell:hover,
+  .day-cell:focus {
+    transform: scale(1.3); /* Larger touch target feedback */
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable entrance animations */
+  .heatmap-entrance,
+  .day-cell,
+  .legend {
+    animation: none !important;
+  }
+
+  /* Disable transitions but keep basic interactivity */
+  .day-cell,
+  .legend-cell {
+    transition: opacity 100ms ease;
+  }
+
+  .day-cell.is-today {
+    animation: none;
+  }
+
+  /* Keep only essential hover feedback */
+  .day-cell:hover,
+  .day-cell:focus {
+    transform: none;
+    opacity: 0.8;
   }
 }
 </style>

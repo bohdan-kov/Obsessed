@@ -85,12 +85,12 @@ import { useI18n } from 'vue-i18n'
 import { useActiveWorkout } from '@/composables/useActiveWorkout'
 import { Button } from '@/components/ui/button'
 import { Plus, Dumbbell } from 'lucide-vue-next'
-import ActiveWorkoutHeader from './ActiveWorkoutHeader.vue'
-import ExerciseCard from './ExerciseCard.vue'
+import ActiveWorkoutHeader from '@/pages/workouts/components/active/ActiveWorkoutHeader.vue'
+import ExerciseCard from '@/pages/workouts/components/active/ExerciseCard.vue'
 import QuickLogSheet from '@/components/QuickLogSheet.vue'
-import AddSetSheet from '../sheets/AddSetSheet.vue'
-import FinishWorkoutSheet from '../sheets/FinishWorkoutSheet.vue'
-import CancelWorkoutDialog from '../sheets/CancelWorkoutDialog.vue'
+import AddSetSheet from '@/pages/workouts/components/sheets/AddSetSheet.vue'
+import FinishWorkoutSheet from '@/pages/workouts/components/sheets/FinishWorkoutSheet.vue'
+import CancelWorkoutDialog from '@/pages/workouts/components/sheets/CancelWorkoutDialog.vue'
 
 const { t } = useI18n()
 const {

@@ -33,12 +33,9 @@ const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { period } = storeToRefs(analyticsStore)
 
-// Get period options from CONFIG
+// Get period options from CONFIG (all 8 options, same as Dashboard)
 const periodOptions = computed(() => {
-  // Filter to show only the most common periods in analytics view
-  return CONFIG.analytics.periods.PERIOD_OPTIONS.filter((option) =>
-    ['last7Days', 'last30Days', 'last90Days', 'allTime'].includes(option.id)
-  )
+  return CONFIG.analytics.periods.PERIOD_OPTIONS
 })
 
 // Check if a period is selected
@@ -48,9 +45,7 @@ function isPeriodSelected(periodId) {
 
 // Handle period selection
 function selectPeriod(periodId) {
-  console.log('[PeriodSelector] Selecting period:', periodId)
   analyticsStore.setPeriod(periodId)
-  console.log('[PeriodSelector] Period set, current period:', analyticsStore.period)
 }
 
 // Get translated label for a period

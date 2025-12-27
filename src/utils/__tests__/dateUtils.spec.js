@@ -367,12 +367,27 @@ describe('dateUtils', () => {
   })
 
   describe('getAllTimeRange', () => {
-    it('should return from 2020 to today', () => {
+    it('should return app launch year (2020) to today when no first workout date provided', () => {
       const { start, end } = getAllTimeRange()
-      expect(start.getDate()).toBe(1)
-      expect(start.getMonth()).toBe(0) // January
-      expect(start.getFullYear()).toBe(2020)
-      expect(end.getFullYear()).toBe(2024)
+      const appLaunchYear = new Date(2020, 0, 1) // Jan 1, 2020
+
+      // Start should be Jan 1, 2020
+      expect(start.getTime()).toBe(appLaunchYear.getTime())
+
+      // End should be today
+      const today = new Date()
+      expect(end.getFullYear()).toBe(today.getFullYear())
+      expect(end.getMonth()).toBe(today.getMonth())
+      expect(end.getDate()).toBe(today.getDate())
+    })
+
+    it('should use provided first workout date as start', () => {
+      const firstWorkout = new Date(2022, 5, 15) // June 15, 2022
+      const { start, end } = getAllTimeRange(firstWorkout)
+
+      expect(start.getFullYear()).toBe(2022)
+      expect(start.getMonth()).toBe(5)
+      expect(start.getDate()).toBe(15)
     })
   })
 

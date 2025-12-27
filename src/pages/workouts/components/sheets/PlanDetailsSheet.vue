@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Play, Edit } from 'lucide-vue-next'
-import PlanExerciseItem from '../plans/PlanExerciseItem.vue'
+import PlanExerciseItem from '@/pages/workouts/components/plans/PlanExerciseItem.vue'
 
 const { t } = useI18n()
 const { getPlan } = usePlan()

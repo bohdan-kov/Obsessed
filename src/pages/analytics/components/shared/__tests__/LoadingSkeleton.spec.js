@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import LoadingSkeleton from '../LoadingSkeleton.vue'
+import LoadingSkeleton from '@/pages/analytics/components/shared/LoadingSkeleton.vue'
 import { Skeleton } from '@/components/ui/skeleton'
 
 describe('LoadingSkeleton', () => {

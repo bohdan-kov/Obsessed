@@ -2,8 +2,10 @@ import { ref, computed, readonly } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuthStore } from './authStore'
 import { normalizeDate } from '@/utils/dateUtils'
+import { CONFIG } from '@/constants/config'
 import {
   fetchCollection,
+  fetchDocument,
   createDocument,
   updateDocument,
   subscribeToCollection,
@@ -168,7 +170,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       return workoutId
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error starting workout:', err)
+        console.error('[workoutStore] Error starting workout:', err)
       }
       error.value = err.message
       throw err
@@ -243,7 +245,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       return workoutId
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error starting workout from plan:', err)
+        console.error('[workoutStore] Error starting workout from plan:', err)
       }
       error.value = err.message
       throw err
@@ -289,7 +291,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error adding exercise:', err)
+        console.error('[workoutStore] Error adding exercise:', err)
       }
       error.value = err.message
       throw err
@@ -383,7 +385,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error adding set:', err)
+        console.error('[workoutStore] Error adding set:', err)
       }
       error.value = err.message
       throw err
@@ -473,7 +475,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
 
       if (import.meta.env.DEV) {
-        console.error('Error deleting exercise:', err)
+        console.error('[workoutStore] Error deleting exercise:', err)
       }
       error.value = err.message
       throw err
@@ -538,7 +540,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error duplicating exercise:', err)
+        console.error('[workoutStore] Error duplicating exercise:', err)
       }
       error.value = err.message
       throw err
@@ -638,7 +640,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
 
       if (import.meta.env.DEV) {
-        console.error('Error deleting exercises:', err)
+        console.error('[workoutStore] Error deleting exercises:', err)
       }
       error.value = err.message
       throw err
@@ -674,7 +676,7 @@ export const useWorkoutStore = defineStore('workout', () => {
           // Create duplicate with only defined fields to avoid Firestore errors
           // Firestore's updateDoc() does not accept undefined values
           const duplicate = {
-            exerciseId: `${exercise.exerciseId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            exerciseId: `${exercise.exerciseId}_${Date.now()}_${Math.random().toString(CONFIG.firebase.ID_RANDOM_BASE).substring(CONFIG.firebase.ID_RANDOM_SUBSTRING_START, CONFIG.firebase.ID_RANDOM_SUBSTRING_START + CONFIG.firebase.ID_RANDOM_STRING_LENGTH)}`,
             exerciseName: exercise.exerciseName,
             sets: [], // Empty sets (template pattern)
             notes: '',
@@ -719,7 +721,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
 
       if (import.meta.env.DEV) {
-        console.error('Error duplicating exercises:', err)
+        console.error('[workoutStore] Error duplicating exercises:', err)
       }
       error.value = err.message
       throw err
@@ -770,7 +772,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error updating exercise:', err)
+        console.error('[workoutStore] Error updating exercise:', err)
       }
       error.value = err.message
       throw err
@@ -854,7 +856,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error finishing workout:', err)
+        console.error('[workoutStore] Error finishing workout:', err)
       }
       error.value = err.message
       throw err
@@ -904,7 +906,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       workouts.value = fetchedWorkouts
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error fetching workouts:', err)
+        console.error('[workoutStore] Error fetching workouts:', err)
       }
       error.value = err.message
       throw err
@@ -942,7 +944,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       },
       (err) => {
         if (import.meta.env.DEV) {
-          console.error('Error in active workout subscription:', err)
+          console.error('[workoutStore] Error in active workout subscription:', err)
         }
         error.value = err.message
       }
@@ -995,7 +997,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       },
       (err) => {
         if (import.meta.env.DEV) {
-          console.error('Error in workouts subscription:', err)
+          console.error('[workoutStore] Error in workouts subscription:', err)
         }
         error.value = err.message
       }
@@ -1117,6 +1119,49 @@ export const useWorkoutStore = defineStore('workout', () => {
   }
 
   /**
+   * Fetch a single workout by ID
+   * @param {string} workoutId - Workout ID to fetch
+   * @returns {Promise<Workout>} Workout object
+   * @throws {Error} If workout not found or fetch fails
+   */
+  async function fetchWorkout(workoutId) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated')
+    }
+
+    // Check if workout already exists in store
+    const existingWorkout = workouts.value.find((w) => w.id === workoutId)
+    if (existingWorkout) {
+      return existingWorkout
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const workoutPath = `users/${authStore.uid}/workouts`
+      const workout = await fetchDocument(workoutPath, workoutId)
+
+      if (!workout) {
+        throw new Error('Workout not found')
+      }
+
+      // Add to workouts array (cache it)
+      workouts.value.push(workout)
+
+      return workout
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('[workoutStore] Error fetching workout:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Clear all workout data and unsubscribe from real-time updates
    * Should be called on logout
    */
@@ -1171,6 +1216,7 @@ export const useWorkoutStore = defineStore('workout', () => {
     finishWorkout,
     updateWorkout,
     fetchWorkouts,
+    fetchWorkout,
     subscribeToActive,
     subscribeToWorkouts,
     unsubscribe,

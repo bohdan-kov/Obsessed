@@ -102,11 +102,18 @@ describe('useContributionHeatmap', () => {
       const allCells = gridData.flat()
 
       // Check that each date is exactly 1 day after the previous
+      // Use date-only comparison to avoid DST (Daylight Saving Time) issues
+      // where days can be 23 or 25 hours due to time changes
       for (let i = 1; i < allCells.length; i++) {
         const prevDate = allCells[i - 1].date
         const currDate = allCells[i].date
-        const diffInMs = currDate - prevDate
-        const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+
+        // Compare using date strings (YYYY-MM-DD) to avoid DST issues
+        const prevDay = new Date(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate())
+        const currDay = new Date(currDate.getFullYear(), currDate.getMonth(), currDate.getDate())
+
+        // Calculate difference in days using UTC to avoid DST issues
+        const diffInDays = Math.round((currDay - prevDay) / (1000 * 60 * 60 * 24))
 
         expect(diffInDays).toBe(1)
       }
@@ -514,16 +521,20 @@ describe('useContributionHeatmap', () => {
     })
 
     it('should handle multiple workouts on the same day', () => {
+      // Create a date at the start of today to ensure all workouts fall on the same day
       const today = new Date()
+      today.setHours(0, 0, 0, 0)
 
       const workouts = []
       for (let i = 0; i < 10; i++) {
+        // Offset by hours within the same day (0-9 hours from midnight)
+        const workoutTime = new Date(today.getTime() + i * 1000 * 60 * 60)
         workouts.push({
           id: `w${i}`,
           userId: 'test-user-123',
           status: 'completed',
-          startedAt: new Date(today.getTime() + i * 1000 * 60 * 60),
-          completedAt: new Date(today.getTime() + i * 1000 * 60 * 60),
+          startedAt: workoutTime,
+          completedAt: workoutTime,
           exercises: [{ exerciseId: 'bench-press', sets: [{ weight: 100, reps: 10 }] }],
         })
       }

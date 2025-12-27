@@ -363,14 +363,21 @@ describe('authStore', () => {
         email: 'newuser@example.com',
         photoURL: 'photo.jpg',
         settings: {
-          units: 'metric',
+          defaultRestTime: 90,
+          weightUnit: 'kg',
           theme: 'system',
+          locale: 'uk',
           notifications: true,
+          autoStartTimer: true,
+          soundEnabled: true,
         },
         stats: {
           totalWorkouts: 0,
           totalSets: 0,
           totalVolume: 0,
+          totalDuration: 0,
+          currentStreak: 0,
+          longestStreak: 0,
         },
       })
     })
