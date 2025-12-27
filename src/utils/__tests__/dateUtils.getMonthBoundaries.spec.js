@@ -117,6 +117,8 @@ describe('getMonthBoundaries', () => {
   describe('Edge Cases: Year Transitions', () => {
     it('should correctly handle December to January transition', () => {
       // December 31, 2024 (Tuesday) to January 1, 2025 (Wednesday)
+      // Range: Dec 30 (Mon) - Jan 5 (Sun) = 1 week
+      // Only Jan 1 is in this range (Dec 1 is not), so only January boundary expected
       const rangeStart = new Date(2024, 11, 30) // Dec 30, 2024 (Monday)
       const rangeEnd = new Date(2025, 0, 5) // Jan 5, 2025 (Sunday)
 
@@ -125,15 +127,14 @@ describe('getMonthBoundaries', () => {
 
       const boundaries = getMonthBoundaries(gridStart, gridEnd)
 
-      // Should have boundaries for both December 2024 and January 2025
-      const decBoundary = boundaries.find((b) => b.month === 11 && b.year === 2024)
+      // Only January 2025 should have a boundary (Dec 1 is not in range)
       const janBoundary = boundaries.find((b) => b.month === 0 && b.year === 2025)
 
-      expect(decBoundary).toBeDefined()
       expect(janBoundary).toBeDefined()
+      expect(janBoundary.firstWeek).toBe(0) // Jan 1 is in week 0
 
-      // January should come after December in week indices
-      expect(janBoundary.firstWeek).toBeGreaterThan(decBoundary.firstWeek)
+      // Should only have 1 boundary (December's 1st is not in this range)
+      expect(boundaries).toHaveLength(1)
     })
 
     it('should correctly handle year boundaries with multi-week range', () => {
@@ -219,6 +220,7 @@ describe('getMonthBoundaries', () => {
 
     it('should correctly transition from Feb 28 to Mar 1 in non-leap year', () => {
       // Non-leap year: Feb ends on 28th
+      // Range Feb 20 - Mar 10 does not contain Feb 1, only Mar 1
       const rangeStart = new Date(2023, 1, 20) // Feb 20, 2023
       const rangeEnd = new Date(2023, 2, 10) // Mar 10, 2023
 
@@ -227,16 +229,16 @@ describe('getMonthBoundaries', () => {
 
       const boundaries = getMonthBoundaries(gridStart, gridEnd)
 
-      const febBoundary = boundaries.find((b) => b.month === 1 && b.year === 2023)
+      // Only March should have a boundary (Feb 1 is not in this range)
       const marBoundary = boundaries.find((b) => b.month === 2 && b.year === 2023)
 
-      expect(febBoundary).toBeDefined()
       expect(marBoundary).toBeDefined()
-      expect(marBoundary.firstWeek).toBeGreaterThan(febBoundary.firstWeek)
+      expect(boundaries).toHaveLength(1)
     })
 
     it('should correctly transition from Feb 29 to Mar 1 in leap year', () => {
       // Leap year: Feb has 29 days
+      // Range Feb 20 - Mar 10 does not contain Feb 1, only Mar 1
       const rangeStart = new Date(2024, 1, 20) // Feb 20, 2024
       const rangeEnd = new Date(2024, 2, 10) // Mar 10, 2024
 
@@ -245,17 +247,16 @@ describe('getMonthBoundaries', () => {
 
       const boundaries = getMonthBoundaries(gridStart, gridEnd)
 
-      const febBoundary = boundaries.find((b) => b.month === 1 && b.year === 2024)
+      // Only March should have a boundary (Feb 1 is not in this range)
       const marBoundary = boundaries.find((b) => b.month === 2 && b.year === 2024)
 
-      expect(febBoundary).toBeDefined()
       expect(marBoundary).toBeDefined()
-      expect(marBoundary.firstWeek).toBeGreaterThan(febBoundary.firstWeek)
+      expect(boundaries).toHaveLength(1)
     })
   })
 
   describe('Edge Cases: Invalid Inputs', () => {
-    it('should handle single-day range', () => {
+    it('should return empty array for single-day range without month start', () => {
       const singleDay = new Date(2025, 5, 15) // Jun 15, 2025
 
       const gridStart = getFirstMondayOnOrBefore(singleDay)
@@ -263,23 +264,23 @@ describe('getMonthBoundaries', () => {
 
       const boundaries = getMonthBoundaries(gridStart, gridEnd)
 
-      // Should have at least one month boundary
-      expect(boundaries.length).toBeGreaterThanOrEqual(1)
-
-      const junBoundary = boundaries.find((b) => b.month === 5 && b.year === 2025)
-      expect(junBoundary).toBeDefined()
+      // Jun 15 week doesn't contain Jun 1, so no boundaries expected
+      // (Jun 1, 2025 is Sunday, so the week Jun 9-15 doesn't contain it)
+      // The function only returns months whose 1st is in the grid
+      expect(boundaries.length).toBe(0)
     })
 
-    it('should handle same start and end date', () => {
+    it('should return empty array for same start and end date without month start', () => {
       const date = new Date(2025, 3, 20) // Apr 20, 2025
 
       const boundaries = getMonthBoundaries(date, date)
 
-      // Should have at least one month boundary
-      expect(boundaries.length).toBeGreaterThanOrEqual(1)
+      // Apr 20 doesn't contain Apr 1, so no boundaries
+      // The function only returns months whose 1st is in the grid
+      expect(boundaries.length).toBe(0)
     })
 
-    it('should handle very short ranges within same week', () => {
+    it('should return empty array for very short ranges without month start', () => {
       const rangeStart = new Date(2025, 6, 7) // Jul 7, 2025 (Monday)
       const rangeEnd = new Date(2025, 6, 8) // Jul 8, 2025 (Tuesday)
 
@@ -288,7 +289,8 @@ describe('getMonthBoundaries', () => {
 
       const boundaries = getMonthBoundaries(gridStart, gridEnd)
 
-      expect(boundaries.length).toBeGreaterThanOrEqual(1)
+      // Jul 7-8 week doesn't contain Jul 1, so no boundaries
+      expect(boundaries.length).toBe(0)
     })
   })
 
@@ -355,8 +357,8 @@ describe('getMonthBoundaries', () => {
       expect(boundaries.length).toBeGreaterThanOrEqual(1)
     })
 
-    it('should normalize dates to start of day', () => {
-      // Dates with time components should be normalized
+    it('should handle dates with time components', () => {
+      // Dates with time components - range Apr 15-20 doesn't contain Apr 1
       const rangeStart = new Date(2025, 3, 15, 14, 30, 45)
       const rangeEnd = new Date(2025, 3, 20, 18, 15, 30)
 
@@ -365,8 +367,9 @@ describe('getMonthBoundaries', () => {
 
       const boundaries = getMonthBoundaries(gridStart, gridEnd)
 
-      // Should still work correctly despite time components
-      expect(boundaries.length).toBeGreaterThanOrEqual(1)
+      // Apr 14-20 week doesn't contain Apr 1
+      // The function only returns months whose 1st is in the grid
+      expect(boundaries.length).toBe(0)
     })
   })
 })

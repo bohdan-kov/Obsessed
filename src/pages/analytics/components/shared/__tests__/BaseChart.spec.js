@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import BaseChart from '../BaseChart.vue'
-import LoadingSkeleton from '../LoadingSkeleton.vue'
-import EmptyState from '../EmptyState.vue'
+import BaseChart from '@/pages/analytics/components/shared/BaseChart.vue'
+import LoadingSkeleton from '@/pages/analytics/components/shared/LoadingSkeleton.vue'
+import EmptyState from '@/pages/analytics/components/shared/EmptyState.vue'
 
 describe('BaseChart', () => {
   let wrapper

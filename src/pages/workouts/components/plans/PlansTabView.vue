@@ -6,11 +6,11 @@ import { usePlan } from '@/composables/usePlan'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-vue-next'
-import EmptyPlansState from './EmptyPlansState.vue'
-import PlanCard from './PlanCard.vue'
-import DeletePlanDialog from '../sheets/DeletePlanDialog.vue'
-import PlanFormSheet from '../sheets/PlanFormSheet.vue'
-import PlanDetailsSheet from '../sheets/PlanDetailsSheet.vue'
+import EmptyPlansState from '@/pages/workouts/components/plans/EmptyPlansState.vue'
+import PlanCard from '@/pages/workouts/components/plans/PlanCard.vue'
+import DeletePlanDialog from '@/pages/workouts/components/sheets/DeletePlanDialog.vue'
+import PlanFormSheet from '@/pages/workouts/components/sheets/PlanFormSheet.vue'
+import PlanDetailsSheet from '@/pages/workouts/components/sheets/PlanDetailsSheet.vue'
 
 const { t } = useI18n()
 const route = useRoute()

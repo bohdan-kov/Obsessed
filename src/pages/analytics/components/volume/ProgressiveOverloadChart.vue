@@ -2,87 +2,63 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { VisAxis, VisGroupedBar, VisXYContainer } from '@unovis/vue'
+import { TrendingUp, TrendingDown, Minus } from 'lucide-vue-next'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartCrosshair,
+  ChartTooltip,
+  ChartTooltipContent,
+  componentToString,
+} from '@/components/ui/chart'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useUnits } from '@/composables/useUnits'
-import BaseChart from '../shared/BaseChart.vue'
-import { STATUS_COLORS } from '@/utils/chartUtils'
 
 const { t } = useI18n()
+const analyticsStore = useAnalyticsStore()
+const { weeklyVolumeProgression, progressiveOverloadStats } = storeToRefs(analyticsStore)
 const { formatWeight } = useUnits()
 
-const analyticsStore = useAnalyticsStore()
-const { weeklyVolumeProgression, progressiveOverloadStats, loading } = storeToRefs(analyticsStore)
+// Status colors matching the existing STATUS_COLORS pattern
+const STATUS_COLORS = {
+  progressing: 'hsl(142, 71%, 45%)', // Green
+  maintaining: 'hsl(43, 96%, 56%)', // Amber
+  regressing: 'hsl(0, 84%, 60%)', // Red
+}
 
-// SVG dimensions
-const CHART_WIDTH = 800
-const CHART_HEIGHT = 350
-const PADDING = { top: 20, right: 20, bottom: 80, left: 60 }
-
-const chartWidth = CHART_WIDTH - PADDING.left - PADDING.right
-const chartHeight = CHART_HEIGHT - PADDING.top - PADDING.bottom
-
-// Find max volume for scaling
-const maxVolume = computed(() => {
-  if (!weeklyVolumeProgression.value?.length) return 0
-  return Math.max(...weeklyVolumeProgression.value.map((w) => w.volume))
-})
-
-// Bar width based on number of weeks
-const barWidth = computed(() => {
-  if (!weeklyVolumeProgression.value?.length) return 0
-  const spacing = 8
-  const totalSpacing = (weeklyVolumeProgression.value.length - 1) * spacing
-  return Math.min(60, (chartWidth - totalSpacing) / weeklyVolumeProgression.value.length)
-})
-
-// Generate bars
-const bars = computed(() => {
+// Transform weekly volume data to chart-compatible format
+// We'll use week index as x-axis since weeks are strings like "Jan 1-7"
+const chartData = computed(() => {
   if (!weeklyVolumeProgression.value?.length) return []
-
-  const spacing = 8
-  const effectiveBarWidth = barWidth.value
-
-  return weeklyVolumeProgression.value.map((week, index) => {
-    const x = PADDING.left + index * (effectiveBarWidth + spacing)
-    const barHeight = (week.volume / (maxVolume.value || 1)) * chartHeight
-    const y = PADDING.top + chartHeight - barHeight
-
-    return {
-      x,
-      y,
-      width: effectiveBarWidth,
-      height: barHeight,
-      color: STATUS_COLORS[week.status] || STATUS_COLORS.maintaining,
-      data: week,
-    }
-  })
-})
-
-// Y-axis labels
-const yAxisLabels = computed(() => {
-  const labels = []
-  const steps = 5
-  for (let i = 0; i <= steps; i++) {
-    const value = (maxVolume.value / steps) * i
-    const y = PADDING.top + chartHeight - (i / steps) * chartHeight
-    labels.push({ value: Math.round(value), y })
-  }
-  return labels.reverse()
-})
-
-// X-axis labels (show all week labels but rotate on mobile)
-const xAxisLabels = computed(() => {
-  if (!weeklyVolumeProgression.value?.length) return []
-
-  const effectiveBarWidth = barWidth.value
-  const spacing = 8
 
   return weeklyVolumeProgression.value.map((week, index) => ({
-    label: week.week, // Fixed: property name is 'week' not 'weekLabel'
-    x: PADDING.left + index * (effectiveBarWidth + spacing) + effectiveBarWidth / 2,
-    index,
+    weekIndex: index,
+    weekLabel: week.week,
+    volume: week.volume,
+    change: week.change,
+    status: week.status,
   }))
 })
+
+// Chart configuration for shadcn charts
+const chartConfig = {
+  volume: {
+    label: t('common.volume'),
+    color: 'var(--chart-1)',
+  },
+}
+
+// Get color based on status
+const getBarColor = (datum) => {
+  return STATUS_COLORS[datum.status] || STATUS_COLORS.maintaining
+}
 
 // Status label translation
 function getStatusLabel(status) {
@@ -93,20 +69,25 @@ function getStatusLabel(status) {
 const isEmpty = computed(() => {
   return !weeklyVolumeProgression.value || weeklyVolumeProgression.value.length === 0
 })
+
+// Y domain - dynamic based on max volume
+const yDomain = computed(() => {
+  if (!chartData.value.length) return [0, 100]
+  const maxVolume = Math.max(...chartData.value.map((d) => d.volume), 100)
+  return [0, maxVolume * 1.1]
+})
 </script>
 
 <template>
-  <BaseChart
-    :title="t('analytics.volume.progressiveOverload.title')"
-    :description="t('analytics.volume.progressiveOverload.description')"
-    :data="weeklyVolumeProgression"
-    :loading="loading"
-    empty-icon="trending-up"
-    height="550px"
-  >
-    <template #header>
+  <Card data-testid="progressive-overload-chart">
+    <CardHeader>
+      <CardTitle>{{ t('analytics.volume.progressiveOverload.title') }}</CardTitle>
+      <CardDescription>
+        {{ t('analytics.volume.progressiveOverload.description') }}
+      </CardDescription>
+
       <!-- Stats Panel -->
-      <div v-if="progressiveOverloadStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+      <div v-if="progressiveOverloadStats && !isEmpty" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
         <!-- Weeks Progressing -->
         <div class="rounded-lg border bg-card p-3">
           <div class="text-xs text-muted-foreground">
@@ -169,166 +150,106 @@ const isEmpty = computed(() => {
           </div>
         </div>
       </div>
-    </template>
+    </CardHeader>
 
-    <template #default>
-      <div class="w-full overflow-x-auto">
-        <svg
-          :viewBox="`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`"
-          class="w-full min-w-[600px] h-auto"
-          role="img"
-          :aria-label="t('analytics.volume.progressiveOverload.title')"
-        >
-          <!-- Y-axis -->
-          <g class="y-axis">
-            <line
-              :x1="PADDING.left"
-              :y1="PADDING.top"
-              :x2="PADDING.left"
-              :y2="PADDING.top + chartHeight"
-              stroke="currentColor"
-              stroke-opacity="0.2"
-              stroke-width="1"
-            />
-
-            <!-- Y-axis labels -->
-            <g v-for="label in yAxisLabels" :key="label.value">
-              <line
-                :x1="PADDING.left"
-                :y1="label.y"
-                :x2="PADDING.left + chartWidth"
-                :y2="label.y"
-                stroke="currentColor"
-                stroke-opacity="0.1"
-                stroke-width="1"
-                stroke-dasharray="4,4"
+    <CardContent v-if="!isEmpty">
+      <ChartContainer :config="chartConfig" class="w-full">
+        <!-- Chart visualization -->
+        <div class="aspect-auto h-[350px] w-full overflow-x-auto">
+          <div class="min-w-[600px] h-full">
+            <VisXYContainer
+              :data="chartData"
+              :margin="{ left: 10, right: 40, top: 20, bottom: 60 }"
+              :y-domain="yDomain"
+            >
+              <!-- Bar Chart -->
+              <VisGroupedBar
+                :x="(d) => d.weekIndex"
+                :y="(d) => d.volume"
+                :color="getBarColor"
+                :rounded-corners="4"
               />
-              <text
-                :x="PADDING.left - 10"
-                :y="label.y"
-                text-anchor="end"
-                dominant-baseline="middle"
-                class="text-[10px] fill-muted-foreground"
-              >
-                {{ label.value }}
-              </text>
-            </g>
 
-            <!-- Y-axis label -->
-            <text
-              :x="15"
-              :y="PADDING.top + chartHeight / 2"
-              text-anchor="middle"
-              class="text-[11px] font-medium fill-muted-foreground"
-              transform="rotate(-90 15 175)"
-            >
-              {{ t('common.volume') }} ({{ t('common.kg') }})
-            </text>
-          </g>
+              <!-- X-Axis with week labels -->
+              <VisAxis
+                type="x"
+                :x="(d) => d.weekIndex"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :num-ticks="6"
+                :tick-format="(index) => {
+                  const dataPoint = chartData[Math.round(index)]
+                  return dataPoint?.weekLabel || ''
+                }"
+              />
 
-          <!-- X-axis -->
-          <g class="x-axis">
-            <line
-              :x1="PADDING.left"
-              :y1="PADDING.top + chartHeight"
-              :x2="PADDING.left + chartWidth"
-              :y2="PADDING.top + chartHeight"
-              stroke="currentColor"
-              stroke-opacity="0.2"
-              stroke-width="1"
-            />
+              <!-- Y-Axis with volume labels -->
+              <VisAxis
+                type="y"
+                :num-ticks="5"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :tick-format="(value) => Math.round(value).toString()"
+              />
 
-            <!-- X-axis labels -->
-            <g v-for="label in xAxisLabels" :key="label.index">
-              <text
-                :x="label.x"
-                :y="PADDING.top + chartHeight + 15"
-                text-anchor="middle"
-                class="text-[9px] fill-muted-foreground"
-                :transform="`rotate(-45 ${label.x} ${PADDING.top + chartHeight + 15})`"
-              >
-                {{ label.label }}
-              </text>
-            </g>
-
-            <!-- X-axis label -->
-            <text
-              :x="PADDING.left + chartWidth / 2"
-              :y="CHART_HEIGHT - 10"
-              text-anchor="middle"
-              class="text-[11px] font-medium fill-muted-foreground"
-            >
-              {{ t('common.week') }}
-            </text>
-          </g>
-
-          <!-- Bars -->
-          <g class="bars">
-            <g v-for="(bar, index) in bars" :key="index">
-              <!-- Bar -->
-              <rect
-                :x="bar.x"
-                :y="bar.y"
-                :width="bar.width"
-                :height="bar.height"
-                :fill="bar.color"
-                opacity="0.8"
-                rx="2"
-                class="transition-all duration-200 hover:opacity-100 cursor-pointer"
-              >
-                <title>
-                  {{ bar.data.week }}: {{ formatWeight(bar.data.volume) }} ({{
-                    bar.data.change >= 0 ? '+' : ''
-                  }}{{ bar.data.change.toFixed(1) }}%)
-                </title>
-              </rect>
-
-              <!-- Percentage label (show for larger bars) -->
-              <text
-                v-if="bar.height > 30"
-                :x="bar.x + bar.width / 2"
-                :y="bar.y + 15"
-                text-anchor="middle"
-                class="text-[10px] font-semibold fill-white pointer-events-none"
-              >
-                {{ bar.data.change >= 0 ? '+' : '' }}{{ bar.data.change.toFixed(1) }}%
-              </text>
-            </g>
-          </g>
-        </svg>
-      </div>
+              <ChartTooltip />
+              <ChartCrosshair
+                :template="componentToString(chartConfig, ChartTooltipContent, {
+                  indicator: 'line',
+                  labelFormatter: (index) => {
+                    const dataPoint = chartData[Math.round(index)]
+                    return dataPoint?.weekLabel || ''
+                  },
+                  valueFormatter: (value, key) => {
+                    if (key === 'volume') {
+                      return formatWeight(value, { precision: 0 })
+                    }
+                    return String(value)
+                  },
+                })"
+                :color="(d) => getBarColor(d)"
+              />
+            </VisXYContainer>
+          </div>
+        </div>
+      </ChartContainer>
 
       <!-- Legend -->
       <div
         class="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground flex-wrap"
       >
         <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded" :style="{ backgroundColor: STATUS_COLORS.progressing }" />
+          <TrendingUp class="w-4 h-4 text-green-500" />
           <span
             >{{ t('analytics.volume.progressiveOverload.statusLabels.progressing') }} (≥2.5%)</span
           >
         </div>
         <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded" :style="{ backgroundColor: STATUS_COLORS.maintaining }" />
+          <Minus class="w-4 h-4 text-amber-500" />
           <span
             >{{ t('analytics.volume.progressiveOverload.statusLabels.maintaining') }} (±2.5%)</span
           >
         </div>
         <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded" :style="{ backgroundColor: STATUS_COLORS.regressing }" />
+          <TrendingDown class="w-4 h-4 text-red-500" />
           <span
             >{{ t('analytics.volume.progressiveOverload.statusLabels.regressing') }} (≤-2.5%)</span
           >
         </div>
       </div>
-    </template>
-  </BaseChart>
-</template>
+    </CardContent>
 
-<style scoped>
-@media (max-width: 640px) {
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-</style>
+    <!-- Empty State -->
+    <CardContent v-else>
+      <div
+        class="flex flex-col items-center justify-center py-12 text-muted-foreground"
+      >
+        <TrendingUp class="w-12 h-12 mb-2 opacity-50" />
+        <p class="text-sm font-medium">{{ t('analytics.emptyStates.noData') }}</p>
+        <p class="text-xs mt-1">{{ t('analytics.emptyStates.noWorkouts') }}</p>
+      </div>
+    </CardContent>
+  </Card>
+</template>

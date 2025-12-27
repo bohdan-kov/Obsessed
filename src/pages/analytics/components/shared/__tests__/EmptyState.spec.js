@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import EmptyState from '../EmptyState.vue'
+import EmptyState from '@/pages/analytics/components/shared/EmptyState.vue'
 import { Button } from '@/components/ui/button'
 
 describe('EmptyState', () => {

@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Target, Clock, Dumbbell, TrendingUp } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
@@ -14,12 +15,19 @@ import ProgressiveOverloadChart from './components/volume/ProgressiveOverloadCha
 import ExerciseProgressTable from './components/exercises/ExerciseProgressTable.vue'
 
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const workoutStore = useWorkoutStore()
 const analyticsStore = useAnalyticsStore()
 const { handleError } = useErrorHandler()
 
-// Active tab state
-const activeTab = ref('muscles')
+// Valid tab values for validation
+const VALID_TABS = ['muscles', 'duration', 'volume', 'exercises']
+
+// Initialize active tab from URL query parameter or default to 'muscles'
+const activeTab = ref(
+  VALID_TABS.includes(route.query.tab) ? route.query.tab : 'muscles'
+)
 
 /**
  * Map analytics period to workout store fetch period
@@ -73,13 +81,24 @@ async function loadWorkoutData(force = false) {
 
 /**
  * Fetch workout data when Analytics page is accessed directly
+ * CRITICAL: Must await workout loading before rendering charts
+ * to ensure firstWorkoutDate is calculated for "All time" period
  */
 onMounted(async () => {
   // Initialize period from localStorage first
   analyticsStore.initializePeriod()
 
-  // Load workout data for the selected period
+  // CRITICAL: Load workout data before charts render
+  // This ensures completedWorkouts is populated for firstWorkoutDate calculation
   await loadWorkoutData()
+})
+
+/**
+ * Cleanup Firebase subscriptions when component is unmounted
+ * CRITICAL: Prevents memory leaks by unsubscribing from real-time listeners
+ */
+onUnmounted(() => {
+  workoutStore.unsubscribe()
 })
 
 /**
@@ -91,6 +110,33 @@ watch(
   async () => {
     // Reload workout data with new period
     await loadWorkoutData(true) // Force reload to ensure fresh data
+  }
+)
+
+/**
+ * Watch for tab changes and update URL query parameter
+ * Use router.replace() to avoid creating history entries for tab switches
+ */
+watch(activeTab, (newTab) => {
+  // Only update URL if tab actually changed to avoid unnecessary router calls
+  if (route.query.tab !== newTab) {
+    router.replace({
+      query: { ...route.query, tab: newTab }
+    })
+  }
+})
+
+/**
+ * Watch for URL query param changes (e.g., browser back/forward) and update active tab
+ * This ensures the tab state stays in sync when user uses browser navigation
+ */
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    // Validate and update active tab if URL changed
+    if (newTab && VALID_TABS.includes(newTab) && newTab !== activeTab.value) {
+      activeTab.value = newTab
+    }
   }
 )
 </script>
@@ -149,23 +195,38 @@ watch(
 
       <!-- Muscles Tab Content -->
       <TabsContent value="muscles" class="mt-6 space-y-6">
-        <MuscleVolumeChart />
+        <!-- Show loading skeleton while workouts are being fetched -->
+        <div v-if="workoutStore.loading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+        <MuscleVolumeChart v-else />
       </TabsContent>
 
       <!-- Duration Tab Content -->
       <TabsContent value="duration" class="mt-6 space-y-6">
-        <DurationTrendChart />
+        <div v-if="workoutStore.loading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+        <DurationTrendChart v-else />
       </TabsContent>
 
       <!-- Volume Tab Content -->
       <TabsContent value="volume" class="mt-6 space-y-6">
-        <VolumeHeatmap />
-        <ProgressiveOverloadChart />
+        <div v-if="workoutStore.loading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+        <template v-else>
+          <VolumeHeatmap />
+          <ProgressiveOverloadChart />
+        </template>
       </TabsContent>
 
       <!-- Exercises Tab Content -->
       <TabsContent value="exercises" class="mt-6 space-y-6">
-        <ExerciseProgressTable />
+        <div v-if="workoutStore.loading" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+        <ExerciseProgressTable v-else />
       </TabsContent>
     </Tabs>
   </div>

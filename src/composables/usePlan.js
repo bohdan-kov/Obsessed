@@ -184,7 +184,7 @@ export function usePlan() {
     } catch (error) {
       // Silently fail - not critical
       if (import.meta.env.DEV) {
-        console.error('Error recording plan usage:', error)
+        console.error('[usePlan] Error recording plan usage:', error)
       }
     }
   }

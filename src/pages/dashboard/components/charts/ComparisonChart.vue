@@ -93,12 +93,13 @@ const previousPeriodLabel = computed(() => {
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="space-y-6" :key="`comparison-chart-${period}`">
+      <div class="space-y-6 comparison-entrance" :key="`comparison-chart-${period}`">
         <!-- Each metric comparison -->
         <div
           v-for="(item, index) in comparisonData"
           :key="index"
-          class="space-y-3"
+          class="space-y-3 metric-item"
+          :style="{ animationDelay: `${index * 50}ms` }"
         >
           <!-- Label and change -->
           <div class="flex justify-between items-center">
@@ -117,7 +118,7 @@ const previousPeriodLabel = computed(() => {
           <div class="flex items-center gap-3">
             <div class="flex-1 h-6 bg-muted/20 rounded-md overflow-hidden">
               <div
-                class="h-full bg-muted rounded-md transition-all"
+                class="h-full bg-muted rounded-md bar-fill"
                 :style="{
                   width: item.max > 0 ? `${(item.previous / item.max) * 100}%` : '0%',
                 }"
@@ -132,7 +133,7 @@ const previousPeriodLabel = computed(() => {
           <div class="flex items-center gap-3">
             <div class="flex-1 h-6 bg-muted/20 rounded-md overflow-hidden">
               <div
-                class="h-full bg-gradient-to-r from-primary to-primary/70 rounded-md transition-all"
+                class="h-full bg-gradient-to-r from-primary to-primary/70 rounded-md bar-fill"
                 :style="{
                   width: item.max > 0 ? `${(item.current / item.max) * 100}%` : '0%',
                 }"
@@ -148,7 +149,7 @@ const previousPeriodLabel = computed(() => {
         </div>
 
         <!-- Legend -->
-        <div class="flex gap-6 pt-4 border-t">
+        <div class="flex gap-6 pt-4 border-t legend-item">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded bg-muted" />
             <span class="text-xs text-muted-foreground">{{ previousPeriodLabel }}</span>
@@ -161,14 +162,14 @@ const previousPeriodLabel = computed(() => {
 
         <!-- Summary cards -->
         <div class="grid grid-cols-2 gap-4 pt-4">
-          <div class="p-4 rounded-lg bg-muted/20 space-y-1">
+          <div class="p-4 rounded-lg bg-muted/20 space-y-1 summary-card">
             <p class="text-xs text-muted-foreground">{{ currentPeriodLabel }}</p>
             <p class="text-2xl font-bold">
               {{ periodComparison.currentPeriod.workouts }}
             </p>
             <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.workouts') }}</p>
           </div>
-          <div class="p-4 rounded-lg bg-muted/20 space-y-1">
+          <div class="p-4 rounded-lg bg-muted/20 space-y-1 summary-card" style="animation-delay: 50ms;">
             <p class="text-xs text-muted-foreground">{{ t('dashboard.charts.volumeChange') }}</p>
             <p
               :class="[
@@ -187,3 +188,79 @@ const previousPeriodLabel = computed(() => {
     </CardContent>
   </Card>
 </template>
+
+<style scoped>
+/* Container entrance animation - 300ms fade-in */
+.comparison-entrance {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Metric items - staggered entrance with 50ms delay between items */
+.metric-item {
+  animation: itemFadeIn 0.3s ease-out backwards;
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Bar fill animation - smooth width transition */
+.bar-fill {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Legend - delayed entrance after metric items (150ms delay) */
+.legend-item {
+  animation: fadeIn 0.3s ease-out 0.15s backwards;
+}
+
+/* Summary cards - staggered entrance */
+.summary-card {
+  animation: cardFadeIn 0.3s ease-out 0.2s backwards;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Respect user's motion preferences - accessibility */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all entrance animations */
+  .comparison-entrance,
+  .metric-item,
+  .legend-item,
+  .summary-card {
+    animation: none !important;
+  }
+
+  /* Disable bar transitions but keep basic functionality */
+  .bar-fill {
+    transition: none;
+  }
+}
+</style>

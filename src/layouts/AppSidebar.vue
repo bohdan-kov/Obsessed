@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
+import { useNavigation } from '@/composables/useNavigation'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -12,22 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  LayoutDashboard,
-  Activity,
-  BarChart3,
-  Target,
-  Users,
-  Dumbbell,
-  FileText,
-  Calendar,
-  MoreHorizontal,
-  Settings,
-  HelpCircle,
-  Search,
-  PanelLeft,
-  Zap,
-} from 'lucide-vue-next'
+import { Dumbbell, PanelLeft, Zap } from 'lucide-vue-next'
 import QuickLogSheet from '@/components/QuickLogSheet.vue'
 
 // Props - allow parent to force collapse state (for responsive behavior)
@@ -38,10 +23,16 @@ const props = defineProps({
   },
 })
 
-const router = useRouter()
-const route = useRoute()
 const { t } = useI18n()
 const { displayName, email, photoURL } = useAuth()
+const {
+  mainNavItems,
+  libraryItems,
+  footerItems,
+  isActive,
+  navigateTo,
+  userInitials,
+} = useNavigation()
 
 const STORAGE_KEY = 'obsessed_sidebar_collapsed'
 const userCollapsed = ref(false) // User's manual preference
@@ -49,111 +40,6 @@ const quickLogOpen = ref(false)
 
 // Actual collapsed state: forced (tablet) or user preference
 const collapsed = computed(() => props.forceCollapsed || userCollapsed.value)
-
-// Main navigation items - computed for reactive i18n
-const mainNavItems = computed(() => [
-  {
-    name: t('common.nav.dashboard.name'),
-    route: 'Dashboard',
-    icon: LayoutDashboard,
-    description: t('common.nav.dashboard.description'),
-  },
-  {
-    name: t('common.nav.workouts.name'),
-    route: 'Workouts',
-    icon: Activity,
-    description: t('common.nav.workouts.description'),
-  },
-  {
-    name: t('common.nav.analytics.name'),
-    route: 'Analytics',
-    icon: BarChart3,
-    description: t('common.nav.analytics.description'),
-  },
-  {
-    name: t('common.nav.goals.name'),
-    route: 'Goals',
-    icon: Target,
-    description: t('common.nav.goals.description'),
-  },
-  {
-    name: t('common.nav.community.name'),
-    route: 'Community',
-    icon: Users,
-    description: t('common.nav.community.description'),
-  },
-])
-
-// Library section items - computed for reactive i18n
-const libraryItems = computed(() => [
-  {
-    name: t('common.nav.library.exercises.name'),
-    route: 'Exercises',
-    icon: Dumbbell,
-    description: t('common.nav.library.exercises.description'),
-  },
-  {
-    name: t('common.nav.library.workoutPlans.name'),
-    route: 'WorkoutPlans',
-    icon: FileText,
-    description: t('common.nav.library.workoutPlans.description'),
-  },
-  {
-    name: t('common.nav.library.schedule.name'),
-    route: 'Schedule',
-    icon: Calendar,
-    description: t('common.nav.library.schedule.description'),
-  },
-  {
-    name: t('common.nav.library.more.name'),
-    route: 'More',
-    icon: MoreHorizontal,
-    description: t('common.nav.library.more.description'),
-  },
-])
-
-// Footer navigation items - computed for reactive i18n
-const footerItems = computed(() => [
-  {
-    name: t('common.nav.settings.name'),
-    route: 'Settings',
-    icon: Settings,
-    description: t('common.nav.settings.description'),
-  },
-  {
-    name: t('common.nav.help.name'),
-    route: 'Help',
-    icon: HelpCircle,
-    description: t('common.nav.help.description'),
-  },
-  {
-    name: t('common.nav.search.name'),
-    route: 'Search',
-    icon: Search,
-    description: t('common.nav.search.description'),
-  },
-])
-
-// Get user initials for avatar fallback
-const userInitials = computed(() => {
-  if (!displayName.value) return 'OB'
-  return displayName.value
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-})
-
-// Check if route is active
-function isActive(routeName) {
-  return route.name === routeName
-}
-
-// Navigate to route
-function navigateTo(routeName) {
-  router.push({ name: routeName })
-}
 
 // Toggle sidebar collapse (only affects user preference, not forced collapse)
 function toggleCollapse() {
@@ -193,17 +79,17 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
   <TooltipProvider>
     <aside
       :class="[
-        'flex flex-col h-screen bg-[#0a0a0c] border-r border-white/[0.06] transition-all duration-200',
+        'flex flex-col h-screen bg-[#0a0a0c] border-r border-white/6 transition-all duration-200',
         collapsed ? 'w-[68px]' : 'w-[260px]',
       ]"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-3 py-5 border-b border-white/[0.06]">
+      <div class="flex items-center justify-between px-3 py-5 border-b border-white/6">
         <div v-if="!collapsed" class="flex items-center gap-2.5">
-          <div class="w-7 h-7 rounded-md bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+          <div class="w-7 h-7 rounded-md bg-linear-to-br from-red-500 to-red-600 flex items-center justify-center">
             <Dumbbell class="w-[18px] h-[18px] text-white" />
           </div>
-          <span class="text-[20px] font-bold tracking-tight bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+          <span class="text-[20px] font-bold tracking-tight bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
             Obsessed
           </span>
         </div>
@@ -215,7 +101,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
               size="icon"
               @click="toggleCollapse"
               :class="[
-                'shrink-0 h-8 w-8 border border-white/[0.08] hover:bg-white/[0.04] hover:border-white/[0.12]',
+                'shrink-0 h-8 w-8 border border-white/8 hover:bg-white/4 hover:border-white/12',
                 collapsed && 'mx-auto',
               ]"
             >
@@ -236,7 +122,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
               <Button
                 @click="quickLog"
                 :class="[
-                  'w-full gap-2 mb-6 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all',
+                  'w-full gap-2 mb-6 bg-linear-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all',
                   collapsed ? 'justify-center px-2.5 h-10' : 'justify-center px-4 h-10',
                 ]"
               >
@@ -257,7 +143,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all',
+                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all',
                     collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
                     isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
@@ -288,7 +174,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all justify-start px-3',
+                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all justify-start px-3',
                     isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
                 >
@@ -307,7 +193,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all justify-center px-2.5',
+                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all justify-center px-2.5',
                     isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
                 >
@@ -326,7 +212,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
       </ScrollArea>
 
       <!-- Footer Section -->
-      <div class="border-t border-white/[0.06]">
+      <div class="border-t border-white/6">
         <div class="px-3 py-2 space-y-0.5">
           <Tooltip v-for="item in footerItems" :key="item.route">
             <TooltipTrigger as-child>
@@ -334,7 +220,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                 variant="ghost"
                 @click="navigateTo(item.route)"
                 :class="[
-                  'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/[0.04] hover:text-white transition-all',
+                  'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all',
                   collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
                   isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                 ]"
@@ -353,16 +239,16 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
         </div>
 
         <!-- User Profile -->
-        <div class="px-3 pb-3 pt-3 border-t border-white/[0.06]">
+        <div class="px-3 pb-3 pt-3 border-t border-white/6">
           <Button
             variant="ghost"
             @click="navigateTo('Profile')"
             :class="[
-              'w-full h-auto p-3 hover:bg-white/[0.04] transition-all',
+              'w-full h-auto p-3 hover:bg-white/4 transition-all',
               collapsed ? 'justify-center' : 'justify-start gap-2.5',
             ]"
           >
-            <Avatar class="w-9 h-9 shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-orange-500">
+            <Avatar class="w-9 h-9 shrink-0 rounded-lg bg-linear-to-br from-red-500 to-orange-500">
               <AvatarImage :src="photoURL" :alt="displayName" />
               <AvatarFallback class="rounded-lg text-xs font-semibold">
                 {{ userInitials }}

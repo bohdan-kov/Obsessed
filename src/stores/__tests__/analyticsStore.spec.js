@@ -581,33 +581,29 @@ describe('analyticsStore', () => {
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock fetchExercises to populate exercises for exerciseMap
-      fetchCollection.mockImplementation((collection) => {
-        if (collection === 'exercises') {
-          return Promise.resolve([
-            { id: 'exercise-chest', name: 'Bench Press', muscleGroup: 'chest' },
-            { id: 'exercise-back', name: 'Pull-up', muscleGroup: 'back' },
-          ])
-        }
-        // For workouts collection
-        return Promise.resolve([
-          createMockWorkout({
-            status: 'completed',
-            exercises: [
-              {
-                exerciseId: 'exercise-chest',
-                sets: [{ weight: 100, reps: 10 }, { weight: 100, reps: 10 }],
-              },
-              {
-                exerciseId: 'exercise-back',
-                sets: [{ weight: 80, reps: 12 }],
-              },
-            ],
-          }),
-        ])
-      })
+      // Mock exercises getter since it's a computed property
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
+        { id: 'exercise-chest', name: 'Bench Press', muscleGroup: 'chest' },
+        { id: 'exercise-back', name: 'Pull-up', muscleGroup: 'back' },
+      ])
 
-      await exerciseStore.fetchExercises()
+      // Mock workouts collection
+      fetchCollection.mockResolvedValue([
+        createMockWorkout({
+          status: 'completed',
+          exercises: [
+            {
+              exerciseId: 'exercise-chest',
+              sets: [{ weight: 100, reps: 10 }, { weight: 100, reps: 10 }],
+            },
+            {
+              exerciseId: 'exercise-back',
+              sets: [{ weight: 80, reps: 12 }],
+            },
+          ],
+        }),
+      ])
+
       await workoutStore.fetchWorkouts('last7Days')
 
       const result = analyticsStore.muscleDistribution
@@ -623,11 +619,11 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Set up exercises array for exerciseMap to use
-      exerciseStore.exercises = [
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
         { id: 'exercise-chest', muscleGroup: 'chest' },
         { id: 'exercise-back', muscleGroup: 'back' },
         { id: 'exercise-legs', muscleGroup: 'legs' },
-      ]
+      ])
 
       const mockWorkouts = [
         createMockWorkout({
@@ -676,10 +672,11 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Set up exercises array for exerciseMap to use
-      exerciseStore.exercises = [
+      // Since exercises is a computed property, we need to spy on it
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
         { id: 'exercise-chest-1', muscleGroup: 'chest' },
         { id: 'exercise-chest-2', muscleGroup: 'chest' },
-      ]
+      ])
 
       const mockWorkouts = [
         createMockWorkout({
@@ -714,11 +711,11 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Set up exercises array for exerciseMap to use
-      exerciseStore.exercises = [
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
         { id: 'exercise-chest', muscleGroup: 'chest' },
         { id: 'exercise-legs', muscleGroup: 'legs' },
         { id: 'exercise-back', muscleGroup: 'back' },
-      ]
+      ])
 
       const mockWorkouts = [
         createMockWorkout({
@@ -750,14 +747,13 @@ describe('analyticsStore', () => {
       expect(result[2].muscle).toBe('chest')
     })
 
-    it('should handle exercises without muscleGroup', async () => {
+    it('should skip exercises without muscleGroup', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
       const exerciseStore = useExerciseStore()
 
-      // Mock exercise store to return null (exercise not found)
-      // Set up empty exercises array (exercise not found scenario)
-      exerciseStore.exercises = []
+      // Mock exercise store to return empty array (exercise not found)
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([])
 
       const mockWorkouts = [
         createMockWorkout({
@@ -776,8 +772,8 @@ describe('analyticsStore', () => {
 
       const result = analyticsStore.muscleDistribution
 
-      expect(result).toHaveLength(1)
-      expect(result[0].muscle).toBe('unknown')
+      // Exercises without muscleGroup are skipped (not counted as 'unknown')
+      expect(result).toHaveLength(0)
     })
 
     it('should filter out non-completed workouts', async () => {
@@ -786,9 +782,9 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Set up exercises array for exerciseMap to use
-      exerciseStore.exercises = [
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
         { id: 'exercise-chest', muscleGroup: 'chest' },
-      ]
+      ])
 
       const mockWorkouts = [
         createMockWorkout({
@@ -1112,10 +1108,10 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Set up exercises array for exerciseMap to use
-      exerciseStore.exercises = [
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
         { id: 'exercise-chest', muscleGroup: 'chest' },
         { id: 'exercise-back', muscleGroup: 'back' },
-      ]
+      ])
 
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
@@ -1154,10 +1150,10 @@ describe('analyticsStore', () => {
       const exerciseStore = useExerciseStore()
 
       // Set up exercises array for exerciseMap to use
-      exerciseStore.exercises = [
+      vi.spyOn(exerciseStore, 'exercises', 'get').mockReturnValue([
         { id: 'exercise-chest', muscleGroup: 'chest' },
         { id: 'exercise-legs', muscleGroup: 'legs' },
-      ]
+      ])
 
       const now = new Date()
       const threeDaysAgo = new Date(now.getTime() - 3 * 86400000)
@@ -1404,7 +1400,7 @@ describe('analyticsStore', () => {
       expect(analyticsStore.avgRpe).toBe(0)
     })
 
-    it('should only consider workouts from last 7 days', async () => {
+    it('should only consider workouts from selected period', async () => {
       const workoutStore = useWorkoutStore()
       const analyticsStore = useAnalyticsStore()
 
@@ -1440,9 +1436,11 @@ describe('analyticsStore', () => {
       ]
 
       fetchCollection.mockResolvedValue(mockWorkouts)
-      await workoutStore.fetchWorkouts('month') // Fetch wider range
+      await workoutStore.fetchWorkouts('last7Days')
 
-      // Should only count the 3-day-ago workout with RPE 8
+      // Set period to last7Days - should only count the 3-day-ago workout with RPE 8
+      analyticsStore.setPeriod('last7Days')
+
       expect(analyticsStore.avgRpe).toBe(8.0)
     })
 

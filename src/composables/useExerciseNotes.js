@@ -35,7 +35,7 @@ export function useExerciseNotes(exerciseId) {
     } catch (err) {
       error.value = err.message
       if (import.meta.env.DEV) {
-        console.error('Error loading note:', err)
+        console.error('[useExerciseNotes] Error loading note:', err)
       }
     }
   }

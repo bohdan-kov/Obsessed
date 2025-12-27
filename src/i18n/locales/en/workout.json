@@ -260,5 +260,27 @@
     "validation": {
       "atLeastOneColumn": "At least one column must remain visible"
     }
+  },
+  "detail": {
+    "title": "Workout Details",
+    "notFound": "Workout Not Found",
+    "notFoundDescription": "This workout may have been deleted or does not exist.",
+    "loadError": "Failed to load workout",
+    "previousWorkout": "Previous",
+    "nextWorkout": "Next",
+    "exercises": "Exercises",
+    "exerciseTotal": "Total",
+    "viewDetails": "View Details"
+  },
+  "stats": {
+    "totalVolume": "Total Volume",
+    "totalSets": "Total Sets",
+    "exercises": "Exercises",
+    "duration": "Duration"
+  },
+  "muscleDistribution": {
+    "title": "Muscle Groups",
+    "description": "Distribution of load across muscle groups",
+    "noMuscles": "No muscle groups detected"
   }
 }

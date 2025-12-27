@@ -260,5 +260,27 @@
     "validation": {
       "atLeastOneColumn": "Принаймні одна колонка має залишатися видимою"
     }
+  },
+  "detail": {
+    "title": "Деталі тренування",
+    "notFound": "Тренування не знайдено",
+    "notFoundDescription": "Це тренування може бути видалене або не існує.",
+    "loadError": "Не вдалося завантажити тренування",
+    "previousWorkout": "Попереднє",
+    "nextWorkout": "Наступне",
+    "exercises": "Вправи",
+    "exerciseTotal": "Всього",
+    "viewDetails": "Детальніше"
+  },
+  "stats": {
+    "totalVolume": "Загальний обсяг",
+    "totalSets": "Всього підходів",
+    "exercises": "Вправи",
+    "duration": "Тривалість"
+  },
+  "muscleDistribution": {
+    "title": "Групи м'язів",
+    "description": "Розподіл навантаження по м'язових групах",
+    "noMuscles": "Групи м'язів не виявлено"
   }
 }

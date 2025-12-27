@@ -27,7 +27,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Plus, Check, Loader2 } from 'lucide-vue-next'
-import PlanExerciseItem from '../plans/PlanExerciseItem.vue'
+import PlanExerciseItem from '@/pages/workouts/components/plans/PlanExerciseItem.vue'
 import { CONFIG } from '@/constants/config'
 
 const { t } = useI18n()

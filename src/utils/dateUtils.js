@@ -317,11 +317,12 @@ export function getMonthBeforeLastRange() {
 }
 
 /**
- * Get all-time range (from distant past to today)
+ * Get all-time range (from first workout or fallback to app launch year)
+ * @param {Date|null} firstWorkoutDate - Date of user's first workout (optional)
  * @returns {{ start: Date, end: Date }}
  */
-export function getAllTimeRange() {
-  const start = new Date(2020, 0, 1) // Reasonable minimum (app launch year)
+export function getAllTimeRange(firstWorkoutDate = null) {
+  const start = firstWorkoutDate || new Date(2020, 0, 1) // Use first workout or fallback to app launch year
   const end = new Date()
   return { start, end }
 }
@@ -401,7 +402,7 @@ export function safeFormatDate(dateInput, options = {}) {
     // Validate that the date is valid
     if (isNaN(date.getTime())) {
       if (import.meta.env.DEV) {
-        console.warn('Invalid date in safeFormatDate:', dateInput)
+        console.warn('[dateUtils] Invalid date in safeFormatDate:', dateInput)
       }
       return fallback
     }
@@ -409,7 +410,7 @@ export function safeFormatDate(dateInput, options = {}) {
     return new Intl.DateTimeFormat(locale, formatOptions).format(date)
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Error formatting date in safeFormatDate:', error, dateInput)
+      console.error('[dateUtils] Error formatting date in safeFormatDate:', error, dateInput)
     }
     return fallback
   }

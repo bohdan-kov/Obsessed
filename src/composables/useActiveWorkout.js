@@ -274,7 +274,7 @@ export function useActiveWorkout() {
       if (backupAge > CONFIG.activeWorkout.STALE_BACKUP_THRESHOLD) {
         // TODO: Show recovery dialog asking user if they want to restore
         if (import.meta.env.DEV) {
-          console.warn('Backup is stale (>24h), skipping auto-recovery')
+          console.warn('[useActiveWorkout] Backup is stale (>24h), skipping auto-recovery')
         }
         return false
       }
@@ -308,7 +308,7 @@ export function useActiveWorkout() {
       return true
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error recovering from backup:', error)
+        console.error('[useActiveWorkout] Error recovering from backup:', error)
       }
       return false
     }

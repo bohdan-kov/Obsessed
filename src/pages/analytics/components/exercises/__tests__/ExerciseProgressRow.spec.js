@@ -1,6 +1,22 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import ExerciseProgressRow from '../ExerciseProgressRow.vue'
+import ExerciseProgressRow from '@/pages/analytics/components/exercises/ExerciseProgressRow.vue'
+
+// Mock vue-router
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}))
+
+// Mock ExerciseMiniChart component
+vi.mock('../ExerciseMiniChart.vue', () => ({
+  default: {
+    name: 'ExerciseMiniChart',
+    props: ['history', 'width', 'height'],
+    template: '<div data-testid="exercise-mini-chart" class="exercise-mini-chart"></div>',
+  },
+}))
 
 describe('ExerciseProgressRow', () => {
   const mockExercise = {
@@ -29,6 +45,10 @@ describe('ExerciseProgressRow', () => {
     ],
   }
 
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   describe('Rendering', () => {
     it('should render exercise name', () => {
       const wrapper = mount(ExerciseProgressRow, {
@@ -51,8 +71,10 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: mockExercise },
       })
 
-      const icons = wrapper.findAllComponents({ name: 'TrendingUpIcon' })
-      expect(icons.length).toBeGreaterThan(0)
+      // The component uses dynamic component with TrendingUp from lucide-vue-next
+      // Look for the SVG element that lucide renders
+      const trendIconArea = wrapper.find('.text-green-600')
+      expect(trendIconArea.exists()).toBe(true)
     })
 
     it('should render status badge on desktop', () => {
@@ -60,7 +82,9 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: mockExercise },
       })
 
-      expect(wrapper.text()).toContain('Progressing')
+      // The component uses translation key: t('analytics.exerciseProgress.statusBadge.up')
+      // Since translations are mocked to return keys, we check for the key
+      expect(wrapper.text()).toContain('analytics.exerciseProgress.statusBadge.up')
     })
   })
 
@@ -102,14 +126,18 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: mockExercise },
       })
 
-      const chevron = wrapper.findComponent({ name: 'ChevronDownIcon' })
-      expect(chevron.classes()).not.toContain('rotate-180')
+      // Find the chevron by looking for the rotate-180 parent element that contains an SVG
+      const chevronContainer = wrapper.find('.transition-transform')
+      expect(chevronContainer.exists()).toBe(true)
+      expect(chevronContainer.classes()).not.toContain('rotate-180')
 
       const row = wrapper.find('.grid')
       await row.trigger('click')
       await wrapper.vm.$nextTick()
 
-      expect(chevron.classes()).toContain('rotate-180')
+      // After expansion, chevron should have rotate-180 class
+      const chevronAfter = wrapper.find('.transition-transform.rotate-180')
+      expect(chevronAfter.exists()).toBe(true)
     })
 
     it('should show ExerciseMiniChart when expanded', async () => {
@@ -117,17 +145,17 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: mockExercise },
       })
 
-      let miniChart = wrapper.findComponent({ name: 'ExerciseMiniChart' })
       // Mini chart exists inline on mobile
-      expect(miniChart.exists()).toBe(true)
+      let miniCharts = wrapper.findAll('[data-testid="exercise-mini-chart"]')
+      expect(miniCharts.length).toBeGreaterThan(0)
 
       const row = wrapper.find('.grid')
       await row.trigger('click')
       await wrapper.vm.$nextTick()
 
-      // Should have larger chart in expanded section
-      const charts = wrapper.findAllComponents({ name: 'ExerciseMiniChart' })
-      expect(charts.length).toBeGreaterThan(1)
+      // Should have larger chart in expanded section (total 2 charts)
+      miniCharts = wrapper.findAll('[data-testid="exercise-mini-chart"]')
+      expect(miniCharts.length).toBe(2)
     })
   })
 
@@ -137,8 +165,9 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: mockExercise },
       })
 
-      const trendIcons = wrapper.findAllComponents({ name: 'TrendingUpIcon' })
-      expect(trendIcons.length).toBeGreaterThan(0)
+      // Check for green color class which is applied to trending up icon
+      const trendIcon = wrapper.find('.text-green-600')
+      expect(trendIcon.exists()).toBe(true)
     })
 
     it('should show downward trend icon for regressing exercise', () => {
@@ -153,8 +182,9 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: regressingExercise },
       })
 
-      const trendIcons = wrapper.findAllComponents({ name: 'TrendingDownIcon' })
-      expect(trendIcons.length).toBeGreaterThan(0)
+      // Check for red color class which is applied to trending down icon
+      const trendIcon = wrapper.find('.text-red-600')
+      expect(trendIcon.exists()).toBe(true)
     })
 
     it('should show flat trend icon for stalled exercise', () => {
@@ -169,8 +199,9 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: stalledExercise },
       })
 
-      const trendIcons = wrapper.findAllComponents({ name: 'MinusIcon' })
-      expect(trendIcons.length).toBeGreaterThan(0)
+      // Check for gray color class which is applied to flat/minus icon
+      const trendIcon = wrapper.find('.text-gray-400')
+      expect(trendIcon.exists()).toBe(true)
     })
 
     it('should display trend percentage', () => {
@@ -332,7 +363,8 @@ describe('ExerciseProgressRow', () => {
         props: { exercise: newExercise },
       })
 
-      expect(wrapper.text()).toContain('New')
+      // Component uses translation key: t('analytics.exerciseProgress.statusBadge.insufficient_data')
+      expect(wrapper.text()).toContain('analytics.exerciseProgress.statusBadge.insufficient_data')
     })
 
     it('should handle very long exercise names', () => {

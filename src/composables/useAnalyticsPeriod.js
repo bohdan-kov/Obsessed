@@ -93,7 +93,7 @@ export function useAnalyticsPeriod(options = {}) {
    */
   function changePeriod(period) {
     if (!PERIOD_OPTIONS.some((opt) => opt.value === period)) {
-      console.warn(`Invalid period: ${period}. Using default.`)
+      console.warn('[useAnalyticsPeriod] Invalid period:', period, 'Using default.')
       period = DEFAULT_PERIOD
     }
 

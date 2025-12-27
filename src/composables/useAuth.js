@@ -24,7 +24,7 @@ export function useAuth() {
       router.push({ name: 'Login' })
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Logout error:', error)
+        console.error('[useAuth] Logout error:', error)
       }
       throw error
     }

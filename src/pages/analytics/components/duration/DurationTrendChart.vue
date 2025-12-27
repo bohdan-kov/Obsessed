@@ -3,9 +3,18 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { VisXYContainer, VisScatter, VisAxis, VisLine } from '@unovis/vue'
+import { Scatter } from '@unovis/ts'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useUnits } from '@/composables/useUnits'
-import BaseChart from '../shared/BaseChart.vue'
+import {
+  ChartContainer,
+  ChartCrosshair,
+  ChartTooltip,
+  ChartTooltipContent,
+  componentToString,
+} from '@/components/ui/chart'
+import BaseChart from '@/pages/analytics/components/shared/BaseChart.vue'
 import { formatDateShort } from '@/utils/dateUtils'
 
 const { t, locale } = useI18n()
@@ -15,113 +24,166 @@ const router = useRouter()
 const analyticsStore = useAnalyticsStore()
 const { durationTrendData, durationStats, loading } = storeToRefs(analyticsStore)
 
-// SVG dimensions
-const CHART_WIDTH = 800
-const CHART_HEIGHT = 350
-const PADDING = { top: 20, right: 20, bottom: 60, left: 60 }
-
-const chartWidth = CHART_WIDTH - PADDING.left - PADDING.right
-const chartHeight = CHART_HEIGHT - PADDING.top - PADDING.bottom
-
-// Find max values for scaling
-const maxDuration = computed(() => {
-  if (!durationTrendData.value?.length) return 0
-  return Math.max(...durationTrendData.value.map((d) => d.duration))
-})
-
-const maxVolume = computed(() => {
-  if (!durationTrendData.value?.length) return 0
-  return Math.max(...durationTrendData.value.map((d) => d.volume))
-})
-
-// Generate scatter points (position + size based on volume)
-const scatterPoints = computed(() => {
+// Transform data for Unovis
+const chartData = computed(() => {
   if (!durationTrendData.value?.length) return []
 
-  return durationTrendData.value.map((point, index) => {
-    const x = PADDING.left + (index / (durationTrendData.value.length - 1 || 1)) * chartWidth
-    const y = PADDING.top + chartHeight - (point.duration / (maxDuration.value || 1)) * chartHeight
+  const maxVolume = Math.max(...durationTrendData.value.map((d) => d.volume))
+  const dataCount = durationTrendData.value.length
 
-    // Size based on volume (min 4px, max 12px)
-    const volumeRatio = point.volume / (maxVolume.value || 1)
-    const radius = 4 + volumeRatio * 8
+  // Dynamic size scaling: automatically reduce point size when there are many data points
+  // This prevents overcrowding and overlap in charts with dense data
+  // Scale factor ranges from 1.0 (few points, max size) to 0.375 (many points, min size)
+  const scaleFactor = Math.max(0.375, 1 - (dataCount / 120))
+
+  // Base sizes (when there are few data points)
+  const baseMinSize = 16
+  const baseMaxSize = 32
+
+  // Apply scaling to size range
+  const minSize = baseMinSize * scaleFactor
+  const maxSize = baseMaxSize * scaleFactor
+
+  const baseData = durationTrendData.value.map((point, index) => {
+    // Size based on volume, with dynamic range that scales down with more data points
+    // Examples:
+    // - 10 workouts: 16-32px (scale: 0.92)
+    // - 30 workouts: 12-24px (scale: 0.75)
+    // - 60 workouts: 8-16px (scale: 0.50)
+    // - 120+ workouts: 6-12px (scale: 0.375)
+    const volumeRatio = point.volume / (maxVolume || 1)
+    const size = minSize + volumeRatio * (maxSize - minSize)
 
     // Color based on volume quartile
-    let color = '#06b6d4' // cyan (low)
-    if (volumeRatio > 0.75)
-      color = '#10b981' // green (high)
-    else if (volumeRatio > 0.5) color = '#f59e0b' // amber (medium)
+    let volumeLevel = 'low'
+    if (volumeRatio > 0.75) volumeLevel = 'high'
+    else if (volumeRatio > 0.5) volumeLevel = 'medium'
 
     return {
-      x,
-      y,
-      radius,
-      color,
-      data: point,
+      index,
+      duration: point.duration,
+      volume: point.volume,
+      exerciseCount: point.exerciseCount,
+      date: point.date,
+      dateLabel: formatDateShort(point.date, locale.value),
+      id: point.id,
+      size,
+      volumeLevel,
     }
   })
-})
 
-// Generate trend line using linear regression
-const trendLine = computed(() => {
-  if (!durationTrendData.value?.length || durationTrendData.value.length < 2) return ''
+  // Calculate linear regression and add trendDuration to each point
+  if (baseData.length >= 2) {
+    const n = baseData.length
+    let sumX = 0
+    let sumY = 0
+    let sumXY = 0
+    let sumX2 = 0
 
-  const n = durationTrendData.value.length
-  let sumX = 0
-  let sumY = 0
-  let sumXY = 0
-  let sumX2 = 0
+    baseData.forEach((point, index) => {
+      sumX += index
+      sumY += point.duration
+      sumXY += index * point.duration
+      sumX2 += index * index
+    })
 
-  durationTrendData.value.forEach((point, index) => {
-    sumX += index
-    sumY += point.duration
-    sumXY += index * point.duration
-    sumX2 += index * index
-  })
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
+    const intercept = (sumY - slope * sumX) / n
 
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
-  const intercept = (sumY - slope * sumX) / n
-
-  // Generate line points
-  const startY = intercept
-  const endY = slope * (n - 1) + intercept
-
-  const startYScaled = PADDING.top + chartHeight - (startY / (maxDuration.value || 1)) * chartHeight
-  const endYScaled = PADDING.top + chartHeight - (endY / (maxDuration.value || 1)) * chartHeight
-
-  return `M ${PADDING.left},${startYScaled} L ${PADDING.left + chartWidth},${endYScaled}`
-})
-
-// Y-axis labels
-const yAxisLabels = computed(() => {
-  const labels = []
-  const steps = 5
-  for (let i = 0; i <= steps; i++) {
-    const value = (maxDuration.value / steps) * i
-    const y = PADDING.top + chartHeight - (i / steps) * chartHeight
-    labels.push({ value: Math.round(value), y })
+    // Add trendDuration to each data point
+    baseData.forEach((point, index) => {
+      point.trendDuration = slope * index + intercept
+    })
   }
-  return labels.reverse()
+
+  return baseData
 })
 
-// X-axis labels
-const xAxisLabels = computed(() => {
-  if (!durationTrendData.value?.length) return []
+// Chart configuration for shadcn tooltips
+const chartConfig = {
+  duration: {
+    label: t('common.duration'),
+    color: 'var(--chart-1)',
+  },
+  volume: {
+    label: t('common.volume'),
+    color: 'var(--chart-2)',
+  },
+  exerciseCount: {
+    label: t('common.exercises'),
+    color: 'var(--chart-3)',
+  },
+}
 
-  const step = Math.ceil(durationTrendData.value.length / 6)
+// Color mapping for scatter points based on volume level
+const getPointColor = (datum) => {
+  const colors = {
+    low: '#06b6d4', // cyan
+    medium: '#f59e0b', // amber
+    high: '#10b981', // green
+  }
+  return colors[datum.volumeLevel] || colors.low
+}
 
-  return durationTrendData.value
-    .map((point, index) => ({
-      label: formatDateShort(point.date, locale.value),
-      x: PADDING.left + (index / (durationTrendData.value.length - 1 || 1)) * chartWidth,
-      index,
-    }))
-    .filter((item, idx) => idx % step === 0 || idx === durationTrendData.value.length - 1)
+// Y domain with some padding
+const yDomain = computed(() => {
+  if (!chartData.value.length) return [0, 100]
+  const maxDuration = Math.max(...chartData.value.map((d) => d.duration), 100)
+  return [0, maxDuration * 1.15]
 })
+
+// Tooltip formatters
+const labelFormatter = (value) => {
+  // componentToString passes datum.date (the actual date value), not the index
+  if (!value) return ''
+
+  const date = new Date(value)
+
+  // Format: "Пт, 12 груд." or "Fri, Dec 12"
+  return date.toLocaleDateString(locale.value, {
+    weekday: 'short', // Пт or Fri
+    day: 'numeric', // 12
+    month: 'short', // груд. or Dec
+  })
+}
+
+const valueFormatter = (value, key) => {
+  if (key === 'duration') {
+    const formatted = Math.round(value).toLocaleString(locale.value)
+    return `${formatted} ${t('common.units.minutes')}`
+  } else if (key === 'volume') {
+    return formatWeight(value, { precision: 0 })
+  } else if (key === 'exerciseCount') {
+    return value.toString()
+  }
+  return String(value)
+}
 
 // Navigate to workout detail
-function navigateToWorkout(workoutId) {
-  router.push(`/workouts/${workoutId}`)
+// Unovis click events provide (datum, index, event) parameters
+function handlePointClick(datum, index, event) {
+  if (!datum?.id) {
+    if (import.meta.env.DEV) {
+      console.warn('[DurationTrendChart] No workout ID found in data point')
+    }
+    return
+  }
+
+  router.push({
+    name: 'WorkoutDetail',
+    params: { id: datum.id },
+    query: {
+      from: 'analytics',
+      tab: 'duration'  // Include tab to preserve context when navigating back
+    },
+  })
+}
+
+// Configure Unovis scatter events
+const scatterEvents = {
+  [Scatter.selectors.point]: {
+    click: handlePointClick,
+  },
 }
 
 // Format trend direction
@@ -142,6 +204,7 @@ const trendLabel = computed(() => {
 
 <template>
   <BaseChart
+    data-testid="duration-trend-chart"
     :title="t('analytics.duration.trendChart.title')"
     :description="t('analytics.duration.trendChart.description')"
     :data="durationTrendData"
@@ -217,128 +280,71 @@ const trendLabel = computed(() => {
     </template>
 
     <template #default>
-      <div class="w-full overflow-x-auto">
-        <svg
-          :viewBox="`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`"
-          class="w-full min-w-[600px] h-auto"
-          role="img"
-          :aria-label="t('analytics.duration.trendChart.title')"
-        >
-          <!-- Y-axis -->
-          <g class="y-axis">
-            <line
-              :x1="PADDING.left"
-              :y1="PADDING.top"
-              :x2="PADDING.left"
-              :y2="PADDING.top + chartHeight"
-              stroke="currentColor"
-              stroke-opacity="0.2"
-              stroke-width="1"
-            />
-
-            <!-- Y-axis labels -->
-            <g v-for="label in yAxisLabels" :key="label.value">
-              <line
-                :x1="PADDING.left"
-                :y1="label.y"
-                :x2="PADDING.left + chartWidth"
-                :y2="label.y"
-                stroke="currentColor"
-                stroke-opacity="0.1"
-                stroke-width="1"
-                stroke-dasharray="4,4"
+      <ChartContainer :config="chartConfig" class="w-full">
+        <div class="aspect-auto h-[350px] w-full overflow-x-auto">
+          <div class="min-w-[600px] h-full">
+            <VisXYContainer
+              :data="chartData"
+              :margin="{ left: 60, right: 20, top: 20, bottom: 60 }"
+              :y-domain="yDomain"
+            >
+              <!-- Trend line (rendered first so it appears behind points) -->
+              <!-- VisLine uses the container's data, no separate :data prop needed -->
+              <VisLine
+                v-if="chartData.length >= 2"
+                :x="(d) => d.index"
+                :y="(d) => d.trendDuration"
+                color="#64748b"
+                :line-width="2"
               />
-              <text
-                :x="PADDING.left - 10"
-                :y="label.y"
-                text-anchor="end"
-                dominant-baseline="middle"
-                class="text-[10px] fill-muted-foreground"
-              >
-                {{ label.value }}
-              </text>
-            </g>
 
-            <!-- Y-axis label -->
-            <text
-              :x="15"
-              :y="PADDING.top + chartHeight / 2"
-              text-anchor="middle"
-              class="text-[11px] font-medium fill-muted-foreground"
-              transform="rotate(-90 15 175)"
-            >
-              {{ t('common.duration') }} ({{ t('common.minutes') }})
-            </text>
-          </g>
+              <!-- Scatter plot -->
+              <VisScatter
+                :x="(d) => d.index"
+                :y="(d) => d.duration"
+                :size="(d) => d.size"
+                :color="getPointColor"
+                :cursor="'pointer'"
+                :events="scatterEvents"
+              />
 
-          <!-- X-axis -->
-          <g class="x-axis">
-            <line
-              :x1="PADDING.left"
-              :y1="PADDING.top + chartHeight"
-              :x2="PADDING.left + chartWidth"
-              :y2="PADDING.top + chartHeight"
-              stroke="currentColor"
-              stroke-opacity="0.2"
-              stroke-width="1"
-            />
+              <!-- X-Axis -->
+              <VisAxis
+                type="x"
+                :x="(d) => d.index"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :num-ticks="6"
+                :tick-format="(index) => {
+                  const dataPoint = chartData[Math.round(index)]
+                  return dataPoint?.dateLabel || ''
+                }"
+              />
 
-            <!-- X-axis labels -->
-            <g v-for="label in xAxisLabels" :key="label.index">
-              <text
-                :x="label.x"
-                :y="PADDING.top + chartHeight + 20"
-                text-anchor="middle"
-                class="text-[10px] fill-muted-foreground"
-              >
-                {{ label.label }}
-              </text>
-            </g>
+              <!-- Y-Axis -->
+              <VisAxis
+                type="y"
+                :num-ticks="5"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :tick-format="(value) => Math.round(value).toString()"
+              />
 
-            <!-- X-axis label -->
-            <text
-              :x="PADDING.left + chartWidth / 2"
-              :y="CHART_HEIGHT - 10"
-              text-anchor="middle"
-              class="text-[11px] font-medium fill-muted-foreground"
-            >
-              {{ t('common.date') }}
-            </text>
-          </g>
-
-          <!-- Trend line -->
-          <path
-            v-if="trendLine"
-            :d="trendLine"
-            stroke="#94a3b8"
-            stroke-width="2"
-            stroke-dasharray="8,4"
-            fill="none"
-            opacity="0.5"
-          />
-
-          <!-- Scatter points -->
-          <g class="points">
-            <circle
-              v-for="(point, index) in scatterPoints"
-              :key="index"
-              :cx="point.x"
-              :cy="point.y"
-              :r="point.radius"
-              :fill="point.color"
-              opacity="0.7"
-              class="transition-all duration-200 hover:opacity-100 hover:stroke-current hover:stroke-2 cursor-pointer"
-              @click="navigateToWorkout(point.data.id)"
-            >
-              <title>
-                {{ formatDateShort(point.data.date, locale) }}: {{ point.data.duration }}
-                {{ t('common.minutes') }}, {{ formatWeight(point.data.volume) }},
-                {{ point.data.exerciseCount }} {{ t('common.exercises').toLowerCase() }}
-              </title>
-            </circle>
-          </g>
-        </svg>
-      </div>
+              <!-- Tooltip -->
+              <ChartTooltip />
+              <ChartCrosshair
+                :color="(d) => getPointColor(d)"
+                :template="componentToString(chartConfig, ChartTooltipContent, {
+                  labelFormatter: labelFormatter,
+                  valueFormatter: valueFormatter,
+                })"
+              />
+            </VisXYContainer>
+          </div>
+        </div>
+      </ChartContainer>
 
       <!-- Legend -->
       <div class="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
@@ -360,9 +366,33 @@ const trendLabel = computed(() => {
 </template>
 
 <style scoped>
-@media (max-width: 640px) {
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
+/* Style the trend line with dashed stroke for better visual distinction */
+/* Use multiple selectors to ensure the style is applied */
+:deep(.vis-line),
+:deep(.vis-line path),
+:deep(.vis-line line) {
+  stroke-dasharray: 8, 4 !important;
+  stroke-dashoffset: 0 !important;
+  opacity: 0.7;
+}
+
+/* Additional fallback selectors for Unovis */
+:deep(svg line.vis-line),
+:deep(svg path.vis-line),
+:deep(.unovis-xy-container line),
+:deep(.unovis-xy-container path:not(.vis-scatter-point)) {
+  stroke-dasharray: 8, 4 !important;
+}
+
+/* Make scatter points visually interactive */
+:deep(.vis-scatter-point) {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+:deep(.vis-scatter-point:hover) {
+  opacity: 0.8;
+  stroke: currentColor;
+  stroke-width: 2px;
 }
 </style>

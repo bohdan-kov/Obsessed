@@ -130,7 +130,7 @@ export const usePlanStore = defineStore('plan', () => {
       plans.value = fetchedPlans
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error fetching plans:', err)
+        console.error('[planStore] Error fetching plans:', err)
       }
       error.value = err.message
       throw err
@@ -168,7 +168,7 @@ export const usePlanStore = defineStore('plan', () => {
       },
       (err) => {
         if (import.meta.env.DEV) {
-          console.error('Error in plans subscription:', err)
+          console.error('[planStore] Error in plans subscription:', err)
         }
         error.value = err.message
         loading.value = false
@@ -240,7 +240,7 @@ export const usePlanStore = defineStore('plan', () => {
       return planId
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error creating plan:', err)
+        console.error('[planStore] Error creating plan:', err)
       }
       error.value = err.message
 
@@ -321,7 +321,7 @@ export const usePlanStore = defineStore('plan', () => {
       await updateDocument(collectionPath, planId, sanitizedUpdates)
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error updating plan:', err)
+        console.error('[planStore] Error updating plan:', err)
       }
       error.value = err.message
 
@@ -374,7 +374,7 @@ export const usePlanStore = defineStore('plan', () => {
       })
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error deleting plan:', err)
+        console.error('[planStore] Error deleting plan:', err)
       }
       error.value = err.message
 
@@ -399,7 +399,7 @@ export const usePlanStore = defineStore('plan', () => {
     const plan = getPlanById(planId)
     if (!plan) {
       if (import.meta.env.DEV) {
-        console.warn('Plan not found for usage recording:', planId)
+        console.warn('[planStore] Plan not found for usage recording:', planId)
       }
       return // Silently fail
     }
@@ -422,7 +422,7 @@ export const usePlanStore = defineStore('plan', () => {
       })
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error recording plan usage:', err)
+        console.error('[planStore] Error recording plan usage:', err)
       }
       // Don't throw - this is not critical
     }

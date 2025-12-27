@@ -5,7 +5,7 @@ import {
   calculatePercentile,
   calculateMovingAverage,
   detectOutliers,
-} from '../statsUtils'
+} from '@/utils/statsUtils'
 
 describe('statsUtils', () => {
   describe('calculateLinearRegression', () => {

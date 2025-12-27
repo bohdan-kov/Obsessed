@@ -57,7 +57,7 @@ async function handleSignOut() {
     router.push({ name: 'Login' })
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Sign out error:', error)
+      console.error('[VerifyEmailView] Sign out error:', error)
     }
   }
 }

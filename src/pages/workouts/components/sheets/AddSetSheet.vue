@@ -4,7 +4,7 @@
       <SheetHeader>
         <SheetTitle>{{ t('workout.activeWorkout.set.logSet') }}</SheetTitle>
         <SheetDescription v-if="exercise">
-          {{ exercise.exerciseName }}
+          {{ localizedExerciseName }}
         </SheetDescription>
       </SheetHeader>
 
@@ -127,8 +127,10 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useUnits } from '@/composables/useUnits'
+import { useExerciseStore } from '@/stores/exerciseStore'
 import {
   Sheet,
   SheetContent,
@@ -160,8 +162,36 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open', 'submit'])
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { weightUnit, unitLabel, fromStorageUnit } = useUnits()
+
+const exerciseStore = useExerciseStore()
+const { allExercises } = storeToRefs(exerciseStore)
+
+/**
+ * Get localized exercise name
+ */
+const localizedExerciseName = computed(() => {
+  if (!props.exercise) return ''
+
+  if (!props.exercise.exerciseId) {
+    return props.exercise.exerciseName || ''
+  }
+
+  const exerciseData = allExercises.value.find(
+    (ex) => ex.id === props.exercise.exerciseId || ex.slug === props.exercise.exerciseId
+  )
+
+  if (!exerciseData) {
+    return props.exercise.exerciseName || ''
+  }
+
+  if (typeof exerciseData.name === 'object' && exerciseData.name !== null) {
+    return exerciseData.name[locale.value] || exerciseData.name.uk || exerciseData.name.en || props.exercise.exerciseName || ''
+  }
+
+  return exerciseData.name || props.exercise.exerciseName || ''
+})
 
 // Form state
 const weight = ref(0)

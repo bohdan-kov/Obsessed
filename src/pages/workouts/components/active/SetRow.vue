@@ -109,7 +109,7 @@ const formattedTime = computed(() => {
     // Handle unknown format
     else {
       if (import.meta.env.DEV) {
-        console.warn('Unknown timestamp format:', completedAt)
+        console.warn('[SetRow] Unknown timestamp format:', completedAt)
       }
       return ''
     }
@@ -117,7 +117,7 @@ const formattedTime = computed(() => {
     // Validate date
     if (isNaN(date.getTime())) {
       if (import.meta.env.DEV) {
-        console.warn('Invalid date:', completedAt)
+        console.warn('[SetRow] Invalid date:', completedAt)
       }
       return ''
     }
@@ -128,7 +128,7 @@ const formattedTime = computed(() => {
     }).format(date)
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Error formatting time:', error, completedAt)
+      console.error('[SetRow] Error formatting time:', error, completedAt)
     }
     return ''
   }

@@ -634,7 +634,7 @@ export const useExerciseLibraryStore = defineStore('exerciseLibrary', () => {
       return data.exercises
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error loading cache:', error)
+        console.error('[exerciseLibraryStore] Error loading cache:', error)
       }
       return null
     }
@@ -654,7 +654,7 @@ export const useExerciseLibraryStore = defineStore('exerciseLibrary', () => {
       localStorage.setItem(CONFIG.exercise.CACHE_KEY, JSON.stringify(data))
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error saving cache:', error)
+        console.error('[exerciseLibraryStore] Error saving cache:', error)
       }
     }
   }

@@ -156,7 +156,7 @@ export const useExerciseStore = defineStore('exercise', () => {
       }))
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error loading default exercises:', err)
+        console.error('[exerciseStore] Error loading default exercises:', err)
       }
       error.value = err.message
       throw err
@@ -187,7 +187,7 @@ export const useExerciseStore = defineStore('exercise', () => {
       }))
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error fetching custom exercises:', err)
+        console.error('[exerciseStore] Error fetching custom exercises:', err)
       }
       error.value = err.message
       throw err
@@ -223,7 +223,7 @@ export const useExerciseStore = defineStore('exercise', () => {
       },
       (err) => {
         if (import.meta.env.DEV) {
-          console.error('Error in custom exercises subscription:', err)
+          console.error('[exerciseStore] Error in custom exercises subscription:', err)
         }
         error.value = err.message
       }
@@ -279,7 +279,7 @@ export const useExerciseStore = defineStore('exercise', () => {
       return exerciseId
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error adding custom exercise:', err)
+        console.error('[exerciseStore] Error adding custom exercise:', err)
       }
       error.value = err.message
       throw err
@@ -308,7 +308,7 @@ export const useExerciseStore = defineStore('exercise', () => {
       await updateDocument(customPath, exerciseId, updates)
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error updating custom exercise:', err)
+        console.error('[exerciseStore] Error updating custom exercise:', err)
       }
       error.value = err.message
       throw err
@@ -334,7 +334,7 @@ export const useExerciseStore = defineStore('exercise', () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(recentlyUsed.value))
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Error adding to recent exercises:', err)
+        console.error('[exerciseStore] Error adding to recent exercises:', err)
       }
     }
   }

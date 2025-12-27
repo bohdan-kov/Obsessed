@@ -44,6 +44,16 @@ const router = createRouter({
           meta: { title: 'Workouts' },
         },
         {
+          path: 'workouts/:id',
+          name: 'WorkoutDetail',
+          component: () => import('@/pages/workouts/WorkoutDetailView.vue'),
+          meta: { title: 'Workout Details', requiresAuth: true, requiresVerification: true },
+          props: (route) => ({
+            id: route.params.id,
+            from: route.query.from || 'workouts',
+          }),
+        },
+        {
           path: 'analytics',
           name: 'Analytics',
           component: () => import('@/pages/analytics/AnalyticsView.vue'),

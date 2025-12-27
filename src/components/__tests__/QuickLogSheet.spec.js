@@ -662,7 +662,7 @@ describe('QuickLogSheet', () => {
       await submitButton.trigger('click')
       await flushPromises()
 
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to save set:', expect.any(Error))
+      expect(consoleSpy).toHaveBeenCalledWith('[QuickLogSheet] Failed to save set:', expect.any(Error))
 
       consoleSpy.mockRestore()
     })

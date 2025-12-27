@@ -47,6 +47,11 @@
       "title": "Muscle Volume Over Time",
       "description": "Track training volume trends across different muscle groups during the selected period",
       "emptyState": "Not enough data to display muscle volume chart"
+    },
+    "distribution": {
+      "title": "Muscle Distribution",
+      "description": "Percentage of sets per muscle group in the selected period",
+      "emptyState": "No data to display muscle distribution"
     }
   },
   "duration": {
