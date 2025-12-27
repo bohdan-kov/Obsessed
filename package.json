@@ -18,7 +18,11 @@
     "seed:workouts:year": "node scripts/seedWorkouts.js --year",
     "seed:workouts:remove": "node scripts/seedWorkouts.js --remove",
     "fix:workout-dates": "node scripts/fixInvalidWorkoutDates.js --check",
-    "fix:workout-dates:repair": "node scripts/fixInvalidWorkoutDates.js --fix"
+    "fix:workout-dates:repair": "node scripts/fixInvalidWorkoutDates.js --fix",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:preview": "npm run build && firebase hosting:channel:deploy preview",
+    "firebase:login": "firebase login",
+    "firebase:logout": "firebase logout"
   },
   "dependencies": {
     "@unovis/ts": "^1.6.2",

@@ -690,28 +690,61 @@ Found a bug? Please open an issue with:
 
 ## 🚢 Deployment
 
-### Prerequisites for Production
-- Firebase project with production Firestore database
-- Environment variables configured for production
-- Security rules set up in Firestore
+### Automated CI/CD with GitHub Actions
 
-### Build for Production
+This project includes a fully configured **CI/CD pipeline** that automatically deploys to Firebase Hosting on every push to `main`. It also creates preview deployments for Pull Requests.
 
-```bash
-npm run build
-```
+#### Quick Start (3 Steps)
 
-This creates an optimized production build in the `dist/` folder.
+1. **Get Firebase Service Account token:**
+   ```bash
+   firebase login:ci
+   ```
+   Copy the token that appears (looks like `1//0eXXXXX...`)
 
-### Preview Production Build Locally
+2. **Add GitHub Secrets:**
+   - Go to: `GitHub Repository → Settings → Secrets and variables → Actions`
+   - Add 7 repository secrets (use helper: `bash .github/copy-secrets.sh`)
+   - Required secrets:
+     - `FIREBASE_SERVICE_ACCOUNT` (token from step 1 in JSON format: `{"token": "YOUR_TOKEN"}`)
+     - `VITE_FIREBASE_API_KEY` (from `.env.local`)
+     - `VITE_FIREBASE_AUTH_DOMAIN`
+     - `VITE_FIREBASE_PROJECT_ID`
+     - `VITE_FIREBASE_STORAGE_BUCKET`
+     - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+     - `VITE_FIREBASE_APP_ID`
 
-```bash
-npm run preview
-```
+3. **Push to GitHub:**
+   ```bash
+   git push origin main
+   ```
+   The CI/CD workflow will automatically:
+   - Run tests (`npm run test:run`)
+   - Build production bundle (`npm run build`)
+   - Deploy to Firebase Hosting
+   - Takes 2-4 minutes
 
-### Deployment Options
+**Live URL:** `https://obsessed-a405c.web.app`
 
-#### Option 1: Firebase Hosting
+#### What You Get with CI/CD
+
+- Automatic deployment on every `push` to `main`
+- Preview URLs for every Pull Request
+- Tests run before deployment (deployment fails if tests fail)
+- Deployment history in GitHub Actions
+- Email notifications on deployment success/failure
+- Rollback capability via Firebase Console
+
+#### Detailed Documentation
+
+For complete setup instructions, troubleshooting, and advanced features:
+- [CI/CD Documentation](.github/README.md) - Full setup guide and instructions
+
+### Manual Deployment Options
+
+If you prefer to deploy manually or use a different platform:
+
+#### Option 1: Firebase Hosting (Manual)
 ```bash
 # Install Firebase CLI
 npm install -g firebase-tools
@@ -719,17 +752,15 @@ npm install -g firebase-tools
 # Login to Firebase
 firebase login
 
-# Initialize hosting
-firebase init hosting
-
-# Deploy
-firebase deploy --only hosting
+# Build and deploy
+npm run deploy
 ```
 
 #### Option 2: Vercel
 1. Install Vercel CLI: `npm install -g vercel`
 2. Run `vercel` in project root
 3. Follow prompts to deploy
+4. Add environment variables in Vercel dashboard
 
 #### Option 3: Netlify
 1. Push your code to GitHub
@@ -739,6 +770,18 @@ firebase deploy --only hosting
 5. Add environment variables in Netlify dashboard
 
 **Important:** Ensure all `VITE_FIREBASE_*` environment variables are configured in your deployment platform's dashboard.
+
+### Build for Production (Local)
+
+```bash
+# Create optimized production build
+npm run build
+
+# Preview production build locally
+npm run preview
+```
+
+This creates an optimized production build in the `dist/` folder.
 
 ---
 
