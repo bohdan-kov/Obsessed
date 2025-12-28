@@ -1,4 +1,4 @@
-import { ref, onUnmounted, readonly } from 'vue'
+import { ref, onUnmounted, readonly, watch } from 'vue'
 import {
   subscribeToDocument,
   subscribeToCollection,

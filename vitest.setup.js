@@ -6,6 +6,44 @@ import { vi } from 'vitest'
 import { config } from '@vue/test-utils'
 import { ref, computed } from 'vue'
 
+// Mock Firebase configuration globally
+// This prevents Firebase validation errors in CI/CD environments
+vi.mock('@/firebase/config', () => ({
+  default: {}, // Mock Firebase app instance
+}))
+
+// Mock Firebase auth functions
+vi.mock('@/firebase/auth', () => ({
+  signInWithGoogle: vi.fn(),
+  signInWithEmail: vi.fn(),
+  signUpWithEmail: vi.fn(),
+  signOutUser: vi.fn(),
+  onAuthChange: vi.fn(() => vi.fn()), // Returns unsubscribe function
+  sendVerificationEmail: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
+  updateUserPassword: vi.fn(),
+  reauthenticateUser: vi.fn(),
+  deleteUserAccount: vi.fn(),
+}))
+
+// Mock Firebase Firestore functions
+vi.mock('@/firebase/firestore', () => ({
+  fetchCollection: vi.fn(),
+  fetchDocument: vi.fn(),
+  createDocument: vi.fn(),
+  updateDocument: vi.fn(),
+  deleteDocument: vi.fn(),
+  subscribeToCollection: vi.fn(() => vi.fn()), // Returns unsubscribe function
+  subscribeToDocument: vi.fn(() => vi.fn()), // Returns unsubscribe function
+  batchWrite: vi.fn(),
+  COLLECTIONS: {
+    USERS: 'users',
+    WORKOUTS: 'workouts',
+    EXERCISES: 'exercises',
+    USER_EXERCISES: 'userExercises',
+  },
+}))
+
 // Mock vue-router globally to prevent "injection Symbol(router) not found" warnings
 // Components using useRouter() will receive this mock unless overridden in individual tests
 vi.mock('vue-router', () => ({
@@ -123,7 +161,7 @@ vi.mock('@/composables/useTheme', () => ({
 }))
 
 // Mock ResizeObserver for @unovis/vue charts
-global.ResizeObserver = class ResizeObserver {
+globalThis.ResizeObserver = class ResizeObserver {
   constructor(callback) {
     this.callback = callback
     this.observationTargets = []
@@ -160,6 +198,34 @@ global.ResizeObserver = class ResizeObserver {
     this.observationTargets = []
   }
 }
+
+// Mock localStorage for jsdom compatibility
+// jsdom's localStorage implementation has issues with clear() method
+const localStorageMock = (() => {
+  let store = {}
+
+  return {
+    getItem: vi.fn((key) => store[key] || null),
+    setItem: vi.fn((key, value) => {
+      store[key] = value.toString()
+    }),
+    removeItem: vi.fn((key) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+    get length() {
+      return Object.keys(store).length
+    },
+    key: vi.fn((index) => {
+      const keys = Object.keys(store)
+      return keys[index] || null
+    }),
+  }
+})()
+
+globalThis.localStorage = localStorageMock
 
 // Mock SVG element methods for @unovis/vue charts
 // jsdom doesn't fully support SVG DOM methods like getBBox()
