@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
-import { nextTick, ref, computed } from 'vue'
+import { nextTick, ref } from 'vue'
 
 // Create mock refs for exercise store (used with storeToRefs)
 const mockRecentExercises = ref([
@@ -22,24 +22,6 @@ const mockWorkoutStore = {
   addExercise: vi.fn().mockResolvedValue(),
   addSet: vi.fn().mockResolvedValue(),
 }
-
-// Mock localStorage before importing the component
-const mockLocalStorageData = {}
-Object.defineProperty(global, 'localStorage', {
-  value: {
-    getItem: vi.fn((key) => mockLocalStorageData[key] || null),
-    setItem: vi.fn((key, value) => {
-      mockLocalStorageData[key] = value
-    }),
-    removeItem: vi.fn((key) => {
-      delete mockLocalStorageData[key]
-    }),
-    clear: vi.fn(() => {
-      Object.keys(mockLocalStorageData).forEach((key) => delete mockLocalStorageData[key])
-    }),
-  },
-  writable: true,
-})
 
 // Mock the stores completely BEFORE importing
 vi.mock('@/stores/workoutStore', () => ({
@@ -173,17 +155,13 @@ vi.mock('@/components/ui/command', () => ({
   },
 }))
 
-// Import the mocked stores
-import { useWorkoutStore } from '@/stores/workoutStore'
-import { useExerciseStore } from '@/stores/exerciseStore'
-
 describe('QuickLogSheet', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
 
-    // Reset localStorage mock data
-    Object.keys(mockLocalStorageData).forEach((key) => delete mockLocalStorageData[key])
+    // Reset localStorage
+    localStorage.clear()
 
     // Reset workout store state
     mockWorkoutStore.activeWorkout = null
@@ -453,7 +431,7 @@ describe('QuickLogSheet', () => {
     }
 
     it('should pre-fill weight from localStorage', async () => {
-      mockLocalStorageData['obsessed_lastWeight'] = '80'
+      localStorage.setItem('obsessed_lastWeight', '80')
 
       const wrapper = createWrapper()
       await goToDetailsStep(wrapper)

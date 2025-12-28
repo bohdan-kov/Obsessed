@@ -322,7 +322,7 @@ onUnmounted(() => {
           </span>
           <div class="legend-colors">
             <div
-              v-for="(level, index) in legendLevels"
+              v-for="level in legendLevels"
               :key="level"
               :class="['legend-cell', getColorClass(level)]"
             />

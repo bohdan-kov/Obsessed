@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* global process */
+
 
 /**
  * Workout Seed Script for Obsessed Gym Tracker

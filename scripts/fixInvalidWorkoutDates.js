@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* global process */
+
 
 /**
  * Fix Invalid Workout Dates Script

@@ -70,7 +70,7 @@ const sortedExercises = computed(() => {
     case 'lastPerformed':
       return exercises.sort((a, b) => b.lastPerformed - a.lastPerformed)
 
-    case 'trend':
+    case 'trend': {
       // Sort by trend direction (up > flat > down) then by percentage
       const trendOrder = { up: 3, flat: 2, down: 1, insufficient_data: 0 }
       return exercises.sort((a, b) => {
@@ -78,6 +78,7 @@ const sortedExercises = computed(() => {
         if (orderDiff !== 0) return orderDiff
         return b.trendPercentage - a.trendPercentage
       })
+    }
 
     default:
       return exercises
