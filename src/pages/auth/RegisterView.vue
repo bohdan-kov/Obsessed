@@ -113,7 +113,7 @@ const displayError = computed(() => localError.value || authStore.error)
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-background p-4">
+  <div class="flex min-h-screen-safe items-center justify-center bg-background p-4">
     <Card class="w-full max-w-md">
       <CardHeader class="space-y-1">
         <CardTitle class="text-2xl font-bold">Create an account</CardTitle>

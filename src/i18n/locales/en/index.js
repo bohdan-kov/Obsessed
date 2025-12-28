@@ -14,6 +14,7 @@ import community from './community.json'
 import goals from './goals.json'
 import schedule from './schedule.json'
 import more from './more.json'
+import charts from './charts.json'
 
 export default {
   common,
@@ -32,4 +33,5 @@ export default {
   goals,
   schedule,
   more,
+  charts,
 }

@@ -76,7 +76,7 @@ const buttonText = computed(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-background p-4">
+  <div class="flex min-h-screen-safe items-center justify-center bg-background p-4">
     <Card class="w-full max-w-md">
       <CardHeader class="space-y-1 text-center">
         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">

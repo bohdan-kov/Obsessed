@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useMediaQuery } from '@vueuse/core'
 import { CurveType } from '@unovis/ts'
 import { VisAxis, VisLine, VisXYContainer } from '@unovis/vue'
+import { Maximize2 } from 'lucide-vue-next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ChartContainer,
@@ -16,6 +17,8 @@ import {
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useUnits } from '@/composables/useUnits'
 import { useLocale } from '@/composables/useLocale'
+import { useFullscreenChart } from '@/composables/useFullscreenChart'
+import FullscreenChartOverlay from '@/components/charts/FullscreenChartOverlay.vue'
 import { MUSCLE_COLORS } from '@/utils/chartUtils'
 import { CONFIG } from '@/constants/config'
 import { formatDateShort } from '@/utils/dateUtils'
@@ -28,7 +31,10 @@ const analyticsStore = useAnalyticsStore()
 const { muscleVolumeByDay, loading, period, currentRange } = storeToRefs(analyticsStore)
 
 // Mobile detection for responsive behavior
-const isMobile = useMediaQuery('(max-width: 640px)')
+const isMobile = useMediaQuery('(max-width: 768px)')
+
+// Full-screen functionality
+const { isFullscreen, enterFullscreen, exitFullscreen } = useFullscreenChart()
 
 // Ref for scroll container
 const chartScrollRef = ref(null)
@@ -222,9 +228,21 @@ onMounted(async () => {
           {{ t('analytics.muscles.volumeOverTime.description') }}
         </CardDescription>
       </div>
+
+      <!-- Full-screen button (mobile only, hidden when no data) -->
+      <button
+        v-if="isMobile && !isFullscreen && chartData.length > 0"
+        type="button"
+        @click="enterFullscreen"
+        class="inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-muted transition-colors touch-manipulation shrink-0"
+        :aria-label="t('charts.fullscreen.open')"
+      >
+        <Maximize2 class="w-5 h-5" />
+      </button>
     </CardHeader>
 
-    <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
+    <!-- Normal view -->
+    <CardContent v-if="!isFullscreen" class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
       <!-- Loading state -->
       <div v-if="loading" class="flex items-center justify-center h-[400px]">
         <div class="text-muted-foreground">{{ t('common.loading') }}</div>
@@ -369,6 +387,113 @@ onMounted(async () => {
         </div>
       </ChartContainer>
     </CardContent>
+
+    <!-- Full-screen overlay -->
+    <FullscreenChartOverlay
+      :is-open="isFullscreen"
+      :title="t('analytics.muscles.volumeOverTime.title')"
+      @close="exitFullscreen"
+    >
+      <ChartContainer :config="chartConfig" class="w-full max-w-full h-full" :cursor="false">
+        <!-- Scroll wrapper for mobile -->
+        <div
+          ref="chartScrollRef"
+          class="chart-scroll-wrapper"
+          :class="{ 'mobile-scroll': isMobile && chartMinWidth !== 'auto' }"
+        >
+          <!-- Chart visualization with optimized height for landscape -->
+          <div class="aspect-auto h-[calc(100vh-120px)] w-full" :style="{ minWidth: chartMinWidth }">
+            <VisXYContainer
+              :key="`chart-${period}-${currentRange.start?.getTime()}-${currentRange.end?.getTime()}`"
+              :data="chartData"
+              :margin="{ top: 10, left: 0, right: 40, bottom: 30 }"
+              :y-domain="yDomain"
+            >
+              <!-- Lines for each muscle group (only visible ones) -->
+              <VisLine
+                v-for="muscle in visibleMusclesArray"
+                :key="muscle"
+                :x="(_d, i) => i"
+                :y="(d) => d[muscle]"
+                :color="MUSCLE_COLORS[muscle]"
+                :line-width="3"
+                :curve-type="CurveType.MonotoneX"
+              />
+
+              <!-- X-Axis (Dates) with daily labels -->
+              <VisAxis
+                type="x"
+                :x="(_d, i) => i"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :num-ticks="6"
+                :tick-format="formatDateLabel"
+              />
+
+              <!-- Y-Axis (Volume) -->
+              <VisAxis
+                type="y"
+                :num-ticks="3"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :tick-format="formatYAxisValue"
+              />
+
+              <!-- Tooltip -->
+              <ChartTooltip />
+
+              <!-- Crosshair with formatted tooltip -->
+              <ChartCrosshair
+                :key="visibleMusclesArray.join(',')"
+                :template="
+                  componentToString(visibleChartConfig, ChartTooltipContent, {
+                    indicator: 'line',
+                    labelFormatter: (dateValue) => dateValue ? formatDateShort(dateValue, currentLocale) : '',
+                    valueFormatter: formatTooltipValue,
+                  })
+                "
+                :color="
+                  (_d, i) => {
+                    // Map series index to visible muscle colors
+                    return visibleMusclesArray[i] ? MUSCLE_COLORS[visibleMusclesArray[i]] : 'currentColor'
+                  }
+                "
+              />
+            </VisXYContainer>
+          </div>
+
+          <!-- Gradient overlay for scroll indicator (mobile only) -->
+          <div v-if="isMobile && chartMinWidth !== 'auto'" class="scroll-gradient" />
+        </div>
+
+        <!-- Custom interactive legend -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-2 mb-8">
+          <button
+            v-for="muscle in MUSCLES"
+            :key="muscle"
+            type="button"
+            @click="toggleMuscle(muscle)"
+            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
+            :class="
+              visibleMuscles.has(muscle)
+                ? 'bg-muted/50 hover:bg-muted'
+                : 'bg-background border border-border opacity-50 hover:opacity-75'
+            "
+            :aria-pressed="visibleMuscles.has(muscle)"
+            :aria-label="`Toggle ${t(`common.muscleGroups.${muscle}`)}`"
+          >
+            <span
+              class="inline-block w-3 h-3 rounded-sm shrink-0"
+              :style="{ backgroundColor: MUSCLE_COLORS[muscle] }"
+              aria-hidden="true"
+            />
+            <span>{{ t(`common.muscleGroups.${muscle}`) }}</span>
+          </button>
+        </div>
+      </ChartContainer>
+    </FullscreenChartOverlay>
   </Card>
 </template>
 

@@ -23,7 +23,6 @@ const isTablet = computed(() =>
   width.value >= CONFIG.ui.TABLET_BREAKPOINT &&
   width.value < CONFIG.ui.SIDEBAR_EXPAND_BREAKPOINT
 )
-const isDesktop = computed(() => width.value >= CONFIG.ui.SIDEBAR_EXPAND_BREAKPOINT)
 
 // Control what shows where
 const showSidebar = computed(() => !isMobile.value) // Show sidebar on tablet and desktop
@@ -32,7 +31,7 @@ const sidebarCollapsed = computed(() => isTablet.value) // Auto-collapse on tabl
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden bg-background">
+  <div class="flex h-screen-safe overflow-hidden bg-background">
     <!-- Desktop/Tablet Sidebar - Hidden on mobile, visible on tablet (collapsed) and desktop (expanded) -->
     <AppSidebar v-if="showSidebar" :force-collapsed="sidebarCollapsed" class="hidden md:flex" />
 

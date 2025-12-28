@@ -79,7 +79,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
   <TooltipProvider>
     <aside
       :class="[
-        'flex flex-col h-screen bg-[#0a0a0c] border-r border-white/6 transition-all duration-200',
+        'flex flex-col h-screen-safe bg-[#0a0a0c] border-r border-white/6 transition-all duration-200',
         collapsed ? 'w-[68px]' : 'w-[260px]',
       ]"
     >
