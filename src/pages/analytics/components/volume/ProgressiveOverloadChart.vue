@@ -2,8 +2,9 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { useMediaQuery } from '@vueuse/core'
 import { VisAxis, VisGroupedBar, VisXYContainer } from '@unovis/vue'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-vue-next'
+import { TrendingUp, TrendingDown, Minus, Maximize2 } from 'lucide-vue-next'
 import {
   Card,
   CardContent,
@@ -20,11 +21,17 @@ import {
 } from '@/components/ui/chart'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useUnits } from '@/composables/useUnits'
+import { useFullscreenChart } from '@/composables/useFullscreenChart'
+import FullscreenChartOverlay from '@/components/charts/FullscreenChartOverlay.vue'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { weeklyVolumeProgression, progressiveOverloadStats } = storeToRefs(analyticsStore)
 const { formatWeight } = useUnits()
+
+// Mobile detection and full-screen functionality
+const isMobile = useMediaQuery('(max-width: 768px)')
+const { isFullscreen, enterFullscreen, exitFullscreen } = useFullscreenChart()
 
 // Status colors matching the existing STATUS_COLORS pattern
 const STATUS_COLORS = {
@@ -80,14 +87,29 @@ const yDomain = computed(() => {
 
 <template>
   <Card data-testid="progressive-overload-chart">
-    <CardHeader>
-      <CardTitle>{{ t('analytics.volume.progressiveOverload.title') }}</CardTitle>
-      <CardDescription>
-        {{ t('analytics.volume.progressiveOverload.description') }}
-      </CardDescription>
+    <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+      <div class="grid flex-1 gap-1">
+        <CardTitle>{{ t('analytics.volume.progressiveOverload.title') }}</CardTitle>
+        <CardDescription>
+          {{ t('analytics.volume.progressiveOverload.description') }}
+        </CardDescription>
+      </div>
 
-      <!-- Stats Panel -->
-      <div v-if="progressiveOverloadStats && !isEmpty" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+      <!-- Full-screen button (mobile only, hidden when no data) -->
+      <button
+        v-if="isMobile && !isFullscreen && chartData.length > 0"
+        type="button"
+        @click="enterFullscreen"
+        class="inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-muted transition-colors touch-manipulation shrink-0"
+        :aria-label="t('charts.fullscreen.open')"
+      >
+        <Maximize2 class="w-5 h-5" />
+      </button>
+    </CardHeader>
+
+    <!-- Stats Panel (hidden in full-screen) -->
+    <div v-if="progressiveOverloadStats && !isEmpty && !isFullscreen" class="px-6 pt-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <!-- Weeks Progressing -->
         <div class="rounded-lg border bg-card p-3">
           <div class="text-xs text-muted-foreground">
@@ -150,9 +172,10 @@ const yDomain = computed(() => {
           </div>
         </div>
       </div>
-    </CardHeader>
+    </div>
 
-    <CardContent v-if="!isEmpty">
+    <!-- Normal view -->
+    <CardContent v-if="!isEmpty && !isFullscreen">
       <ChartContainer :config="chartConfig" class="w-full">
         <!-- Chart visualization -->
         <div class="aspect-auto h-[350px] w-full overflow-x-auto">
@@ -242,7 +265,7 @@ const yDomain = computed(() => {
     </CardContent>
 
     <!-- Empty State -->
-    <CardContent v-else>
+    <CardContent v-else-if="isEmpty">
       <div
         class="flex flex-col items-center justify-center py-12 text-muted-foreground"
       >
@@ -251,5 +274,99 @@ const yDomain = computed(() => {
         <p class="text-xs mt-1">{{ t('analytics.emptyStates.noWorkouts') }}</p>
       </div>
     </CardContent>
+
+    <!-- Full-screen overlay -->
+    <FullscreenChartOverlay
+      :is-open="isFullscreen"
+      :title="t('analytics.volume.progressiveOverload.title')"
+      @close="exitFullscreen"
+    >
+      <ChartContainer :config="chartConfig" class="w-full max-w-full h-full">
+        <!-- Chart visualization with optimized height for landscape -->
+        <div class="aspect-auto h-[calc(100vh-120px)] w-full overflow-x-auto">
+          <div class="min-w-[600px] h-full">
+            <VisXYContainer
+              :data="chartData"
+              :margin="{ left: 10, right: 40, top: 20, bottom: 60 }"
+              :y-domain="yDomain"
+            >
+              <!-- Bar Chart -->
+              <VisGroupedBar
+                :x="(d) => d.weekIndex"
+                :y="(d) => d.volume"
+                :color="getBarColor"
+                :rounded-corners="4"
+              />
+
+              <!-- X-Axis with week labels -->
+              <VisAxis
+                type="x"
+                :x="(d) => d.weekIndex"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :num-ticks="6"
+                :tick-format="(index) => {
+                  const dataPoint = chartData[Math.round(index)]
+                  return dataPoint?.weekLabel || ''
+                }"
+              />
+
+              <!-- Y-Axis with volume labels -->
+              <VisAxis
+                type="y"
+                :num-ticks="5"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :tick-format="(value) => Math.round(value).toString()"
+              />
+
+              <ChartTooltip />
+              <ChartCrosshair
+                :template="componentToString(chartConfig, ChartTooltipContent, {
+                  indicator: 'line',
+                  labelFormatter: (index) => {
+                    const dataPoint = chartData[Math.round(index)]
+                    return dataPoint?.weekLabel || ''
+                  },
+                  valueFormatter: (value, key) => {
+                    if (key === 'volume') {
+                      return formatWeight(value, { precision: 0 })
+                    }
+                    return String(value)
+                  },
+                })"
+                :color="(d) => getBarColor(d)"
+              />
+            </VisXYContainer>
+          </div>
+        </div>
+      </ChartContainer>
+
+      <!-- Legend -->
+      <div
+        class="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground flex-wrap"
+      >
+        <div class="flex items-center gap-1.5">
+          <TrendingUp class="w-4 h-4 text-green-500" />
+          <span
+            >{{ t('analytics.volume.progressiveOverload.statusLabels.progressing') }} (≥2.5%)</span
+          >
+        </div>
+        <div class="flex items-center gap-1.5">
+          <Minus class="w-4 h-4 text-amber-500" />
+          <span
+            >{{ t('analytics.volume.progressiveOverload.statusLabels.maintaining') }} (±2.5%)</span
+          >
+        </div>
+        <div class="flex items-center gap-1.5">
+          <TrendingDown class="w-4 h-4 text-red-500" />
+          <span
+            >{{ t('analytics.volume.progressiveOverload.statusLabels.regressing') }} (≤-2.5%)</span
+          >
+        </div>
+      </div>
+    </FullscreenChartOverlay>
   </Card>
 </template>

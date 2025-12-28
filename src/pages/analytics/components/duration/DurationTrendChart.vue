@@ -3,10 +3,14 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
 import { VisXYContainer, VisScatter, VisAxis, VisLine } from '@unovis/vue'
 import { Scatter } from '@unovis/ts'
+import { Maximize2 } from 'lucide-vue-next'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useUnits } from '@/composables/useUnits'
+import { useFullscreenChart } from '@/composables/useFullscreenChart'
+import FullscreenChartOverlay from '@/components/charts/FullscreenChartOverlay.vue'
 import {
   ChartContainer,
   ChartCrosshair,
@@ -23,6 +27,10 @@ const router = useRouter()
 
 const analyticsStore = useAnalyticsStore()
 const { durationTrendData, durationStats, loading } = storeToRefs(analyticsStore)
+
+// Mobile detection and full-screen functionality
+const isMobile = useMediaQuery('(max-width: 768px)')
+const { isFullscreen, enterFullscreen, exitFullscreen } = useFullscreenChart()
 
 // Transform data for Unovis
 const chartData = computed(() => {
@@ -203,16 +211,31 @@ const trendLabel = computed(() => {
 </script>
 
 <template>
-  <BaseChart
-    data-testid="duration-trend-chart"
-    :title="t('analytics.duration.trendChart.title')"
-    :description="t('analytics.duration.trendChart.description')"
-    :data="durationTrendData"
-    :loading="loading"
-    empty-icon="clock"
-    height="500px"
-  >
-    <template #header>
+  <div class="duration-trend-chart-wrapper">
+    <BaseChart
+      v-if="!isFullscreen"
+      data-testid="duration-trend-chart"
+      :title="t('analytics.duration.trendChart.title')"
+      :description="t('analytics.duration.trendChart.description')"
+      :data="durationTrendData"
+      :loading="loading"
+      empty-icon="clock"
+      height="500px"
+    >
+      <template #actions>
+        <!-- Full-screen button (mobile only, hidden when no data) -->
+        <button
+          v-if="isMobile && chartData.length > 0"
+          type="button"
+          @click="enterFullscreen"
+          class="inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-muted transition-colors touch-manipulation shrink-0"
+          :aria-label="t('charts.fullscreen.open')"
+        >
+          <Maximize2 class="w-5 h-5" />
+        </button>
+      </template>
+
+      <template #header>
       <!-- Stats Panel -->
       <div v-if="durationStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
         <!-- Average -->
@@ -362,7 +385,96 @@ const trendLabel = computed(() => {
         </div>
       </div>
     </template>
-  </BaseChart>
+    </BaseChart>
+
+    <!-- Full-screen overlay -->
+    <FullscreenChartOverlay
+      :is-open="isFullscreen"
+      :title="t('analytics.duration.trendChart.title')"
+      @close="exitFullscreen"
+    >
+      <ChartContainer :config="chartConfig" class="w-full max-w-full h-full">
+        <div class="aspect-auto h-[calc(100vh-120px)] w-full overflow-x-auto">
+          <div class="min-w-[600px] h-full">
+            <VisXYContainer
+              :data="chartData"
+              :margin="{ left: 60, right: 20, top: 20, bottom: 60 }"
+              :y-domain="yDomain"
+            >
+              <!-- Trend line (rendered first so it appears behind points) -->
+              <VisLine
+                v-if="chartData.length >= 2"
+                :x="(d) => d.index"
+                :y="(d) => d.trendDuration"
+                color="#64748b"
+                :line-width="2"
+              />
+
+              <!-- Scatter plot -->
+              <VisScatter
+                :x="(d) => d.index"
+                :y="(d) => d.duration"
+                :size="(d) => d.size"
+                :color="getPointColor"
+                :cursor="'pointer'"
+                :events="scatterEvents"
+              />
+
+              <!-- X-Axis -->
+              <VisAxis
+                type="x"
+                :x="(d) => d.index"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :num-ticks="6"
+                :tick-format="(index) => {
+                  const dataPoint = chartData[Math.round(index)]
+                  return dataPoint?.dateLabel || ''
+                }"
+              />
+
+              <!-- Y-Axis -->
+              <VisAxis
+                type="y"
+                :num-ticks="5"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :tick-format="(value) => Math.round(value).toString()"
+              />
+
+              <!-- Tooltip -->
+              <ChartTooltip />
+              <ChartCrosshair
+                :color="(d) => getPointColor(d)"
+                :template="componentToString(chartConfig, ChartTooltipContent, {
+                  labelFormatter: labelFormatter,
+                  valueFormatter: valueFormatter,
+                })"
+              />
+            </VisXYContainer>
+          </div>
+        </div>
+      </ChartContainer>
+
+      <!-- Legend -->
+      <div class="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-[#06b6d4]" />
+          <span>{{ t('analytics.duration.trendChart.volumeLow') }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-[#f59e0b]" />
+          <span>{{ t('analytics.duration.trendChart.volumeMedium') }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-[#10b981]" />
+          <span>{{ t('analytics.duration.trendChart.volumeHigh') }}</span>
+        </div>
+      </div>
+    </FullscreenChartOverlay>
+  </div>
 </template>
 
 <style scoped>

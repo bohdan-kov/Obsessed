@@ -156,9 +156,34 @@ vi.mock('@/utils/dateUtils', () => ({
   isValidDate: vi.fn(() => true),
 }))
 
-// Mock @vueuse/core
+// Mock @vueuse/core - must return actual Vue ref for template auto-unwrapping
 vi.mock('@vueuse/core', () => ({
-  useMediaQuery: vi.fn(() => ({ value: false })),
+  useMediaQuery: vi.fn(() => ref(false)),
+}))
+
+// Mock vue-router (required by useFullscreenChart composable)
+vi.mock('vue-router', () => ({
+  useRouter: vi.fn(() => ({
+    beforeEach: vi.fn(() => vi.fn()),
+  })),
+}))
+
+// Mock useFullscreenChart composable to avoid side effects
+vi.mock('@/composables/useFullscreenChart', () => ({
+  useFullscreenChart: vi.fn(() => ({
+    isFullscreen: ref(false),
+    enterFullscreen: vi.fn(),
+    exitFullscreen: vi.fn(),
+  })),
+}))
+
+// Mock FullscreenChartOverlay component to prevent rendering
+vi.mock('@/components/charts/FullscreenChartOverlay.vue', () => ({
+  default: {
+    name: 'FullscreenChartOverlay',
+    props: ['isOpen', 'title'],
+    template: '<div v-if="isOpen" class="fullscreen-overlay"><slot /></div>',
+  },
 }))
 
 // Module-level mock refs
@@ -257,7 +282,7 @@ describe('MuscleVolumeChart', () => {
     it('should render all muscle legend buttons', () => {
       const wrapper = createWrapper()
       const buttons = wrapper.findAll('button')
-      // 8 muscle groups
+      // 8 muscle groups (fullscreen button is hidden on desktop)
       expect(buttons.length).toBe(8)
     })
 

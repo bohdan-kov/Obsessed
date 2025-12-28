@@ -6,6 +6,26 @@ import { vi } from 'vitest'
 import { config } from '@vue/test-utils'
 import { ref, computed } from 'vue'
 
+// Suppress Vue lifecycle warnings in composable tests
+// When testing composables directly (outside of components), Vue warns about
+// onMounted/onUnmounted being called without an active component instance.
+// This is expected behavior in tests and doesn't affect functionality.
+const originalWarn = console.warn
+console.warn = (...args) => {
+  const msg = args[0]
+  if (typeof msg === 'string') {
+    // Suppress lifecycle injection warnings
+    if (
+      msg.includes('onMounted is called when there is no active component instance') ||
+      msg.includes('onUnmounted is called when there is no active component instance')
+    ) {
+      return // Skip these warnings
+    }
+  }
+  // Pass through all other warnings
+  originalWarn(...args)
+}
+
 // Mock Firebase configuration globally
 // This prevents Firebase validation errors in CI/CD environments
 vi.mock('@/firebase/config', () => ({

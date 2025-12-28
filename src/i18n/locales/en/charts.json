@@ -1,0 +1,7 @@
+{
+  "fullscreen": {
+    "open": "Open in full screen",
+    "close": "Close full screen",
+    "active": "Chart in full screen mode"
+  }
+}

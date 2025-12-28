@@ -3,8 +3,8 @@
     class="container mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:py-8"
   >
     <!-- Page Header -->
-    <div class="flex items-center justify-between">
-      <h1 class="text-4xl font-bold">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <h1 class="text-3xl font-bold sm:text-4xl">
         {{ t('workout.activeWorkout.title') }}
       </h1>
 
@@ -12,7 +12,7 @@
       <Button
         v-if="!hasActiveWorkout"
         size="lg"
-        class="h-12"
+        class="h-12 w-full sm:w-auto"
         @click="handleStartWorkout"
       >
         <Play class="mr-2 h-5 w-5" />
@@ -79,7 +79,7 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { storeToRefs } from 'pinia'
+import { storeToRefs } from 'pinia' // cspell:disable-line
 import { useActiveWorkout } from '@/composables/useActiveWorkout'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { Card, CardContent } from '@/components/ui/card'
@@ -125,7 +125,7 @@ onMounted(async () => {
   // The subscription will then keep it updated
   try {
     await workoutStore.fetchWorkouts('month')
-  } catch (error) {
+  } catch (_error) {
     // Error handled by workoutStore
   }
 })
