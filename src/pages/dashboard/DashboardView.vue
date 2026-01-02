@@ -7,14 +7,22 @@ import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { useUnits } from '@/composables/useUnits'
+import { usePageMeta } from '@/composables/usePageMeta'
 import StatCard from './components/StatCard.vue'
 import ChartSection from './components/ChartSection.vue'
 import ExerciseTable from './components/ExerciseTable.vue'
 import PersonalStatsCard from './components/PersonalStatsCard.vue'
-import GlobalPeriodSelector from './components/GlobalPeriodSelector.vue'
+import PeriodSelector from '@/pages/analytics/components/shared/PeriodSelector.vue'
 
 const { t } = useI18n()
 const { displayName } = useAuth()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('dashboard.title')),
+  computed(() => `${t('dashboard.welcomeBack')}, ${displayName.value || 'User'}! 👋`)
+)
+
 const analyticsStore = useAnalyticsStore()
 const workoutStore = useWorkoutStore()
 const { handleError } = useErrorHandler()
@@ -168,17 +176,17 @@ onUnmounted(() => {
 
 <template>
   <div class="container max-w-7xl mx-auto py-6 px-4 sm:py-8 space-y-6 sm:space-y-8">
-    <!-- Header with Period Selector -->
+    <!-- Header with Period Selector - Title hidden on mobile, shown on desktop -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+      <div class="hidden md:block">
         <h1 class="text-3xl font-bold">{{ t('dashboard.title') }}</h1>
         <p class="text-muted-foreground mt-1">
           {{ t('dashboard.welcomeBack') }}, {{ displayName || 'User' }}! 👋
         </p>
       </div>
 
-      <!-- Global Period Selector -->
-      <GlobalPeriodSelector />
+      <!-- Period Selector -->
+      <PeriodSelector variant="select" size="default" />
     </div>
 
     <!-- Stats Grid -->

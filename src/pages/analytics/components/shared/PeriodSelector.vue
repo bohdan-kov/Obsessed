@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { Calendar } from 'lucide-vue-next'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { CONFIG } from '@/constants/config'
 import { Button } from '@/components/ui/button'
@@ -96,13 +97,16 @@ const buttonSizeClass = computed(() => {
     >
       <SelectTrigger
         :class="[
-          'w-full sm:w-[200px]',
+          'w-[180px]',
           props.size === 'sm' ? 'h-8 text-xs' : '',
           props.size === 'lg' ? 'h-11 text-base' : '',
         ]"
-        aria-label="Select period"
+        :aria-label="t('dashboard.periodSelector.ariaLabel')"
       >
-        <SelectValue :placeholder="t('dashboard.periodSelector.last30Days')" />
+        <div class="flex items-center gap-2">
+          <Calendar class="h-4 w-4" />
+          <SelectValue :placeholder="t('dashboard.periodSelector.placeholder')" />
+        </div>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

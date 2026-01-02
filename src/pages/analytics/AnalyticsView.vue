@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Target, Clock, Dumbbell, TrendingUp } from 'lucide-vue-next'
@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
+import { usePageMeta } from '@/composables/usePageMeta'
 import PeriodSelector from './components/shared/PeriodSelector.vue'
 import MuscleVolumeChart from './components/muscles/MuscleVolumeChart.vue'
 import DurationTrendChart from './components/duration/DurationTrendChart.vue'
@@ -15,6 +16,13 @@ import ProgressiveOverloadChart from './components/volume/ProgressiveOverloadCha
 import ExerciseProgressTable from './components/exercises/ExerciseProgressTable.vue'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('analytics.title')),
+  computed(() => t('analytics.description'))
+)
+
 const route = useRoute()
 const router = useRouter()
 const workoutStore = useWorkoutStore()
@@ -143,14 +151,15 @@ watch(
 
 <template>
   <div class="container max-w-7xl mx-auto py-6 px-4 sm:py-8 space-y-6 sm:space-y-8">
-    <!-- Page Header -->
+    <!-- Page Header - Title hidden on mobile, shown on desktop -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <h1 class="text-3xl font-bold sm:text-4xl">{{ t('analytics.title') }}</h1>
+      <div class="hidden md:block">
+        <h1 class="text-3xl font-bold sm:text-4xl">{{ t('analytics.title') }}</h1>
+        <p class="text-muted-foreground mt-1">{{ t('analytics.description') }}</p>
+      </div>
 
       <!-- Period Selector -->
-      <div class="w-full sm:w-auto shrink-0">
-        <PeriodSelector variant="select" size="default" />
-      </div>
+      <PeriodSelector variant="select" size="default" />
     </div>
 
     <!-- Analytics Tabs -->

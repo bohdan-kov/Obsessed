@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Accordion,
@@ -12,6 +13,12 @@ import { Button } from '@/components/ui/button'
 import { HelpCircle, Mail, Book, Lightbulb, MessageSquare } from 'lucide-vue-next'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('help.title')),
+  computed(() => t('help.subtitle'))
+)
 const expandedFaq = ref(['faq-1'])
 
 const faqItems = [
@@ -40,8 +47,8 @@ const faqItems = [
 
 <template>
   <div class="container max-w-4xl mx-auto py-6 px-4 space-y-6">
-    <!-- Header -->
-    <div class="space-y-2">
+    <!-- Header (hidden on mobile, shown in AppLayout mobile header) -->
+    <div class="hidden md:block space-y-2">
       <h1 class="text-3xl font-bold tracking-tight">{{ t('help.title') }}</h1>
       <p class="text-muted-foreground">{{ t('help.subtitle') }}</p>
     </div>

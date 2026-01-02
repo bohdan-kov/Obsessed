@@ -153,6 +153,83 @@ describe('WorkoutHistoryCard', () => {
       expect(wrapper.find('.text-lg').exists()).toBe(true)
     })
 
+    it('should handle Firestore Timestamp with toDate method', () => {
+      const mockTimestamp = {
+        toDate: () => new Date('2023-11-30T10:00:00'),
+        seconds: 1701342000,
+        nanoseconds: 0,
+      }
+
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        completedAt: mockTimestamp,
+      })
+
+      // Should successfully format the date
+      expect(wrapper.find('.text-lg').exists()).toBe(true)
+      expect(wrapper.find('.text-lg').text()).not.toMatch(/Unknown|Невідомо/)
+    })
+
+    it('should handle Firestore Timestamp with seconds property', () => {
+      const mockTimestamp = {
+        seconds: 1701342000,
+        nanoseconds: 0,
+      }
+
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        completedAt: mockTimestamp,
+      })
+
+      // Should successfully convert seconds to date
+      expect(wrapper.find('.text-lg').exists()).toBe(true)
+      expect(wrapper.find('.text-lg').text()).not.toMatch(/Unknown|Невідомо/)
+    })
+
+    it('should handle Date object', () => {
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        completedAt: new Date('2023-11-30T10:00:00'),
+      })
+
+      // Should successfully format Date object
+      expect(wrapper.find('.text-lg').exists()).toBe(true)
+      expect(wrapper.find('.text-lg').text()).not.toMatch(/Unknown|Невідомо/)
+    })
+
+    it('should handle ISO date string', () => {
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        completedAt: '2023-11-30T10:00:00.000Z',
+      })
+
+      // Should successfully parse ISO string
+      expect(wrapper.find('.text-lg').exists()).toBe(true)
+      expect(wrapper.find('.text-lg').text()).not.toMatch(/Unknown|Невідомо/)
+    })
+
+    it('should handle invalid date gracefully', () => {
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        completedAt: 'invalid-date',
+      })
+
+      // Should display "Unknown date" for invalid date
+      const text = wrapper.find('.text-lg').text()
+      expect(text).toMatch(/Unknown|Невідомо|workout\.history\.card\.dateUnknown/)
+    })
+
+    it('should handle missing completedAt', () => {
+      const wrapper = createWrapper({
+        ...mockWorkout,
+        completedAt: null,
+      })
+
+      // Should display "Unknown date" for missing date
+      const text = wrapper.find('.text-lg').text()
+      expect(text).toMatch(/Unknown|Невідомо|workout\.history\.card\.dateUnknown/)
+    })
+
     it('should display total volume with unit', () => {
       const wrapper = createWrapper()
 

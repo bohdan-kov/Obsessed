@@ -69,7 +69,7 @@ function handleClose() {
     >
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 bg-background"
+        class="fixed inset-0 z-50 bg-background flex flex-col"
         role="dialog"
         aria-modal="true"
         :aria-label="t('charts.fullscreen.active')"
@@ -106,8 +106,12 @@ function handleClose() {
 
         <!-- Chart content area -->
         <div
-          class="h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden"
-          style="padding-bottom: max(env(safe-area-inset-bottom, 1rem), 1rem)"
+          class="flex-1 overflow-hidden flex flex-col"
+          style="
+            padding-bottom: max(env(safe-area-inset-bottom, 0.5rem), 0.5rem);
+            padding-left: max(env(safe-area-inset-left, 0.5rem), 0.5rem);
+            padding-right: max(env(safe-area-inset-right, 0.5rem), 0.5rem);
+          "
         >
           <slot />
         </div>

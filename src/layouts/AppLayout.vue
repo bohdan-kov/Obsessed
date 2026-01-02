@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, provide } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWindowSize } from '@vueuse/core'
 import { CONFIG } from '@/constants/config'
@@ -9,9 +9,13 @@ import MobileNav from './MobileNav.vue'
 const route = useRoute()
 const { width } = useWindowSize()
 
-// Get page title from route meta or name
+// Page metadata for mobile header (provided to child components via usePageMeta)
+const pageMeta = ref({ title: '', description: '' })
+provide('pageMeta', pageMeta)
+
+// Fallback page title from route meta or name (used if pageMeta is not set)
 const pageTitle = computed(() => {
-  return route.meta?.title || route.name || 'Obsessed'
+  return pageMeta.value.title || route.meta?.title || route.name || 'Obsessed'
 })
 
 // Responsive breakpoint logic
@@ -40,11 +44,19 @@ const sidebarCollapsed = computed(() => isTablet.value) // Auto-collapse on tabl
       <!-- Mobile Header - Only visible on mobile -->
       <header
         v-if="showMobileNav"
-        class="flex items-center justify-between h-16 px-4 border-b border-border md:hidden"
+        :class="[
+          'flex items-center px-4 border-b border-border md:hidden',
+          pageMeta.description ? 'h-20' : 'h-16'
+        ]"
       >
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
           <MobileNav />
-          <h1 class="text-lg font-semibold">{{ pageTitle }}</h1>
+          <div class="flex-1 min-w-0">
+            <h1 class="text-lg font-semibold truncate">{{ pageTitle }}</h1>
+            <p v-if="pageMeta.description" class="text-xs text-muted-foreground truncate">
+              {{ pageMeta.description }}
+            </p>
+          </div>
         </div>
       </header>
 

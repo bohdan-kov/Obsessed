@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { useUserStore } from '@/stores/userStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useUnits } from '@/composables/useUnits'
@@ -35,6 +36,12 @@ const authStore = useAuthStore()
 const { unitLabel, fromStorageUnit, toStorageUnit } = useUnits()
 const { handleError } = useErrorHandler()
 const { toast } = useToast()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('profile.title')),
+  computed(() => t('profile.description'))
+)
 
 // Local editing state
 const isEditingIdentity = ref(false)
@@ -316,8 +323,8 @@ async function savePersonalInfo() {
 
 <template>
   <div class="container max-w-4xl mx-auto py-6 px-4 sm:py-8 space-y-6 sm:space-y-8">
-    <!-- Header -->
-    <div>
+    <!-- Header (hidden on mobile, shown in AppLayout mobile header) -->
+    <div class="hidden md:block">
       <h1 class="text-3xl font-bold">{{ t('profile.title') }}</h1>
       <p class="text-muted-foreground mt-2">
         {{ t('profile.description') }}

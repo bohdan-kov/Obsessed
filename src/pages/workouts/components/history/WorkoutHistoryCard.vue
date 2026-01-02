@@ -1,5 +1,5 @@
 <template>
-  <Card class="cursor-pointer transition-colors hover:bg-accent">
+  <Card class="cursor-pointer transition-colors hover:bg-accent" @click="handleCardClick">
     <CardHeader class="pb-3">
       <div class="flex items-start justify-between">
         <div class="flex-1">
@@ -49,6 +49,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { useUnits } from '@/composables/useUnits'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -63,6 +64,8 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const { formatWeight } = useUnits()
 
 const exerciseStore = useExerciseStore()
@@ -102,11 +105,24 @@ const formattedDate = computed(() => {
   }
 
   try {
-    // Convert Firestore Timestamp or parse date string
-    const date =
-      props.workout.completedAt?.toDate
-        ? props.workout.completedAt.toDate()
-        : new Date(props.workout.completedAt)
+    let date
+
+    // Handle Firestore Timestamp (has toDate method)
+    if (typeof props.workout.completedAt?.toDate === 'function') {
+      date = props.workout.completedAt.toDate()
+    }
+    // Handle Firestore Timestamp object with seconds property
+    else if (props.workout.completedAt?.seconds) {
+      date = new Date(props.workout.completedAt.seconds * 1000)
+    }
+    // Handle Date object or date string
+    else if (props.workout.completedAt instanceof Date) {
+      date = props.workout.completedAt
+    }
+    // Handle ISO string or timestamp
+    else {
+      date = new Date(props.workout.completedAt)
+    }
 
     // Validate that the date is valid
     if (isNaN(date.getTime())) {
@@ -175,4 +191,23 @@ const remainingExercises = computed(() => {
   const total = props.workout.exercises?.length || 0
   return Math.max(0, total - MAX_EXERCISES_DISPLAY)
 })
+
+/**
+ * Navigate to workout detail view when card is clicked
+ * Preserve the active tab in query parameters for correct back navigation
+ */
+function handleCardClick() {
+  const query = { from: 'workouts' }
+
+  // Include current tab in query params if present
+  if (route.query.tab) {
+    query.tab = route.query.tab
+  }
+
+  router.push({
+    name: 'WorkoutDetail',
+    params: { id: props.workout.id },
+    query,
+  })
+}
 </script>

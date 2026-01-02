@@ -88,7 +88,7 @@ function getStatusColor(status) {
         </div>
         <!-- Mobile: Show mini chart inline -->
         <div class="sm:hidden flex items-center gap-2">
-          <ExerciseMiniChart :history="exercise.history" :width="80" :height="24" />
+          <ExerciseMiniChart :history="exercise.history" :trend="exercise.trend" :width="80" :height="24" />
           <span class="text-xs text-muted-foreground">
             {{ formatWeight(exercise.estimated1RM) }}
           </span>
@@ -173,7 +173,7 @@ function getStatusColor(status) {
             {{ t('analytics.exerciseProgress.chart.title') }}
           </h4>
           <div class="bg-background rounded-lg p-4 border">
-            <ExerciseMiniChart :history="exercise.history" :width="280" :height="100" />
+            <ExerciseMiniChart :history="exercise.history" :trend="exercise.trend" :width="280" :height="100" />
             <div class="mt-2 flex justify-between text-xs text-muted-foreground">
               <span>{{ exercise.history.length }} workouts</span>
               <span>{{ t('analytics.exerciseProgress.chart.yAxis') }}</span>

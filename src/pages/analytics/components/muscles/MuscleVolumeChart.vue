@@ -221,7 +221,7 @@ onMounted(async () => {
 
 <template>
   <Card class="pt-0">
-    <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+    <CardHeader class="flex flex-row items-center gap-2 space-y-0 border-b py-5">
       <div class="grid flex-1 gap-1">
         <CardTitle>{{ t('analytics.muscles.volumeOverTime.title') }}</CardTitle>
         <CardDescription>
@@ -292,7 +292,7 @@ onMounted(async () => {
             <VisXYContainer
               :key="`chart-${period}-${currentRange.start?.getTime()}-${currentRange.end?.getTime()}`"
               :data="chartData"
-              :margin="{ top: 10, left: 0, right: 40, bottom: 30 }"
+              :margin="{ top: 10, left: 0, right: 40, bottom: 60 }"
               :y-domain="yDomain"
             >
               <!-- Lines for each muscle group (only visible ones) -->
@@ -394,19 +394,19 @@ onMounted(async () => {
       :title="t('analytics.muscles.volumeOverTime.title')"
       @close="exitFullscreen"
     >
-      <ChartContainer :config="chartConfig" class="w-full max-w-full h-full" :cursor="false">
+      <ChartContainer :config="chartConfig" class="w-full h-full" :cursor="false">
         <!-- Scroll wrapper for mobile -->
         <div
           ref="chartScrollRef"
-          class="chart-scroll-wrapper"
+          class="chart-scroll-wrapper h-full"
           :class="{ 'mobile-scroll': isMobile && chartMinWidth !== 'auto' }"
         >
           <!-- Chart visualization with optimized height for landscape -->
-          <div class="aspect-auto h-[calc(100vh-120px)] w-full" :style="{ minWidth: chartMinWidth }">
+          <div class="h-full w-full" :style="{ minWidth: chartMinWidth }">
             <VisXYContainer
               :key="`chart-${period}-${currentRange.start?.getTime()}-${currentRange.end?.getTime()}`"
               :data="chartData"
-              :margin="{ top: 10, left: 0, right: 40, bottom: 30 }"
+              :margin="{ top: 10, left: 0, right: 40, bottom: 60 }"
               :y-domain="yDomain"
             >
               <!-- Lines for each muscle group (only visible ones) -->
@@ -466,31 +466,6 @@ onMounted(async () => {
 
           <!-- Gradient overlay for scroll indicator (mobile only) -->
           <div v-if="isMobile && chartMinWidth !== 'auto'" class="scroll-gradient" />
-        </div>
-
-        <!-- Custom interactive legend -->
-        <div class="flex flex-wrap items-center justify-center gap-3 mt-2 mb-8">
-          <button
-            v-for="muscle in MUSCLES"
-            :key="muscle"
-            type="button"
-            @click="toggleMuscle(muscle)"
-            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200"
-            :class="
-              visibleMuscles.has(muscle)
-                ? 'bg-muted/50 hover:bg-muted'
-                : 'bg-background border border-border opacity-50 hover:opacity-75'
-            "
-            :aria-pressed="visibleMuscles.has(muscle)"
-            :aria-label="`Toggle ${t(`common.muscleGroups.${muscle}`)}`"
-          >
-            <span
-              class="inline-block w-3 h-3 rounded-sm shrink-0"
-              :style="{ backgroundColor: MUSCLE_COLORS[muscle] }"
-              aria-hidden="true"
-            />
-            <span>{{ t(`common.muscleGroups.${muscle}`) }}</span>
-          </button>
         </div>
       </ChartContainer>
     </FullscreenChartOverlay>

@@ -235,9 +235,9 @@ const trendLabel = computed(() => {
         </button>
       </template>
 
-      <template #header>
-      <!-- Stats Panel -->
-      <div v-if="durationStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+    <template #default>
+      <!-- Stats Panel - moved here to allow full width -->
+      <div v-if="durationStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <!-- Average -->
         <div class="rounded-lg border bg-card p-3">
           <div class="text-xs text-muted-foreground">
@@ -300,9 +300,8 @@ const trendLabel = computed(() => {
           </div>
         </div>
       </div>
-    </template>
 
-    <template #default>
+      <!-- Chart -->
       <ChartContainer :config="chartConfig" class="w-full">
         <div class="aspect-auto h-[350px] w-full overflow-x-auto">
           <div class="min-w-[600px] h-full">
@@ -393,84 +392,87 @@ const trendLabel = computed(() => {
       :title="t('analytics.duration.trendChart.title')"
       @close="exitFullscreen"
     >
-      <ChartContainer :config="chartConfig" class="w-full max-w-full h-full">
-        <div class="aspect-auto h-[calc(100vh-120px)] w-full overflow-x-auto">
-          <div class="min-w-[600px] h-full">
-            <VisXYContainer
-              :data="chartData"
-              :margin="{ left: 60, right: 20, top: 20, bottom: 60 }"
-              :y-domain="yDomain"
-            >
-              <!-- Trend line (rendered first so it appears behind points) -->
-              <VisLine
-                v-if="chartData.length >= 2"
-                :x="(d) => d.index"
-                :y="(d) => d.trendDuration"
-                color="#64748b"
-                :line-width="2"
-              />
+      <div class="flex flex-col h-full w-full">
+        <!-- Chart Container - flex-1 takes available space -->
+        <ChartContainer :config="chartConfig" class="flex-1 w-full overflow-hidden">
+          <div class="h-full w-full overflow-x-auto">
+            <div class="min-w-[600px] h-full">
+              <VisXYContainer
+                :data="chartData"
+                :margin="{ left: 60, right: 20, top: 20, bottom: 60 }"
+                :y-domain="yDomain"
+              >
+                <!-- Trend line (rendered first so it appears behind points) -->
+                <VisLine
+                  v-if="chartData.length >= 2"
+                  :x="(d) => d.index"
+                  :y="(d) => d.trendDuration"
+                  color="#64748b"
+                  :line-width="2"
+                />
 
-              <!-- Scatter plot -->
-              <VisScatter
-                :x="(d) => d.index"
-                :y="(d) => d.duration"
-                :size="(d) => d.size"
-                :color="getPointColor"
-                :cursor="'pointer'"
-                :events="scatterEvents"
-              />
+                <!-- Scatter plot -->
+                <VisScatter
+                  :x="(d) => d.index"
+                  :y="(d) => d.duration"
+                  :size="(d) => d.size"
+                  :color="getPointColor"
+                  :cursor="'pointer'"
+                  :events="scatterEvents"
+                />
 
-              <!-- X-Axis -->
-              <VisAxis
-                type="x"
-                :x="(d) => d.index"
-                :tick-line="false"
-                :domain-line="false"
-                :grid-line="false"
-                :num-ticks="6"
-                :tick-format="(index) => {
-                  const dataPoint = chartData[Math.round(index)]
-                  return dataPoint?.dateLabel || ''
-                }"
-              />
+                <!-- X-Axis -->
+                <VisAxis
+                  type="x"
+                  :x="(d) => d.index"
+                  :tick-line="false"
+                  :domain-line="false"
+                  :grid-line="false"
+                  :num-ticks="6"
+                  :tick-format="(index) => {
+                    const dataPoint = chartData[Math.round(index)]
+                    return dataPoint?.dateLabel || ''
+                  }"
+                />
 
-              <!-- Y-Axis -->
-              <VisAxis
-                type="y"
-                :num-ticks="5"
-                :tick-line="false"
-                :domain-line="false"
-                :grid-line="false"
-                :tick-format="(value) => Math.round(value).toString()"
-              />
+                <!-- Y-Axis -->
+                <VisAxis
+                  type="y"
+                  :num-ticks="5"
+                  :tick-line="false"
+                  :domain-line="false"
+                  :grid-line="false"
+                  :tick-format="(value) => Math.round(value).toString()"
+                />
 
-              <!-- Tooltip -->
-              <ChartTooltip />
-              <ChartCrosshair
-                :color="(d) => getPointColor(d)"
-                :template="componentToString(chartConfig, ChartTooltipContent, {
-                  labelFormatter: labelFormatter,
-                  valueFormatter: valueFormatter,
-                })"
-              />
-            </VisXYContainer>
+                <!-- Tooltip -->
+                <ChartTooltip />
+                <ChartCrosshair
+                  :color="(d) => getPointColor(d)"
+                  :template="componentToString(chartConfig, ChartTooltipContent, {
+                    labelFormatter: labelFormatter,
+                    valueFormatter: valueFormatter,
+                  })"
+                />
+              </VisXYContainer>
+            </div>
           </div>
-        </div>
-      </ChartContainer>
+        </ChartContainer>
 
-      <!-- Legend -->
-      <div class="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-        <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded-full bg-[#06b6d4]" />
-          <span>{{ t('analytics.duration.trendChart.volumeLow') }}</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded-full bg-[#f59e0b]" />
-          <span>{{ t('analytics.duration.trendChart.volumeMedium') }}</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded-full bg-[#10b981]" />
-          <span>{{ t('analytics.duration.trendChart.volumeHigh') }}</span>
+        <!-- Legend - compact spacing -->
+        <div class="flex items-center justify-center gap-4 py-2 text-xs text-muted-foreground shrink-0">
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-full bg-[#06b6d4]" />
+            <span>{{ t('analytics.duration.trendChart.volumeLow') }}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-full bg-[#f59e0b]" />
+            <span>{{ t('analytics.duration.trendChart.volumeMedium') }}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-full bg-[#10b981]" />
+            <span>{{ t('analytics.duration.trendChart.volumeHigh') }}</span>
+          </div>
         </div>
       </div>
     </FullscreenChartOverlay>

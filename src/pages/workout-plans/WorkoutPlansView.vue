@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { useRoute } from 'vue-router'
 import { usePlan } from '@/composables/usePlan'
 import { useWorkoutStore } from '@/stores/workoutStore'
@@ -13,6 +14,12 @@ import PlanFormSheet from './components/sheets/PlanFormSheet.vue'
 import PlanDetailsSheet from './components/sheets/PlanDetailsSheet.vue'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('plans.title')),
+  computed(() => t('plans.description'))
+)
 const route = useRoute()
 const { sortedPlans, loading, canCreatePlan, subscribeToPlans, deletePlan, duplicatePlan } =
   usePlan()
@@ -121,12 +128,12 @@ async function handleStart(planId) {
 
 <template>
   <div class="container mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:py-8">
-    <!-- Page Header -->
+    <!-- Page Header (hidden on mobile, shown in AppLayout mobile header) -->
     <div class="flex items-center justify-between">
-      <div>
+      <div class="hidden md:block">
         <h1 class="text-4xl font-bold">{{ t('plans.title') }}</h1>
-        <p v-if="sortedPlans.length > 0" class="text-sm text-muted-foreground mt-2">
-          {{ t('plans.list.planCount', { count: sortedPlans.length }) }}
+        <p class="text-muted-foreground mt-1">
+          {{ t('plans.description') }}
         </p>
       </div>
 
