@@ -1,10 +1,18 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Target, TrendingUp, Calendar, Award } from 'lucide-vue-next'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('goals.title')),
+  computed(() => t('goals.subtitle'))
+)
 
 // Placeholder goal categories
 const goalCategories = [
@@ -31,8 +39,8 @@ const goalCategories = [
 
 <template>
   <div class="container max-w-4xl mx-auto py-6 px-4 space-y-6">
-    <!-- Header -->
-    <div class="space-y-2">
+    <!-- Header (hidden on mobile, shown in AppLayout mobile header) -->
+    <div class="hidden md:block space-y-2">
       <h1 class="text-3xl font-bold tracking-tight">{{ t('goals.title') }}</h1>
       <p class="text-muted-foreground">{{ t('goals.subtitle') }}</p>
     </div>

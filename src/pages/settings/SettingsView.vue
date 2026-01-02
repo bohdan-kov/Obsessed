@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useLocale } from '@/composables/useLocale'
 import { useUnits } from '@/composables/useUnits'
 import { useTheme } from '@/composables/useTheme'
+import { usePageMeta } from '@/composables/usePageMeta'
 
 import {
   Card,
@@ -30,6 +31,13 @@ import { Globe, Scale, User, LogOut } from 'lucide-vue-next'
 import PersonalInfoCard from './components/PersonalInfoCard.vue'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('settings.title')),
+  computed(() => t('settings.description'))
+)
+
 const router = useRouter()
 const authStore = useAuthStore()
 const { currentLocale, availableLocales, changeLocale } = useLocale()
@@ -50,8 +58,8 @@ const userInitials = computed(() => {
 
 <template>
   <div class="container max-w-2xl mx-auto py-6 px-4 sm:py-8 space-y-6 sm:space-y-8">
-    <!-- Header -->
-    <div>
+    <!-- Header - Hidden on mobile, shown on desktop -->
+    <div class="hidden md:block">
       <h1 class="text-3xl font-bold">{{ t('settings.title') }}</h1>
       <p class="text-muted-foreground mt-2">
         {{ t('settings.description') }}

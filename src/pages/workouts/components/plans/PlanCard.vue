@@ -157,7 +157,7 @@ const dropdownActions = computed(() => {
       {
         label: t('plans.card.goToWorkouts'),
         icon: ArrowRight,
-        onClick: () => router.push(`/workouts?tab=plans&highlight=${props.plan.id}`),
+        onClick: () => router.push(`/workout-plans?highlight=${props.plan.id}`),
       },
     ]
   }

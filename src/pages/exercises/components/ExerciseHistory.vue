@@ -18,12 +18,14 @@
       </div>
 
       <!-- Progress chart -->
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-6">
         <!-- Weight progression chart -->
-        <ExerciseProgressChart :data="stats.progressData.value" />
+        <div class="pb-8 sm:pb-6 md:pb-0">
+          <ExerciseProgressChart :data="stats.progressData.value" />
+        </div>
 
         <!-- Recent sessions with scroll -->
-        <div class="space-y-4">
+        <div class="space-y-4 mt-24 sm:mt-16 md:mt-6">
           <h4 class="text-sm font-semibold">{{ t('workout.session.recentSessions') }}</h4>
 
           <!-- Scroll container wrapper -->

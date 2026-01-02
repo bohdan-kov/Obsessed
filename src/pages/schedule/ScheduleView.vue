@@ -1,10 +1,18 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, Bell, CalendarDays } from 'lucide-vue-next'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('schedule.title')),
+  computed(() => t('schedule.subtitle'))
+)
 
 // Placeholder schedule features
 const features = [
@@ -28,8 +36,8 @@ const features = [
 
 <template>
   <div class="container max-w-4xl mx-auto py-6 px-4 space-y-6">
-    <!-- Header -->
-    <div class="space-y-2">
+    <!-- Header (hidden on mobile, shown in AppLayout mobile header) -->
+    <div class="hidden md:block space-y-2">
       <h1 class="text-3xl font-bold tracking-tight">{{ t('schedule.title') }}</h1>
       <p class="text-muted-foreground">{{ t('schedule.subtitle') }}</p>
     </div>

@@ -1,11 +1,18 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Search, Dumbbell, Activity, Target } from 'lucide-vue-next'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('search.title')),
+  computed(() => t('search.subtitle'))
+)
 const searchQuery = ref('')
 const isSearching = ref(false)
 
@@ -25,8 +32,8 @@ function handleSearch() {
 
 <template>
   <div class="container max-w-4xl mx-auto py-6 px-4 space-y-6">
-    <!-- Header -->
-    <div class="space-y-2">
+    <!-- Header (hidden on mobile, shown in AppLayout mobile header) -->
+    <div class="hidden md:block space-y-2">
       <h1 class="text-3xl font-bold tracking-tight">{{ t('search.title') }}</h1>
       <p class="text-muted-foreground">{{ t('search.subtitle') }}</p>
     </div>

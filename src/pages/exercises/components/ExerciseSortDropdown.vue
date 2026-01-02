@@ -1,6 +1,6 @@
 <template>
   <Select :model-value="modelValue" @update:modelValue="handleChange">
-    <SelectTrigger class="h-11 w-full sm:w-[200px]">
+    <SelectTrigger class="h-11 w-full sm:w-[260px]">
       <div class="flex items-center gap-2">
         <ArrowUpDown class="h-4 w-4 text-muted-foreground" />
         <SelectValue :placeholder="t('exercises.sort.label')" />

@@ -1,7 +1,7 @@
 <template>
   <div class="container max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-    <!-- Header -->
-    <div class="space-y-2">
+    <!-- Header - Hidden on mobile, shown on desktop -->
+    <div class="space-y-2 hidden md:block">
       <h1 class="text-3xl font-bold tracking-tight">
         {{ t('exercises.title') }}
       </h1>
@@ -152,10 +152,17 @@ import { useExerciseLibraryStore } from '@/stores/exerciseLibraryStore'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useDynamicPagination } from '@/composables/useDynamicPagination'
 import { useErrorHandler } from '@/composables/useErrorHandler'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { useI18n } from 'vue-i18n'
 import { CONFIG } from '@/constants/config'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('exercises.title')),
+  computed(() => t('exercises.subtitle'))
+)
 const router = useRouter()
 const exerciseStore = useExerciseStore()
 const exerciseLibraryStore = useExerciseLibraryStore()

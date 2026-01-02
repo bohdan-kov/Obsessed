@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useMediaQuery } from '@vueuse/core'
 import { VisArea, VisAxis, VisLine, VisXYContainer } from '@unovis/vue'
+import { Maximize2 } from 'lucide-vue-next'
 import {
   Card,
   CardContent,
@@ -20,6 +21,8 @@ import {
   componentToString,
 } from '@/components/ui/chart'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { useFullscreenChart } from '@/composables/useFullscreenChart'
+import FullscreenChartOverlay from '@/components/charts/FullscreenChartOverlay.vue'
 import { CONFIG } from '@/constants/config'
 
 const { t } = useI18n()
@@ -28,6 +31,9 @@ const { volumeByDay, periodLabel, period } = storeToRefs(analyticsStore)
 
 // Mobile detection
 const isMobile = useMediaQuery('(max-width: 640px)')
+
+// Full-screen functionality
+const { isFullscreen, enterFullscreen, exitFullscreen } = useFullscreenChart()
 
 // Ref for scroll container
 const chartScrollRef = ref(null)
@@ -136,16 +142,28 @@ onMounted(async () => {
 
 <template>
   <Card class="pt-0">
-    <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+    <CardHeader class="flex flex-row items-center gap-2 space-y-0 border-b py-5">
       <div class="grid flex-1 gap-1">
         <CardTitle>{{ t('dashboard.volumeChart.title') }}</CardTitle>
         <CardDescription>
           {{ t('dashboard.volumeChart.subtitlePeriod', { period: t(periodLabel) }) }}
         </CardDescription>
       </div>
+
+      <!-- Full-screen button (mobile only, hidden when no data) -->
+      <button
+        v-if="isMobile && !isFullscreen && chartData.length > 0"
+        type="button"
+        @click="enterFullscreen"
+        class="inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-muted transition-colors touch-manipulation shrink-0"
+        :aria-label="t('charts.fullscreen.open')"
+      >
+        <Maximize2 class="w-5 h-5" />
+      </button>
     </CardHeader>
 
-    <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
+    <!-- Normal view -->
+    <CardContent v-if="!isFullscreen" class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
       <ChartContainer :config="chartConfig" class="w-full" :cursor="false">
         <!-- Scroll wrapper for mobile -->
         <div
@@ -162,7 +180,7 @@ onMounted(async () => {
               :key="`volume-chart-${period}`"
               :data="chartData"
               :svg-defs="svgDefs"
-              :margin="{ left: -40, right: 40 }"
+              :margin="{ top: 10, left: 0, right: 40, bottom: 60 }"
               :y-domain="yDomain"
             >
             <!-- Volume Area Chart (Primary Y-axis) -->
@@ -277,6 +295,133 @@ onMounted(async () => {
         <ChartLegendContent class="mt-4 justify-center" />
       </ChartContainer>
     </CardContent>
+
+    <!-- Full-screen overlay -->
+    <FullscreenChartOverlay
+      :is-open="isFullscreen"
+      :title="t('dashboard.volumeChart.title')"
+      @close="exitFullscreen"
+    >
+      <ChartContainer :config="chartConfig" class="w-full h-full" :cursor="false">
+        <!-- Scroll wrapper for mobile -->
+        <div
+          ref="chartScrollRef"
+          class="chart-scroll-wrapper h-full"
+          :class="{ 'mobile-scroll': isMobile && chartMinWidth !== 'auto' }"
+        >
+          <!-- Chart visualization with optimized height for landscape -->
+          <div class="h-full w-full" :style="{ minWidth: chartMinWidth }">
+            <VisXYContainer
+              :key="`volume-chart-${period}`"
+              :data="chartData"
+              :svg-defs="svgDefs"
+              :margin="{ top: 10, left: 0, right: 40, bottom: 60 }"
+              :y-domain="yDomain"
+            >
+              <!-- Volume Area Chart (Primary Y-axis) -->
+              <VisArea
+                :x="(d) => d.date"
+                :y="(d) => d.volume"
+                :color="'url(#fillVolume)'"
+                :opacity="0.6"
+              />
+              <VisLine
+                :x="(d) => d.date"
+                :y="(d) => d.volume"
+                :color="chartConfig.volume.color"
+                :line-width="2"
+              />
+
+              <!-- Exercise Count Line (Secondary Y-axis) -->
+              <VisLine
+                :x="(d) => d.date"
+                :y="(d) => scaleExercisesToVolume(d.exercises)"
+                :color="chartConfig.exercises.color"
+                :line-width="2"
+                :opacity="0.8"
+              />
+
+              <!-- X-Axis -->
+              <VisAxis
+                type="x"
+                :x="(d) => d.date"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :num-ticks="6"
+                :tick-format="(d) => {
+                  const date = new Date(d)
+                  return date.toLocaleDateString('uk-UA', {
+                    month: 'short',
+                    day: 'numeric',
+                  })
+                }"
+              />
+
+              <!-- Primary Y-Axis (Volume) - Left -->
+              <VisAxis
+                type="y"
+                :num-ticks="3"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="true"
+              />
+
+              <!-- Secondary Y-Axis (Exercises) - Right -->
+              <VisAxis
+                type="y"
+                position="right"
+                :num-ticks="3"
+                :tick-line="false"
+                :domain-line="false"
+                :grid-line="false"
+                :tick-format="formatExerciseAxisValue"
+              />
+
+              <ChartTooltip />
+              <ChartCrosshair
+                :template="componentToString(chartConfig, ChartTooltipContent, {
+                  indicator: 'line',
+                  labelFormatter: (d) => {
+                    return new Date(d).toLocaleDateString('uk-UA', {
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  },
+                  valueFormatter: (value, key) => {
+                    if (typeof value !== 'number') return String(value)
+
+                    // Add 'kg' unit for volume field
+                    const formattedNumber = value.toLocaleString('uk-UA', {
+                      maximumFractionDigits: 0
+                    })
+
+                    return key === 'volume'
+                      ? `${formattedNumber} ${t('common.units.kg')}`
+                      : formattedNumber
+                  },
+                })"
+                :color="(_d, i) => {
+                  // Explicitly map series index to chart config colors
+                  const colorMap = [
+                    null, // Index 0: VisArea (not used for crosshair)
+                    chartConfig.volume.color, // Index 1: volume line
+                    chartConfig.exercises.color, // Index 2: exercises line
+                  ]
+                  return colorMap[i] || 'currentColor'
+                }"
+              />
+            </VisXYContainer>
+          </div>
+
+          <!-- Gradient overlay for scroll indicator (mobile only) -->
+          <div
+            v-if="isMobile && chartMinWidth !== 'auto'"
+            class="scroll-gradient"
+          />
+        </div>
+      </ChartContainer>
+    </FullscreenChartOverlay>
   </Card>
 </template>
 

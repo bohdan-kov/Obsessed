@@ -1,5 +1,6 @@
 {
   "title": "Workout Plans",
+  "description": "Create and manage your workout plans",
   "list": {
     "empty": "No workout plans yet",
     "emptyDescription": "Create a plan to save your favorite workout routines",

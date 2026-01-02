@@ -94,7 +94,25 @@ describe('ExerciseMiniChart', () => {
   })
 
   describe('Trend Direction', () => {
-    it('should detect upward trend', () => {
+    it('should use provided trend prop over calculated trend', () => {
+      // History suggests upward trend, but we force it to "flat" via prop
+      const upwardHistory = [
+        { date: new Date(), bestSet: { weight: 100, reps: 10 }, sets: [] },
+        { date: new Date(), bestSet: { weight: 110, reps: 10 }, sets: [] },
+        { date: new Date(), bestSet: { weight: 120, reps: 10 }, sets: [] },
+      ]
+
+      const wrapper = mount(ExerciseMiniChart, {
+        props: { history: upwardHistory, trend: 'flat' },
+      })
+
+      // Should use trend prop (yellow for flat), not calculated trend (green for up)
+      const paths = wrapper.findAll('path')
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(234, 179, 8)') // yellow-500
+    })
+
+    it('should detect upward trend when trend prop not provided (fallback)', () => {
       const upwardHistory = [
         { date: new Date(), bestSet: { weight: 100, reps: 10 }, sets: [] },
         { date: new Date(), bestSet: { weight: 110, reps: 10 }, sets: [] },
@@ -105,13 +123,13 @@ describe('ExerciseMiniChart', () => {
         props: { history: upwardHistory },
       })
 
-      // Should have green color for upward trend
+      // Should have green color for upward trend (rgb(34, 197, 94) = green-500)
       const paths = wrapper.findAll('path')
-      const hasGreenStroke = paths.some((p) => p.classes().includes('stroke-green-500'))
-      expect(hasGreenStroke).toBe(true)
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(34, 197, 94)')
     })
 
-    it('should detect downward trend', () => {
+    it('should detect downward trend when trend prop not provided (fallback)', () => {
       const downwardHistory = [
         { date: new Date(), bestSet: { weight: 120, reps: 10 }, sets: [] },
         { date: new Date(), bestSet: { weight: 110, reps: 10 }, sets: [] },
@@ -122,13 +140,13 @@ describe('ExerciseMiniChart', () => {
         props: { history: downwardHistory },
       })
 
-      // Should have red color for downward trend
+      // Should have red color for downward trend (rgb(239, 68, 68) = red-500)
       const paths = wrapper.findAll('path')
-      const hasRedStroke = paths.some((p) => p.classes().includes('stroke-red-500'))
-      expect(hasRedStroke).toBe(true)
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(239, 68, 68)')
     })
 
-    it('should detect flat trend', () => {
+    it('should detect flat trend when trend prop not provided (fallback)', () => {
       const flatHistory = [
         { date: new Date(), bestSet: { weight: 100, reps: 10 }, sets: [] },
         { date: new Date(), bestSet: { weight: 101, reps: 10 }, sets: [] },
@@ -139,10 +157,61 @@ describe('ExerciseMiniChart', () => {
         props: { history: flatHistory },
       })
 
-      // Should have gray color for flat trend
+      // Should have yellow color for flat trend (rgb(234, 179, 8) = yellow-500)
       const paths = wrapper.findAll('path')
-      const hasGrayStroke = paths.some((p) => p.classes().includes('stroke-gray-400'))
-      expect(hasGrayStroke).toBe(true)
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(234, 179, 8)')
+    })
+
+    it('should apply green color when trend prop is "up"', () => {
+      const wrapper = mount(ExerciseMiniChart, {
+        props: { history: mockHistory, trend: 'up' },
+      })
+
+      const paths = wrapper.findAll('path')
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(34, 197, 94)') // green-500
+    })
+
+    it('should apply red color when trend prop is "down"', () => {
+      const wrapper = mount(ExerciseMiniChart, {
+        props: { history: mockHistory, trend: 'down' },
+      })
+
+      const paths = wrapper.findAll('path')
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(239, 68, 68)') // red-500
+    })
+
+    it('should apply yellow color when trend prop is "flat"', () => {
+      const wrapper = mount(ExerciseMiniChart, {
+        props: { history: mockHistory, trend: 'flat' },
+      })
+
+      const paths = wrapper.findAll('path')
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(234, 179, 8)') // yellow-500
+    })
+
+    it('should apply gray color when trend prop is "insufficient_data"', () => {
+      const wrapper = mount(ExerciseMiniChart, {
+        props: { history: mockHistory, trend: 'insufficient_data' },
+      })
+
+      const paths = wrapper.findAll('path')
+      const sparkline = paths.find((p) => p.attributes('stroke'))
+      expect(sparkline.attributes('stroke')).toBe('rgb(156, 163, 175)') // gray-400
+
+      // Verify gradient colors
+      const gradientColors = wrapper.vm.gradientColors
+      expect(gradientColors.start).toBe('rgb(156, 163, 175, 0.2)')
+      expect(gradientColors.end).toBe('rgb(156, 163, 175, 0)')
+
+      // Verify fill color
+      expect(wrapper.vm.fillColor).toBe('rgb(156, 163, 175)') // gray-400
+
+      // Verify highlight fill color
+      expect(wrapper.vm.highlightFillColor).toBe('rgb(107, 114, 128)') // gray-500
     })
   })
 

@@ -1,6 +1,7 @@
 {
   "activeWorkout": {
     "title": "Active Workout",
+    "description": "Manage active workouts and view history",
     "startWorkout": "Start Workout",
     "finishWorkout": "Finish Workout",
     "cancelWorkout": "Cancel Workout",
@@ -27,7 +28,7 @@
       "addExercise": "Add Exercise",
       "addExerciseDescription": "Search and select an exercise to add to your workout",
       "noExercises": "No exercises yet",
-      "noExercisesHint": "Tap the button below to add your first exercise",
+      "noExercisesHint": "Start a workout to add your first exercise",
       "notes": "Notes",
       "notesPlaceholder": "Add notes for this exercise..."
     },

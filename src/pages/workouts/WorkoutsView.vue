@@ -2,15 +2,20 @@
   <div
     class="container mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:py-8"
   >
-    <!-- Page Header -->
+    <!-- Page Header - Title hidden on mobile, shown on desktop -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-3xl font-bold sm:text-4xl">
-        {{ t('workout.activeWorkout.title') }}
-      </h1>
+      <div class="hidden md:block">
+        <h1 class="text-3xl font-bold sm:text-4xl">
+          {{ t('workout.activeWorkout.title') }}
+        </h1>
+        <p class="text-muted-foreground mt-1">
+          {{ t('workout.activeWorkout.description') }}
+        </p>
+      </div>
 
-      <!-- Start Workout Button (when no active workout) -->
+      <!-- Start Workout Button (only show when active workout exists or when on non-active tab) -->
       <Button
-        v-if="!hasActiveWorkout"
+        v-if="!hasActiveWorkout && activeTab !== 'active'"
         size="lg"
         class="h-12 w-full sm:w-auto"
         @click="handleStartWorkout"
@@ -20,9 +25,9 @@
       </Button>
     </div>
 
-    <!-- Tabs for Active/History/Plans -->
-    <Tabs :default-value="defaultTab" class="w-full">
-      <TabsList class="grid w-full grid-cols-1 sm:grid-cols-3">
+    <!-- Tabs for Active/History -->
+    <Tabs v-model="activeTab" class="w-full">
+      <TabsList class="grid w-full grid-cols-1 sm:grid-cols-2">
         <TabsTrigger value="active">
           <div class="flex items-center gap-2">
             {{ t('workout.activeWorkout.title') }}
@@ -33,9 +38,6 @@
         </TabsTrigger>
         <TabsTrigger value="history">
           {{ t('workout.history.title') }}
-        </TabsTrigger>
-        <TabsTrigger value="plans">
-          {{ t('plans.title') }}
         </TabsTrigger>
       </TabsList>
 
@@ -66,22 +68,18 @@
       <TabsContent value="history" class="mt-6">
         <WorkoutHistoryList :workouts="recentWorkouts" :loading="loading" />
       </TabsContent>
-
-      <!-- Plans Tab -->
-      <TabsContent value="plans" class="mt-6">
-        <PlansTabView />
-      </TabsContent>
     </Tabs>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia' // cspell:disable-line
 import { useActiveWorkout } from '@/composables/useActiveWorkout'
 import { useWorkoutStore } from '@/stores/workoutStore'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -89,10 +87,17 @@ import { Badge } from '@/components/ui/badge'
 import { Play, Dumbbell } from 'lucide-vue-next'
 import ActiveWorkoutPanel from './components/active/ActiveWorkoutPanel.vue'
 import WorkoutHistoryList from './components/history/WorkoutHistoryList.vue'
-import PlansTabView from './components/plans/PlansTabView.vue'
 
 const { t } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('workout.activeWorkout.title')),
+  computed(() => t('workout.activeWorkout.description'))
+)
+
 const route = useRoute()
+const router = useRouter()
 const { activeWorkout, startWorkout } = useActiveWorkout()
 const workoutStore = useWorkoutStore()
 
@@ -102,19 +107,45 @@ const { recentWorkouts, loading } = storeToRefs(workoutStore)
 // Check if there's an active workout
 const hasActiveWorkout = computed(() => !!activeWorkout.value)
 
-// Default tab based on URL query params or active workout status
-const defaultTab = computed(() => {
-  // If tab query param is provided, use it
-  if (route.query.tab && ['active', 'history', 'plans'].includes(route.query.tab)) {
-    return route.query.tab
-  }
-  return hasActiveWorkout.value ? 'active' : 'active'
-})
+// Valid tab values for validation
+const VALID_TABS = ['active', 'history']
+
+// Initialize active tab from URL query parameter or default to 'active'
+const activeTab = ref(
+  VALID_TABS.includes(route.query.tab) ? route.query.tab : 'active'
+)
 
 // Handle start workout
 async function handleStartWorkout() {
   await startWorkout()
 }
+
+/**
+ * Watch for tab changes and update URL query parameter
+ * Use router.replace() to avoid creating history entries for tab switches
+ */
+watch(activeTab, (newTab) => {
+  // Only update URL if tab actually changed to avoid unnecessary router calls
+  if (route.query.tab !== newTab) {
+    router.replace({
+      query: { ...route.query, tab: newTab }
+    })
+  }
+})
+
+/**
+ * Watch for URL query param changes (e.g., browser back/forward) and update active tab
+ * This ensures the tab state stays in sync when user uses browser navigation
+ */
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    // Validate and update active tab if URL changed
+    if (newTab && VALID_TABS.includes(newTab) && newTab !== activeTab.value) {
+      activeTab.value = newTab
+    }
+  }
+)
 
 // Fetch workouts on mount and subscribe to real-time updates
 onMounted(async () => {

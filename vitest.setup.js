@@ -180,6 +180,14 @@ vi.mock('@/composables/useTheme', () => ({
   }),
 }))
 
+// Mock usePageMeta composable
+// This composable uses Vue's provide/inject pattern to communicate with AppLayout
+// In tests, we mock it to avoid "pageMeta not provided" warnings when mounting
+// components outside of AppLayout context
+vi.mock('@/composables/usePageMeta', () => ({
+  usePageMeta: vi.fn(),
+}))
+
 // Mock ResizeObserver for @unovis/vue charts
 globalThis.ResizeObserver = class ResizeObserver {
   constructor(callback) {

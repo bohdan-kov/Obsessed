@@ -353,7 +353,7 @@ describe('FullscreenChartOverlay', () => {
       expect(spacer.exists()).toBe(true)
     })
 
-    it('should have content area with calculated height', () => {
+    it('should have content area with flex layout', () => {
       const wrapper = mount(FullscreenChartOverlay, {
         props: {
           isOpen: true,
@@ -366,8 +366,8 @@ describe('FullscreenChartOverlay', () => {
         },
       })
 
-      // Content area should have calc height
-      const content = wrapper.find('.h-\\[calc\\(100vh-60px\\)\\]')
+      // Content area should have flex-1 for flexible height
+      const content = wrapper.find('.flex-1.overflow-hidden.flex.flex-col')
       expect(content.exists()).toBe(true)
     })
   })
@@ -440,14 +440,16 @@ describe('FullscreenChartOverlay', () => {
         },
       })
 
-      const content = wrapper.find('.h-\\[calc\\(100vh-60px\\)\\]')
+      const content = wrapper.find('.flex-1.overflow-hidden.flex.flex-col')
 
       // Verify content element exists (where safe area padding would be applied)
       expect(content.exists()).toBe(true)
 
-      // Verify it has overflow classes for scroll handling
-      expect(content.classes()).toContain('overflow-y-auto')
-      expect(content.classes()).toContain('overflow-x-hidden')
+      // Verify it has flex and overflow classes
+      expect(content.classes()).toContain('flex-1')
+      expect(content.classes()).toContain('overflow-hidden')
+      expect(content.classes()).toContain('flex')
+      expect(content.classes()).toContain('flex-col')
 
       // Note: Inline style attributes (env() CSS) are stripped by Vue Test Utils
       // These are tested in browser/E2E tests, not unit tests

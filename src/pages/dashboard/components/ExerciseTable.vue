@@ -481,9 +481,9 @@ function handleViewPlan(planId) {
  * @param {string} planId - Plan ID to edit
  */
 function handleEditPlan(planId) {
-  // Close details sheet and navigate to workouts page where plan editing is available
+  // Close details sheet and navigate to workout plans page
   isPlanDetailsSheetOpen.value = false
-  router.push(`/workouts?tab=plans&highlight=${planId}`)
+  router.push(`/workout-plans?highlight=${planId}`)
 }
 
 /**

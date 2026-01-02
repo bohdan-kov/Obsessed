@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
  *
  * Provides:
  * - Full-screen state management
- * - Landscape orientation lock (with graceful degradation)
+ * - Landscape orientation lock with retry mechanism (graceful degradation)
  * - Keyboard shortcuts (Escape key)
  * - Auto-exit on navigation
  * - Focus management for accessibility
@@ -16,17 +16,24 @@ import { useRouter } from 'vue-router'
  *
  * @returns {Object} Full-screen chart controls
  * @returns {Ref<boolean>} isFullscreen - Whether full-screen mode is active
+ * @returns {Ref<boolean>} isOrientationLocked - Whether orientation was successfully locked to landscape
  * @returns {Function} enterFullscreen - Activate full-screen mode and lock landscape
  * @returns {Function} exitFullscreen - Exit full-screen mode and unlock orientation
  *
  * @example
  * import { useFullscreenChart } from '@/composables/useFullscreenChart'
  *
- * const { isFullscreen, enterFullscreen, exitFullscreen } = useFullscreenChart()
+ * const { isFullscreen, isOrientationLocked, enterFullscreen, exitFullscreen } = useFullscreenChart()
+ *
+ * // Show hint if orientation couldn't be locked
+ * if (isFullscreen.value && !isOrientationLocked.value) {
+ *   // Display rotation hint to user
+ * }
  */
 export function useFullscreenChart() {
   const router = useRouter()
   const isFullscreen = ref(false)
+  const isOrientationLocked = ref(false)
 
   // Rapid toggle protection flag
   let isTransitioning = false
@@ -35,10 +42,85 @@ export function useFullscreenChart() {
   const hasRouter = router && typeof router.beforeEach === 'function'
 
   /**
+   * Lock screen orientation to landscape with retry logic
+   * Handles timing issues and ensures lock succeeds when possible
+   *
+   * @param {number} maxRetries - Maximum number of retry attempts
+   * @param {number} delay - Delay between retries in milliseconds
+   * @returns {Promise<boolean>} Whether lock succeeded
+   */
+  async function lockOrientationWithRetry(maxRetries = 3, delay = 100) {
+    if (!screen?.orientation?.lock) {
+      if (import.meta.env.DEV) {
+        console.debug('[useFullscreenChart] Screen Orientation API not available')
+      }
+      return false
+    }
+
+    // Check if document is visible and active (required for orientation lock)
+    if (document.hidden || !document.hasFocus()) {
+      if (import.meta.env.DEV) {
+        console.debug('[useFullscreenChart] Document not visible/focused, deferring orientation lock')
+      }
+      // Wait a bit for document to become active
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await screen.orientation.lock('landscape')
+
+        if (import.meta.env.DEV) {
+          console.debug(`[useFullscreenChart] Orientation locked to landscape (attempt ${attempt}/${maxRetries})`)
+        }
+
+        return true
+      } catch (err) {
+        // Common errors:
+        // - NotSupportedError: Device doesn't support orientation lock
+        // - SecurityError: Document is not fully active or secure context required
+        // - AbortError: Request was aborted (e.g., another lock request)
+        // - InvalidStateError: Document is not visible
+
+        const isLastAttempt = attempt === maxRetries
+        const isFatalError = err.name === 'NotSupportedError'
+
+        if (import.meta.env.DEV) {
+          console.debug(
+            `[useFullscreenChart] Orientation lock attempt ${attempt}/${maxRetries} failed:`,
+            err.name,
+            err.message,
+            isLastAttempt ? '(final attempt)' : `(retrying in ${delay}ms)`
+          )
+        }
+
+        // Don't retry on fatal errors (device doesn't support orientation lock)
+        if (isFatalError) {
+          if (import.meta.env.DEV) {
+            console.debug('[useFullscreenChart] Device does not support orientation lock, aborting retries')
+          }
+          return false
+        }
+
+        // Wait before retrying (unless this was the last attempt)
+        if (!isLastAttempt) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+
+    if (import.meta.env.DEV) {
+      console.warn('[useFullscreenChart] Failed to lock orientation after all retry attempts')
+    }
+
+    return false
+  }
+
+  /**
    * Enter full-screen mode and lock screen to landscape orientation
    * Uses Screen Orientation API with graceful degradation for unsupported browsers
    * Also manages focus for keyboard accessibility
-   * Includes rapid toggle protection
+   * Includes rapid toggle protection and retry logic for orientation lock
    */
   async function enterFullscreen() {
     // Prevent rapid toggling
@@ -47,37 +129,23 @@ export function useFullscreenChart() {
     isTransitioning = true
     isFullscreen.value = true
 
-    // Try to lock orientation to landscape (graceful degradation)
+    // Wait for Vue to render the overlay (Teleport to body)
+    // This ensures the fullscreen element is in the DOM before attempting orientation lock
+    await nextTick()
+    await nextTick() // Double nextTick for Teleport
+
+    // Try to lock orientation to landscape with retry logic
     // Screen Orientation API support:
     // - iOS Safari 16.4+
     // - Chrome Mobile 113+
     // - Firefox Mobile 115+
     // - Samsung Internet 21+
-    if (screen?.orientation?.lock) {
-      try {
-        await screen.orientation.lock('landscape')
-      } catch (err) {
-        // Fail silently - full-screen works without orientation lock
-        // Common reasons for rejection:
-        // - User has locked orientation in device settings
-        // - Browser doesn't support the API
-        // - Security policy prevents orientation lock
-        // - NotSupportedError: Device doesn't support orientation lock
-        // - AbortError: Orientation lock request was aborted
-        if (import.meta.env.DEV) {
-          console.debug('[useFullscreenChart] Screen orientation lock failed:', err.name, err.message)
-        }
-      }
-    } else if (import.meta.env.DEV) {
-      console.debug('[useFullscreenChart] Screen Orientation API not available')
-    }
+    const lockSucceeded = await lockOrientationWithRetry()
+    isOrientationLocked.value = lockSucceeded
 
     // Focus management for accessibility (WCAG 2.1 compliance)
-    // Wait for Vue Teleport to render overlay in DOM
+    // Overlay is already rendered (we waited above), now focus the close button
     try {
-      await nextTick()
-      await nextTick() // Double nextTick ensures Teleport has fully rendered
-
       // Find and focus the close button for keyboard navigation
       // Selector targets both Ukrainian and English aria-labels
       const closeButton = document.querySelector(
@@ -124,6 +192,7 @@ export function useFullscreenChart() {
 
     isTransitioning = true
     isFullscreen.value = false
+    isOrientationLocked.value = false
 
     // Unlock orientation if it was locked
     if (screen?.orientation?.unlock) {
@@ -220,6 +289,7 @@ export function useFullscreenChart() {
 
   return {
     isFullscreen,
+    isOrientationLocked,
     enterFullscreen,
     exitFullscreen,
   }

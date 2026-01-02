@@ -1,10 +1,11 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-vue-next'
 import WorkoutHeader from './components/WorkoutHeader.vue'
@@ -27,7 +28,7 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, d, locale } = useI18n()
 const { handleError } = useErrorHandler()
 
 const workoutStore = useWorkoutStore()
@@ -40,6 +41,45 @@ const { allExercises } = storeToRefs(exerciseStore)
 const workout = computed(() => {
   return workouts.value.find((w) => w.id === props.id)
 })
+
+// Dynamic page title for mobile header
+const workoutTitle = computed(() => {
+  if (!workout.value) return t('workout.detail.title')
+
+  // Format the workout date for display using startedAt (same as WorkoutHeader)
+  const date = workout.value.startedAt?.toDate
+    ? workout.value.startedAt.toDate()
+    : workout.value.startedAt
+    ? new Date(workout.value.startedAt)
+    : new Date()
+
+  return date.toLocaleDateString(locale.value, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+})
+
+// Set page metadata for mobile header with dynamic title
+usePageMeta(workoutTitle)
+
+// CRITICAL FIX: Explicitly watch for workout changes and update page meta
+// This ensures the mobile header updates when navigating between workouts
+// on reused component instances (Vue Router optimization)
+watch(
+  () => props.id,
+  async (newId) => {
+    // Fetch workout if not in store when ID changes
+    if (!workouts.value.find((w) => w.id === newId)) {
+      try {
+        await workoutStore.fetchWorkout(newId)
+      } catch (error) {
+        handleError(error, t('workout.detail.loadError'), 'WorkoutDetailView')
+      }
+    }
+  }
+)
 
 // Calculate summary stats
 const summaryStats = computed(() => {
@@ -68,9 +108,13 @@ const backRoute = computed(() => {
   const from = props.from || route.query.from || 'workouts'
   const tab = route.query.tab // Get tab from query if present
 
-  // If navigating back to analytics with a specific tab, include the tab query param
-  if (from === 'analytics' && tab) {
-    return { path: '/analytics', query: { tab } }
+  // If navigating back to analytics or workouts with a specific tab, include the tab query param
+  if ((from === 'analytics' || from === 'workouts') && tab) {
+    const routeMap = {
+      analytics: '/analytics',
+      workouts: '/workouts',
+    }
+    return { path: routeMap[from], query: { tab } }
   }
 
   // Default route mapping
@@ -187,14 +231,14 @@ function navigateToWorkout(workoutId) {
 
     <!-- Workout Detail Content -->
     <div v-else class="space-y-4 sm:space-y-6">
-      <!-- Back Button -->
-      <Button variant="ghost" @click="handleBack" class="mb-2 min-h-11">
+      <!-- Back Button (visible on mobile, provides navigation) -->
+      <Button variant="ghost" @click="handleBack" class="mb-2 min-h-11 md:mb-0">
         <ArrowLeft class="mr-2 w-4 h-4" />
         {{ t('common.actions.back') }}
       </Button>
 
       <!-- Workout Header -->
-      <WorkoutHeader :workout="workout" :stats="summaryStats" />
+      <WorkoutHeader :workout="workout" />
 
       <!-- Summary Stats Grid -->
       <WorkoutSummaryStats :stats="summaryStats" />

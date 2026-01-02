@@ -9,6 +9,11 @@ const props = defineProps({
     required: true,
     validator: (value) => Array.isArray(value),
   },
+  trend: {
+    type: String,
+    default: null,
+    validator: (value) => ['up', 'down', 'flat', 'insufficient_data', null].includes(value),
+  },
   height: {
     type: Number,
     default: 40,
@@ -20,6 +25,11 @@ const props = defineProps({
 })
 
 const { formatWeight } = useUnits()
+
+/**
+ * Generate unique gradient ID to avoid conflicts when multiple charts are on the page
+ */
+const gradientId = `sparklineGradient-${Math.random().toString(36).substr(2, 9)}`
 
 /**
  * Calculate 1RM for each workout in history
@@ -89,8 +99,16 @@ const circlePoints = computed(() => {
 
 /**
  * Determine trend direction (up/down/flat)
+ * If trend prop is provided, use it (from parent's linear regression calculation)
+ * Otherwise fall back to simple first-to-last comparison
  */
 const trendDirection = computed(() => {
+  // Use parent-provided trend if available (more accurate - uses linear regression)
+  if (props.trend) {
+    return props.trend
+  }
+
+  // Fallback: simple first-to-last comparison (legacy behavior)
   if (dataPoints.value.length < 2) return 'flat'
 
   const first = dataPoints.value[0]
@@ -100,6 +118,91 @@ const trendDirection = computed(() => {
   if (change > 2.5) return 'up'
   if (change < -2.5) return 'down'
   return 'flat'
+})
+
+/**
+ * Get gradient colors based on trend direction
+ * CRITICAL: SVG gradients require actual color values, not Tailwind classes
+ * Colors match ExerciseProgressRow status badges:
+ * - up → green (progressing)
+ * - down → red (regressing)
+ * - flat → yellow (stalled/stable)
+ * - insufficient_data → gray (new exercise)
+ */
+const gradientColors = computed(() => {
+  switch (trendDirection.value) {
+    case 'up':
+      return {
+        start: 'rgb(34, 197, 94, 0.2)', // green-500 with 20% opacity
+        end: 'rgb(34, 197, 94, 0)',     // green-500 with 0% opacity
+      }
+    case 'down':
+      return {
+        start: 'rgb(239, 68, 68, 0.2)', // red-500 with 20% opacity
+        end: 'rgb(239, 68, 68, 0)',     // red-500 with 0% opacity
+      }
+    case 'insufficient_data':
+      return {
+        start: 'rgb(156, 163, 175, 0.2)', // gray-400 with 20% opacity
+        end: 'rgb(156, 163, 175, 0)',     // gray-400 with 0% opacity
+      }
+    default: // 'flat'
+      return {
+        start: 'rgb(234, 179, 8, 0.2)', // yellow-500 with 20% opacity
+        end: 'rgb(234, 179, 8, 0)',     // yellow-500 with 0% opacity
+      }
+  }
+})
+
+/**
+ * Get stroke color based on trend direction
+ * Matches status badge colors in ExerciseProgressRow
+ */
+const strokeColor = computed(() => {
+  switch (trendDirection.value) {
+    case 'up':
+      return 'rgb(34, 197, 94)' // green-500
+    case 'down':
+      return 'rgb(239, 68, 68)' // red-500
+    case 'insufficient_data':
+      return 'rgb(156, 163, 175)' // gray-400
+    default: // 'flat'
+      return 'rgb(234, 179, 8)' // yellow-500
+  }
+})
+
+/**
+ * Get fill color for circles based on trend direction
+ * Matches status badge colors in ExerciseProgressRow
+ */
+const fillColor = computed(() => {
+  switch (trendDirection.value) {
+    case 'up':
+      return 'rgb(34, 197, 94)' // green-500
+    case 'down':
+      return 'rgb(239, 68, 68)' // red-500
+    case 'insufficient_data':
+      return 'rgb(156, 163, 175)' // gray-400
+    default: // 'flat'
+      return 'rgb(234, 179, 8)' // yellow-500
+  }
+})
+
+/**
+ * Get fill color for highlighted last point
+ * Uses darker shade for better visibility
+ */
+const highlightFillColor = computed(() => {
+  switch (trendDirection.value) {
+    case 'up':
+      return 'rgb(22, 163, 74)' // green-600
+    case 'down':
+      return 'rgb(220, 38, 38)' // red-600
+    case 'insufficient_data':
+      return 'rgb(107, 114, 128)' // gray-500
+    default: // 'flat'
+      return 'rgb(202, 138, 4)' // yellow-600
+  }
 })
 
 const isEmpty = computed(() => dataPoints.value.length === 0)
@@ -136,41 +239,23 @@ const isEmpty = computed(() => dataPoints.value.length === 0)
       <template v-else>
         <!-- Background area (gradient fill) -->
         <defs>
-          <linearGradient id="sparklineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop
-              offset="0%"
-              :class="{
-                'stop-green-500/20': trendDirection === 'up',
-                'stop-red-500/20': trendDirection === 'down',
-                'stop-gray-500/20': trendDirection === 'flat',
-              }"
-            />
-            <stop
-              offset="100%"
-              :class="{
-                'stop-green-500/0': trendDirection === 'up',
-                'stop-red-500/0': trendDirection === 'down',
-                'stop-gray-500/0': trendDirection === 'flat',
-              }"
-            />
+          <linearGradient :id="gradientId" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" :stop-color="gradientColors.start" />
+            <stop offset="100%" :stop-color="gradientColors.end" />
           </linearGradient>
         </defs>
 
         <!-- Area under curve -->
         <path
           :d="`${sparklinePath} L ${width} ${height} L 0 ${height} Z`"
-          fill="url(#sparklineGradient)"
+          :fill="`url(#${gradientId})`"
         />
 
         <!-- Main sparkline -->
         <path
           :d="sparklinePath"
           fill="none"
-          :class="{
-            'stroke-green-500': trendDirection === 'up',
-            'stroke-red-500': trendDirection === 'down',
-            'stroke-gray-400': trendDirection === 'flat',
-          }"
+          :stroke="strokeColor"
           stroke-width="1.5"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -182,12 +267,9 @@ const isEmpty = computed(() => dataPoints.value.length === 0)
             :cx="point.x"
             :cy="point.y"
             r="2"
-            :class="{
-              'fill-green-500': trendDirection === 'up',
-              'fill-red-500': trendDirection === 'down',
-              'fill-gray-400': trendDirection === 'flat',
-            }"
-            class="stroke-background stroke-1"
+            :fill="fillColor"
+            stroke="hsl(var(--background))"
+            stroke-width="1"
           >
             <title>{{ formatWeight(point.value) }}</title>
           </circle>
@@ -199,12 +281,9 @@ const isEmpty = computed(() => dataPoints.value.length === 0)
           :cx="circlePoints[circlePoints.length - 1].x"
           :cy="circlePoints[circlePoints.length - 1].y"
           r="3"
-          :class="{
-            'fill-green-600': trendDirection === 'up',
-            'fill-red-600': trendDirection === 'down',
-            'fill-gray-500': trendDirection === 'flat',
-          }"
-          class="stroke-background stroke-2"
+          :fill="highlightFillColor"
+          stroke="hsl(var(--background))"
+          stroke-width="2"
         />
       </template>
     </svg>

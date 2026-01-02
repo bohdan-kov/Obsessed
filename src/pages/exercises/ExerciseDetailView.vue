@@ -32,8 +32,8 @@
             {{ t('exercises.detail.back') }}
           </Button>
 
-          <!-- Exercise name -->
-          <h1 class="text-3xl font-bold tracking-tight mb-2">
+          <!-- Exercise name (hidden on mobile, shown in AppLayout mobile header) -->
+          <h1 class="hidden md:block text-3xl font-bold tracking-tight mb-2">
             {{ exerciseName }}
           </h1>
 
@@ -174,6 +174,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -242,6 +243,9 @@ const exerciseName = computed(() => {
   }
   return exercise.value.name || ''
 })
+
+// Set page metadata for mobile header with dynamic exercise name
+usePageMeta(computed(() => exerciseName.value || t('exercises.detail.overview')))
 
 /**
  * Get localized description

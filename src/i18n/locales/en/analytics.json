@@ -1,5 +1,6 @@
 {
   "title": "Analytics",
+  "description": "Track your progress and analyze results",
   "tabs": {
     "muscles": "Muscles",
     "duration": "Duration",

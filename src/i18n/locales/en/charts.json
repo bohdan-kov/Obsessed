@@ -2,6 +2,7 @@
   "fullscreen": {
     "open": "Open in full screen",
     "close": "Close full screen",
-    "active": "Chart in full screen mode"
+    "active": "Chart in full screen mode",
+    "rotateHint": "Rotate your device to landscape for best viewing"
   }
 }

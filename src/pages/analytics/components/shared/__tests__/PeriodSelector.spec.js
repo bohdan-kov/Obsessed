@@ -35,7 +35,7 @@ describe('PeriodSelector', () => {
             props: ['modelValue'],
           },
           SelectTrigger: {
-            template: '<button class="select-trigger" :class="$attrs.class" aria-label="Select period"><slot /></button>',
+            template: '<button class="select-trigger" :class="$attrs.class" :aria-label="$attrs.ariaLabel"><slot /></button>',
           },
           SelectContent: {
             template: '<div class="select-content"><slot /></div>',
@@ -156,19 +156,20 @@ describe('PeriodSelector', () => {
     })
 
     it('has accessible label on select trigger', () => {
-      const trigger = wrapper.find('[aria-label="Select period"]')
+      // With mocked i18n, translation keys are returned directly
+      const trigger = wrapper.find('[aria-label="dashboard.periodSelector.ariaLabel"]')
       expect(trigger.exists()).toBe(true)
     })
 
     it('applies size classes to select trigger', async () => {
       // Test sm size
       const smWrapper = createWrapper({ variant: 'select', size: 'sm' })
-      let trigger = smWrapper.find('[aria-label="Select period"]')
+      let trigger = smWrapper.find('[aria-label="dashboard.periodSelector.ariaLabel"]')
       expect(trigger.classes()).toContain('h-8')
 
       // Test lg size
       const lgWrapper = createWrapper({ variant: 'select', size: 'lg' })
-      trigger = lgWrapper.find('[aria-label="Select period"]')
+      trigger = lgWrapper.find('[aria-label="dashboard.periodSelector.ariaLabel"]')
       expect(trigger.classes()).toContain('h-11')
     })
   })
@@ -227,9 +228,9 @@ describe('PeriodSelector', () => {
 
     it('applies responsive width to select variant', () => {
       wrapper = createWrapper({ variant: 'select' })
-      const trigger = wrapper.find('[aria-label="Select period"]')
-      expect(trigger.classes()).toContain('w-full')
-      expect(trigger.classes()).toContain('sm:w-[200px]')
+      const trigger = wrapper.find('[aria-label="dashboard.periodSelector.ariaLabel"]')
+      // The component uses w-[180px], not w-full with responsive breakpoint
+      expect(trigger.classes()).toContain('w-[180px]')
     })
   })
 

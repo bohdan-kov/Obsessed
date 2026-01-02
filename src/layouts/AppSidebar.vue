@@ -79,17 +79,17 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
   <TooltipProvider>
     <aside
       :class="[
-        'flex flex-col h-screen-safe bg-[#0a0a0c] border-r border-white/6 transition-all duration-200',
+        'flex flex-col h-screen-safe bg-background border-r border-border transition-all duration-200',
         collapsed ? 'w-[68px]' : 'w-[260px]',
       ]"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-3 py-5 border-b border-white/6">
+      <div class="flex items-center justify-between px-3 py-5 border-b border-border">
         <div v-if="!collapsed" class="flex items-center gap-2.5">
           <div class="w-7 h-7 rounded-md bg-linear-to-br from-red-500 to-red-600 flex items-center justify-center">
             <Dumbbell class="w-[18px] h-[18px] text-white" />
           </div>
-          <span class="text-[20px] font-bold tracking-tight bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+          <span class="text-[20px] font-bold tracking-tight bg-linear-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
             Obsessed
           </span>
         </div>
@@ -101,11 +101,11 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
               size="icon"
               @click="toggleCollapse"
               :class="[
-                'shrink-0 h-8 w-8 border border-white/8 hover:bg-white/4 hover:border-white/12',
+                'shrink-0 h-8 w-8 border border-border hover:bg-accent hover:border-border',
                 collapsed && 'mx-auto',
               ]"
             >
-              <PanelLeft :class="['w-4 h-4 text-zinc-500', collapsed && 'rotate-180']" />
+              <PanelLeft :class="['w-4 h-4 text-muted-foreground', collapsed && 'rotate-180']" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -143,7 +143,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all',
+                    'w-full gap-2.5 h-10 text-muted-foreground hover:bg-accent hover:text-foreground transition-all',
                     collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
                     isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
@@ -164,7 +164,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
           <!-- Library Section -->
           <div v-if="!collapsed" class="space-y-0.5">
             <div class="px-3 py-2 mb-2">
-              <span class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">
+              <span class="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
                 {{ t('common.nav.library.label') }}
               </span>
             </div>
@@ -174,7 +174,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all justify-start px-3',
+                    'w-full gap-2.5 h-10 text-muted-foreground hover:bg-accent hover:text-foreground transition-all justify-start px-3',
                     isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
                 >
@@ -193,7 +193,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   variant="ghost"
                   @click="navigateTo(item.route)"
                   :class="[
-                    'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all justify-center px-2.5',
+                    'w-full gap-2.5 h-10 text-muted-foreground hover:bg-accent hover:text-foreground transition-all justify-center px-2.5',
                     isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                   ]"
                 >
@@ -212,7 +212,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
       </ScrollArea>
 
       <!-- Footer Section -->
-      <div class="border-t border-white/6">
+      <div class="border-t border-border">
         <div class="px-3 py-2 space-y-0.5">
           <Tooltip v-for="item in footerItems" :key="item.route">
             <TooltipTrigger as-child>
@@ -220,7 +220,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                 variant="ghost"
                 @click="navigateTo(item.route)"
                 :class="[
-                  'w-full gap-2.5 h-10 text-zinc-400 hover:bg-white/4 hover:text-white transition-all',
+                  'w-full gap-2.5 h-10 text-muted-foreground hover:bg-accent hover:text-foreground transition-all',
                   collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
                   isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
                 ]"
@@ -239,12 +239,12 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
         </div>
 
         <!-- User Profile -->
-        <div class="px-3 pb-3 pt-3 border-t border-white/6">
+        <div class="px-3 pb-3 pt-3 border-t border-border">
           <Button
             variant="ghost"
             @click="navigateTo('Profile')"
             :class="[
-              'w-full h-auto p-3 hover:bg-white/4 transition-all',
+              'w-full h-auto p-3 hover:bg-accent transition-all',
               collapsed ? 'justify-center' : 'justify-start gap-2.5',
             ]"
           >
@@ -259,7 +259,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
               <div class="text-sm font-medium truncate">
                 {{ displayName || t('common.user.defaultName') }}
               </div>
-              <div class="text-xs text-zinc-500 truncate">
+              <div class="text-xs text-muted-foreground truncate">
                 {{ email }}
               </div>
             </div>
