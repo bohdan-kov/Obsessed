@@ -137,6 +137,18 @@ export const useExerciseStore = defineStore('exercise', () => {
     return grouped
   })
 
+  /**
+   * Create a Map of exercises by ID for O(1) lookups
+   * Used by goalsStore and analyticsStore to avoid N+1 queries
+   */
+  const exerciseMap = computed(() => {
+    const map = new Map()
+    allExercises.value.forEach((exercise) => {
+      map.set(exercise.id, exercise)
+    })
+    return map
+  })
+
   // Actions
   /**
    * Load default exercises from local data
@@ -426,6 +438,7 @@ export const useExerciseStore = defineStore('exercise', () => {
     byCategory,
     searchResults,
     recentExercises,
+    exerciseMap, // Map<exerciseId, exercise> for O(1) lookups
 
     // Actions
     fetchExercises,

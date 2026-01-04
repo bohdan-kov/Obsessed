@@ -1,6 +1,9 @@
 {
   "title": "Цілі",
   "subtitle": "Відстеження прогресу до ваших фітнес-цілей",
+  "createGoal": "Створити ціль",
+  "goalCreatedSuccess": "Ціль успішно створена!",
+  "noGoals": "У вас ще немає цілей",
   "empty": {
     "title": "Поки що немає цілей",
     "description": "Почніть відстежувати ваш прогрес, створивши першу ціль",
@@ -12,6 +15,209 @@
       "squat": "Збільшити присід на 20%"
     }
   },
+  "types": {
+    "strength": "Сила",
+    "volume": "Об'єм",
+    "frequency": "Частота",
+    "streak": "Стрік"
+  },
+  "status": {
+    "active": "Активна",
+    "completed": "Досягнута",
+    "failed": "Не досягнута",
+    "paused": "Призупинена",
+    "on-track": "По плану",
+    "ahead": "Попереду",
+    "behind": "Відстаєте",
+    "at-risk": "Під загрозою",
+    "achieved": "Досягнуто",
+    "on-pace": "У темпі"
+  },
+  "wizard": {
+    "title": "Створити ціль",
+    "subtitle": "Створіть ціль по силі, щоб відстежувати свій прогрес",
+    "step1": "Оберіть тип цілі",
+    "step2": "Налаштування",
+    "step3": "Дедлайн",
+    "step4": "Перегляд",
+    "selectType": "Оберіть тип цілі",
+    "selectTypeDescription": "Оберіть, що ви хочете досягти",
+    "example": "Приклад",
+    "selectExercise": "Оберіть вправу",
+    "selectExercisePlaceholder": "Оберіть вправу",
+    "selectExerciseDescription": "Оберіть вправу для відстеження прогресу",
+    "targetWeight": "Цільова вага",
+    "enterTargetWeight": "Введіть цільову вагу",
+    "invalidTargetWeight": "Ціль має бути більшою за поточну вагу",
+    "setTargetDescription": "Встановіть цільову вагу для досягнення",
+    "deadline": "Термін досягнення",
+    "setDeadline": "Встановіть термін",
+    "setDeadlineDescription": "Коли ви хочете досягнути цієї цілі?",
+    "deadlineHint": "Рекомендовано: 3-6 місяців для реалістичних цілей",
+    "invalidDeadline": "Термін має бути у майбутньому",
+    "notes": "Нотатки (опціонально)",
+    "notesPlaceholder": "Додайте мотивацію або стратегію...",
+    "currentWeight": "Поточна вага",
+    "currentVolume": "Поточний об'єм",
+    "selectVolumeType": "Тип об'єму",
+    "selectVolumeTypeDescription": "Оберіть, який об'єм хочете відстежувати",
+    "setVolumeTargetDescription": "Встановіть цільовий об'єм для досягнення",
+    "targetVolume": "Цільовий об'єм",
+    "enterTargetVolume": "Введіть цільовий об'єм",
+    "invalidVolume": "Введіть коректний об'єм (більше 0)",
+    "recommendation": "Рекомендація",
+    "recommendationDescription": "На основі вашого поточного об'єму, ми рекомендуємо збільшення на 10-15%",
+    "setPeriod": "Оберіть період",
+    "setPeriodDescription": "Як часто ви хочете досягати цієї цілі?",
+    "timePeriod": "Період часу",
+    "configureFrequency": "Налаштування частоти",
+    "configureFrequencyDescription": "Скільки разів ви хочете тренуватись?",
+    "frequencyType": "Тип частоти",
+    "selectMuscleGroup": "М'язова група",
+    "selectMuscleGroupPlaceholder": "Оберіть м'язову групу",
+    "targetWorkouts": "Кількість тренувань",
+    "enterTargetWorkouts": "Введіть кількість тренувань",
+    "invalidFrequency": "Введіть коректну кількість тренувань",
+    "configureStreak": "Налаштування стріку",
+    "configureStreakDescription": "Встановіть ціль для безперервних тренувань",
+    "streakType": "Тип стріку",
+    "targetDays": "Кількість днів",
+    "targetWeeks": "Кількість тижнів",
+    "enterTargetDays": "Введіть кількість днів",
+    "enterTargetWeeks": "Введіть кількість тижнів",
+    "allowRestDays": "Дозволити дні відпочинку",
+    "allowRestDaysDescription": "Дозволити певну кількість днів відпочинку на тиждень",
+    "maxRestDaysPerWeek": "Макс. днів відпочинку на тиждень",
+    "enterMaxRestDays": "Введіть кількість днів",
+    "maxRestDaysHint": "Рекомендовано: 1-2 дні відпочинку на тиждень",
+    "invalidStreak": "Введіть коректні налаштування стріку",
+    "period": "Період",
+    "next": "Далі",
+    "back": "Назад",
+    "create": "Створити",
+    "creating": "Створення...",
+    "cancel": "Скасувати",
+    "strengthGoalLabel": "Ціль по силі",
+    "types": {
+      "strength": {
+        "title": "Ціль по силі",
+        "description": "Досягти певної ваги у вправі",
+        "example": "Жим лежачи 100 кг"
+      },
+      "volume": {
+        "title": "Ціль по об'єму",
+        "description": "Досягти певного об'єму тренувань",
+        "example": "10,000 кг грудні/тиждень"
+      },
+      "frequency": {
+        "title": "Ціль по частоті",
+        "description": "Тренуватись певну кількість разів",
+        "example": "4 тренування/тиждень"
+      },
+      "streak": {
+        "title": "Ціль-стрік",
+        "description": "Тренуватись без пропусків",
+        "example": "30 днів поспіль"
+      }
+    },
+    "volumeTypes": {
+      "total": "Загальний об'єм",
+      "totalDescription": "Відстежувати загальний об'єм всіх вправ",
+      "totalExample": "Приклад: 50,000 кг на тиждень",
+      "exercise": "Об'єм вправи",
+      "exerciseDescription": "Відстежувати об'єм конкретної вправи",
+      "exerciseExample": "Приклад: 5,000 кг жиму лежачи",
+      "muscleGroup": "Об'єм м'язової групи",
+      "muscleGroupDescription": "Відстежувати об'єм м'язової групи",
+      "muscleGroupExample": "Приклад: 15,000 кг на груди"
+    },
+    "periods": {
+      "week": "Тиждень",
+      "weekDescription": "Ціль на кожен тиждень",
+      "month": "Місяць",
+      "monthDescription": "Ціль на кожен місяць"
+    },
+    "frequencyTypes": {
+      "total": "Всі тренування",
+      "totalDescription": "Загальна кількість тренувань",
+      "muscleGroup": "Тренування м'язової групи",
+      "muscleGroupDescription": "Тренування конкретної м'язової групи"
+    },
+    "streakTypes": {
+      "daily": "Щоденний стрік",
+      "dailyDescription": "Тренуватись щодня без пропусків",
+      "dailyExample": "Приклад: 30 днів поспіль",
+      "weekly": "Тижневий стрік",
+      "weeklyDescription": "Тренуватись кожного тижня",
+      "weeklyExample": "Приклад: 12 тижнів поспіль"
+    }
+  },
+  "detail": {
+    "progress": "Прогрес",
+    "current": "Поточний",
+    "target": "Ціль",
+    "daysRemaining": "{count} днів залишилось",
+    "predictions": "Прогноз",
+    "willReachOnTime": "За поточного темпу ви досягнете цілі вчасно",
+    "needToIncrease": "Щоб досягнути вчасно, потрібно +{amount} на тиждень",
+    "workoutHistory": "Історія тренувань",
+    "edit": "Редагувати",
+    "pause": "Призупинити",
+    "resume": "Відновити",
+    "delete": "Видалити",
+    "chart": {
+      "title": "Прогрес у часі",
+      "description": "Відстежуйте свій прогрес до цілі",
+      "targetLine": "Ціль",
+      "trendLine": "Тренд",
+      "actualProgress": "Фактичний",
+      "noData": "Ще немає даних тренувань",
+      "startTraining": "Завершіть тренування, щоб побачити прогрес"
+    },
+    "predictions": {
+      "title": "Прогноз досягнення",
+      "description": "На основі вашого поточного прогресу",
+      "completionDate": "Прогнозована дата",
+      "requiredPace": "Потрібний приріст на тиждень",
+      "currentPace": "Поточний темп",
+      "perWeek": "на тиждень",
+      "onTime": "Ви на шляху до досягнення цілі!",
+      "needsMore": "Збільште зусилля для досягнення вчасно",
+      "notEnoughData": "Потрібно мінімум 3 тренування для прогнозу"
+    },
+    "workoutHistory": {
+      "title": "Історія тренувань",
+      "description": "Останні тренування з {exercise}",
+      "date": "Дата",
+      "sets": "Підходи",
+      "reps": "Повторення",
+      "maxWeight": "Макс. вага",
+      "estimated1RM": "Розрах. 1RM",
+      "volume": "Об'єм",
+      "change": "Зміна",
+      "noWorkouts": "Ще немає тренувань",
+      "startTracking": "Завершіть тренування для відстеження прогресу"
+    }
+  },
+  "milestones": {
+    "reached": "Досягнуто {percent}%",
+    "upcoming": "Наступний етап: {percent}%"
+  },
+  "volumeTypes": {
+    "total": "Загальний об'єм",
+    "exercise": "Об'єм вправи",
+    "muscle-group": "Об'єм м'язової групи"
+  },
+  "periods": {
+    "week": "Тиждень",
+    "month": "Місяць"
+  },
+  "stats": {
+    "totalGoals": "Всього цілей",
+    "activeGoals": "Активних цілей",
+    "completionRate": "Відсоток завершення",
+    "onTrack": "По плану"
+  },
   "comingSoon": {
     "title": "Незабаром",
     "description": "Ми працюємо над цією функцією. Скоро ви зможете встановлювати та відстежувати свої фітнес-цілі."
@@ -20,5 +226,21 @@
     "strength": "Цілі з сили",
     "consistency": "Цілі постійності",
     "achievement": "Цілі досягнень"
+  },
+  "deleteConfirmTitle": "Видалити ціль?",
+  "deleteConfirmMessage": "Цю дію неможливо скасувати. Вашу ціль та весь прогрес буде видалено назавжди.",
+  "pauseConfirmTitle": "Призупинити ціль?",
+  "pauseConfirmMessage": "Призупинення цієї цілі зупинить відстеження прогресу. Ви зможете відновити її пізніше.",
+  "resumeConfirmTitle": "Відновити ціль?",
+  "resumeConfirmMessage": "Відновлення цієї цілі знову запустить відстеження прогресу.",
+  "goalPausedSuccess": "Ціль успішно призупинено",
+  "goalResumedSuccess": "Ціль успішно відновлено",
+  "goalDeletedSuccess": "Ціль успішно видалено",
+  "errors": {
+    "loadFailed": "Не вдалося завантажити цілі",
+    "createFailed": "Не вдалося створити ціль",
+    "updateFailed": "Не вдалося оновити ціль",
+    "deleteFailed": "Не вдалося видалити ціль",
+    "invalidGoalData": "Некоректні дані цілі"
   }
 }

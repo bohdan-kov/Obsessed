@@ -1,6 +1,9 @@
 {
   "title": "Goals",
   "subtitle": "Track progress toward your fitness goals",
+  "createGoal": "Create Goal",
+  "goalCreatedSuccess": "Goal created successfully!",
+  "noGoals": "You don't have any goals yet",
   "empty": {
     "title": "No goals yet",
     "description": "Start tracking your progress by creating your first goal",
@@ -12,6 +15,209 @@
       "squat": "Increase squat by 20%"
     }
   },
+  "types": {
+    "strength": "Strength",
+    "volume": "Volume",
+    "frequency": "Frequency",
+    "streak": "Streak"
+  },
+  "status": {
+    "active": "Active",
+    "completed": "Completed",
+    "failed": "Failed",
+    "paused": "Paused",
+    "on-track": "On Track",
+    "ahead": "Ahead",
+    "behind": "Behind",
+    "at-risk": "At Risk",
+    "achieved": "Achieved",
+    "on-pace": "On Pace"
+  },
+  "wizard": {
+    "title": "Create Goal",
+    "subtitle": "Create a strength goal to track your progress",
+    "step1": "Choose goal type",
+    "step2": "Settings",
+    "step3": "Deadline",
+    "step4": "Review",
+    "selectType": "Choose goal type",
+    "selectTypeDescription": "Choose what you want to achieve",
+    "example": "Example",
+    "selectExercise": "Select exercise",
+    "selectExercisePlaceholder": "Select an exercise",
+    "selectExerciseDescription": "Choose an exercise to track your progress",
+    "targetWeight": "Target weight",
+    "enterTargetWeight": "Enter target weight",
+    "invalidTargetWeight": "Target must be higher than current weight",
+    "setTargetDescription": "Set your target weight to achieve",
+    "deadline": "Deadline",
+    "setDeadline": "Set deadline",
+    "setDeadlineDescription": "When do you want to achieve this goal?",
+    "deadlineHint": "Recommended: 3-6 months for realistic goals",
+    "invalidDeadline": "Deadline must be in the future",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Add motivation or strategy notes...",
+    "currentWeight": "Current weight",
+    "currentVolume": "Current volume",
+    "selectVolumeType": "Volume type",
+    "selectVolumeTypeDescription": "Choose which volume to track",
+    "setVolumeTargetDescription": "Set your target volume to achieve",
+    "targetVolume": "Target volume",
+    "enterTargetVolume": "Enter target volume",
+    "invalidVolume": "Enter a valid volume (greater than 0)",
+    "recommendation": "Recommendation",
+    "recommendationDescription": "Based on your current volume, we recommend a 10-15% increase",
+    "setPeriod": "Choose period",
+    "setPeriodDescription": "How often do you want to achieve this goal?",
+    "timePeriod": "Time period",
+    "configureFrequency": "Configure frequency",
+    "configureFrequencyDescription": "How many times do you want to train?",
+    "frequencyType": "Frequency type",
+    "selectMuscleGroup": "Muscle group",
+    "selectMuscleGroupPlaceholder": "Select a muscle group",
+    "targetWorkouts": "Number of workouts",
+    "enterTargetWorkouts": "Enter number of workouts",
+    "invalidFrequency": "Enter a valid workout count",
+    "configureStreak": "Configure streak",
+    "configureStreakDescription": "Set a goal for consecutive workouts",
+    "streakType": "Streak type",
+    "targetDays": "Number of days",
+    "targetWeeks": "Number of weeks",
+    "enterTargetDays": "Enter number of days",
+    "enterTargetWeeks": "Enter number of weeks",
+    "allowRestDays": "Allow rest days",
+    "allowRestDaysDescription": "Allow a certain number of rest days per week",
+    "maxRestDaysPerWeek": "Max rest days per week",
+    "enterMaxRestDays": "Enter number of days",
+    "maxRestDaysHint": "Recommended: 1-2 rest days per week",
+    "invalidStreak": "Enter valid streak settings",
+    "period": "Period",
+    "next": "Next",
+    "back": "Back",
+    "create": "Create",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "strengthGoalLabel": "Strength Goal",
+    "types": {
+      "strength": {
+        "title": "Strength Goal",
+        "description": "Reach a target weight in an exercise",
+        "example": "Bench press 100kg"
+      },
+      "volume": {
+        "title": "Volume Goal",
+        "description": "Reach a target training volume",
+        "example": "10,000kg chest/week"
+      },
+      "frequency": {
+        "title": "Frequency Goal",
+        "description": "Train a certain number of times",
+        "example": "4 workouts/week"
+      },
+      "streak": {
+        "title": "Streak Goal",
+        "description": "Train without missing days",
+        "example": "30 days in a row"
+      }
+    },
+    "volumeTypes": {
+      "total": "Total Volume",
+      "totalDescription": "Track total volume across all exercises",
+      "totalExample": "Example: 50,000kg per week",
+      "exercise": "Exercise Volume",
+      "exerciseDescription": "Track volume for a specific exercise",
+      "exerciseExample": "Example: 5,000kg bench press",
+      "muscleGroup": "Muscle Group Volume",
+      "muscleGroupDescription": "Track volume for a muscle group",
+      "muscleGroupExample": "Example: 15,000kg chest"
+    },
+    "periods": {
+      "week": "Week",
+      "weekDescription": "Goal per week",
+      "month": "Month",
+      "monthDescription": "Goal per month"
+    },
+    "frequencyTypes": {
+      "total": "All Workouts",
+      "totalDescription": "Total number of workouts",
+      "muscleGroup": "Muscle Group Workouts",
+      "muscleGroupDescription": "Workouts for a specific muscle group"
+    },
+    "streakTypes": {
+      "daily": "Daily Streak",
+      "dailyDescription": "Train every day without missing",
+      "dailyExample": "Example: 30 days in a row",
+      "weekly": "Weekly Streak",
+      "weeklyDescription": "Train every week",
+      "weeklyExample": "Example: 12 weeks in a row"
+    }
+  },
+  "detail": {
+    "progress": "Progress",
+    "current": "Current",
+    "target": "Target",
+    "daysRemaining": "{count} days remaining",
+    "predictions": "Predictions",
+    "willReachOnTime": "At current pace, you'll reach your goal on time",
+    "needToIncrease": "To reach on time, you need +{amount} per week",
+    "workoutHistory": "Workout History",
+    "edit": "Edit",
+    "pause": "Pause",
+    "resume": "Resume",
+    "delete": "Delete",
+    "chart": {
+      "title": "Progress Over Time",
+      "description": "Track your progress toward your goal",
+      "targetLine": "Target",
+      "trendLine": "Trend",
+      "actualProgress": "Actual",
+      "noData": "No workout data yet",
+      "startTraining": "Complete workouts to see your progress"
+    },
+    "predictions": {
+      "title": "Goal Predictions",
+      "description": "Based on your current progress",
+      "completionDate": "Predicted completion",
+      "requiredPace": "Required weekly gain",
+      "currentPace": "Current pace",
+      "perWeek": "per week",
+      "onTime": "You're on track to reach your goal!",
+      "needsMore": "Increase effort to reach on time",
+      "notEnoughData": "Need at least 3 workouts for predictions"
+    },
+    "workoutHistory": {
+      "title": "Workout History",
+      "description": "Recent workouts with {exercise}",
+      "date": "Date",
+      "sets": "Sets",
+      "reps": "Reps",
+      "maxWeight": "Max Weight",
+      "estimated1RM": "Est. 1RM",
+      "volume": "Volume",
+      "change": "Change",
+      "noWorkouts": "No workouts yet",
+      "startTracking": "Complete a workout to start tracking progress"
+    }
+  },
+  "milestones": {
+    "reached": "Reached {percent}%",
+    "upcoming": "Next milestone: {percent}%"
+  },
+  "volumeTypes": {
+    "total": "Total Volume",
+    "exercise": "Exercise Volume",
+    "muscle-group": "Muscle Group Volume"
+  },
+  "periods": {
+    "week": "Week",
+    "month": "Month"
+  },
+  "stats": {
+    "totalGoals": "Total Goals",
+    "activeGoals": "Active Goals",
+    "completionRate": "Completion Rate",
+    "onTrack": "On Track"
+  },
   "comingSoon": {
     "title": "Coming Soon",
     "description": "We're working on this feature. Soon you'll be able to set and track your fitness goals."
@@ -20,5 +226,21 @@
     "strength": "Strength Goals",
     "consistency": "Consistency Goals",
     "achievement": "Achievement Goals"
+  },
+  "deleteConfirmTitle": "Delete Goal?",
+  "deleteConfirmMessage": "This action cannot be undone. Your goal and all its progress will be permanently deleted.",
+  "pauseConfirmTitle": "Pause Goal?",
+  "pauseConfirmMessage": "Pausing this goal will stop tracking progress. You can resume it later.",
+  "resumeConfirmTitle": "Resume Goal?",
+  "resumeConfirmMessage": "Resuming this goal will start tracking progress again.",
+  "goalPausedSuccess": "Goal paused successfully",
+  "goalResumedSuccess": "Goal resumed successfully",
+  "goalDeletedSuccess": "Goal deleted successfully",
+  "errors": {
+    "loadFailed": "Failed to load goals",
+    "createFailed": "Failed to create goal",
+    "updateFailed": "Failed to update goal",
+    "deleteFailed": "Failed to delete goal",
+    "invalidGoalData": "Invalid goal data"
   }
 }

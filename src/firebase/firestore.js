@@ -41,6 +41,10 @@ export const COLLECTIONS = {
   PERSONAL_RECORDS: 'personal_records',
   MUSCLE_GROUPS: 'muscle_groups',
   WORKOUT_PLANS: 'workoutPlans',
+  GOALS: 'goals',
+  // Community collections
+  FEED: 'feed',
+  REPORTS: 'reports',
 }
 
 /**

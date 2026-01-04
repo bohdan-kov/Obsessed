@@ -116,7 +116,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
 
       await store.initAuth()
@@ -134,7 +144,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
 
       await store.initAuth()
@@ -207,7 +227,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'user@test.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'user@test.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
 
       await store.initAuth()
@@ -261,7 +291,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
 
       await store.initAuth()
@@ -326,7 +366,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
 
       await store.initAuth()
@@ -362,6 +412,15 @@ describe('authStore', () => {
         displayName: 'New User',
         email: 'newuser@example.com',
         photoURL: 'photo.jpg',
+        profile: {
+          displayName: 'New User',
+          bio: '',
+          photoURL: 'photo.jpg',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+          createdAt: expect.any(String),
+        },
         settings: {
           defaultRestTime: 90,
           weightUnit: 'kg',
@@ -395,7 +454,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(unsubscribeMock)
 
       await store.initAuth()
@@ -593,7 +662,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(unsubscribeMock)
 
       await store.initAuth()
@@ -704,7 +783,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
       setDocument.mockResolvedValue()
 
@@ -742,7 +831,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
 
       setDocument.mockImplementation(() => {
@@ -769,7 +868,17 @@ describe('authStore', () => {
         return vi.fn()
       })
 
-      fetchDocument.mockResolvedValue({ email: 'test@example.com' })
+      fetchDocument.mockResolvedValue({
+        email: 'test@example.com',
+        profile: {
+          displayName: 'Test User',
+          bio: '',
+          photoURL: '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+        },
+      })
       subscribeToDocument.mockReturnValue(vi.fn())
       setDocument.mockRejectedValue(new Error(errorMessage))
 

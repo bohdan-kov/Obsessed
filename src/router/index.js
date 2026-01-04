@@ -66,10 +66,44 @@ const router = createRouter({
           meta: { title: 'Goals' },
         },
         {
+          path: 'goals/:id',
+          name: 'GoalDetail',
+          component: () => import('@/pages/goals/GoalDetailView.vue'),
+          meta: { title: 'Goal Detail' },
+          props: true,
+        },
+        {
           path: 'community',
           name: 'Community',
           component: () => import('@/pages/community/CommunityView.vue'),
           meta: { title: 'Community' },
+        },
+        {
+          path: 'profile/@:username',
+          name: 'UserProfile',
+          component: () => import('@/pages/community/ProfileView.vue'),
+          meta: { title: 'User Profile' },
+          props: true,
+        },
+        {
+          path: 'profile/@:username/followers',
+          name: 'UserFollowers',
+          component: () => import('@/pages/community/FollowersView.vue'),
+          meta: { title: 'Followers' },
+          props: true,
+        },
+        {
+          path: 'profile/@:username/following',
+          name: 'UserFollowing',
+          component: () => import('@/pages/community/FollowingView.vue'),
+          meta: { title: 'Following' },
+          props: true,
+        },
+        {
+          path: 'community/settings/privacy',
+          name: 'CommunityPrivacySettings',
+          component: () => import('@/pages/community/PrivacySettingsView.vue'),
+          meta: { title: 'Privacy Settings' },
         },
         {
           path: 'exercises',
@@ -121,10 +155,20 @@ const router = createRouter({
           meta: { title: 'Search' },
         },
         {
+          path: 'me',
+          name: 'MyProfile',
+          component: () => import('@/pages/profile/ProfileView.vue'),
+          meta: { title: 'My Profile' },
+        },
+        {
           path: 'profile',
           name: 'Profile',
-          component: () => import('@/pages/profile/ProfileView.vue'),
-          meta: { title: 'Profile' },
+          redirect: () => {
+            const authStore = useAuthStore()
+            // Redirect to user's own Community profile
+            return `/profile/@${authStore.uid}`
+          },
+          meta: { title: 'Community Profile' },
         },
       ],
     },

@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import { useAuth } from '@/composables/useAuth'
 import { useNavigation } from '@/composables/useNavigation'
+import { useGoalsStore } from '@/stores/goalsStore'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -33,6 +36,9 @@ const {
   navigateTo,
   userInitials,
 } = useNavigation()
+
+const goalsStore = useGoalsStore()
+const { activeGoals } = storeToRefs(goalsStore)
 
 const STORAGE_KEY = 'obsessed_sidebar_collapsed'
 const userCollapsed = ref(false) // User's manual preference
@@ -149,7 +155,15 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   ]"
                 >
                   <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />
-                  <span v-if="!collapsed" class="text-sm">{{ item.name }}</span>
+                  <span v-if="!collapsed" class="text-sm flex-1 text-left">{{ item.name }}</span>
+                  <!-- Badge for Goals (active goals count) -->
+                  <Badge
+                    v-if="!collapsed && item.route === 'Goals' && activeGoals.length > 0"
+                    variant="secondary"
+                    class="ml-auto h-5 min-w-5 px-1.5 text-xs"
+                  >
+                    {{ activeGoals.length }}
+                  </Badge>
                 </Button>
               </TooltipTrigger>
               <TooltipContent v-if="collapsed" side="right">
@@ -242,7 +256,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
         <div class="px-3 pb-3 pt-3 border-t border-border">
           <Button
             variant="ghost"
-            @click="navigateTo('Profile')"
+            @click="navigateTo('MyProfile')"
             :class="[
               'w-full h-auto p-3 hover:bg-accent transition-all',
               collapsed ? 'justify-center' : 'justify-start gap-2.5',

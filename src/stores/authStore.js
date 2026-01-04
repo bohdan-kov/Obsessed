@@ -100,6 +100,11 @@ export const useAuthStore = defineStore('auth', () => {
       await createUserProfile(userId)
     } else {
       userProfile.value = profile
+
+      // CRITICAL FIX: Ensure existing users have a public community profile
+      if (!profile.profile || !profile.profile.displayName) {
+        await ensurePublicProfile(userId, profile)
+      }
     }
 
     // Subscribe to real-time updates
@@ -116,14 +121,56 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * Ensure user has a public community profile (for existing users)
+   * This fixes the "Anonymous" bug by adding the profile object to existing users
+   */
+  async function ensurePublicProfile(userId, existingProfile) {
+    try {
+      const updates = {
+        profile: {
+          displayName:
+            existingProfile.displayName ||
+            user.value?.displayName ||
+            'Gym Enthusiast',
+          bio: existingProfile.bio || '',
+          photoURL: existingProfile.photoURL || user.value?.photoURL || '',
+          privacyMode: 'public',
+          followerCount: 0,
+          followingCount: 0,
+          createdAt: new Date().toISOString(),
+        },
+      }
+
+      await setDocument(COLLECTIONS.USERS, userId, updates, { merge: true })
+      console.log('[authStore] Created public profile for existing user:', userId)
+    } catch (err) {
+      console.error('[authStore] Failed to create public profile:', err)
+    }
+  }
+
+  /**
    * Create initial user profile in Firestore
    * IMPORTANT: Keep settings structure in sync with userStore
+   * CRITICAL: Creates both private settings AND public community profile
    */
   async function createUserProfile(userId) {
     const profileData = {
+      // Top-level fields for backward compatibility
       displayName: user.value?.displayName || '',
       email: user.value?.email || '',
       photoURL: user.value?.photoURL || '',
+
+      // Public community profile (used by feedStore and communityStore)
+      profile: {
+        displayName: user.value?.displayName || 'Gym Enthusiast',
+        bio: '',
+        photoURL: user.value?.photoURL || '',
+        privacyMode: 'public', // Default to public for community features
+        followerCount: 0,
+        followingCount: 0,
+        createdAt: new Date().toISOString(),
+      },
+
       settings: {
         defaultRestTime: 90,
         weightUnit: 'kg',

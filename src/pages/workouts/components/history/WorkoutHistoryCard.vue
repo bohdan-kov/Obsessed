@@ -41,12 +41,32 @@
           +{{ remainingExercises }} {{ t('common.more') }}
         </p>
       </div>
+
+      <!-- Share Button -->
+      <div class="mt-4 pt-3 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          class="w-full"
+          @click.stop="handleShareClick"
+        >
+          <Share2 class="h-4 w-4 mr-2" />
+          {{ t('common.share') }}
+        </Button>
+      </div>
     </CardContent>
+
+    <!-- Share Workout Modal -->
+    <ShareWorkoutModal
+      v-model:open="showShareModal"
+      :workout="workout"
+      @shared="handleWorkoutShared"
+    />
   </Card>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -54,7 +74,10 @@ import { useUnits } from '@/composables/useUnits'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dumbbell, Hash } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { Dumbbell, Hash, Share2 } from 'lucide-vue-next'
+import ShareWorkoutModal from '@/pages/community/components/share/ShareWorkoutModal.vue'
+import { useToast } from '@/components/ui/toast/use-toast'
 
 const props = defineProps({
   workout: {
@@ -67,11 +90,15 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { formatWeight } = useUnits()
+const { toast } = useToast()
 
 const exerciseStore = useExerciseStore()
 const { allExercises } = storeToRefs(exerciseStore)
 
 const MAX_EXERCISES_DISPLAY = 3
+
+// Share modal state
+const showShareModal = ref(false)
 
 /**
  * Get localized exercise name
@@ -209,5 +236,22 @@ function handleCardClick() {
     params: { id: props.workout.id },
     query,
   })
+}
+
+/**
+ * Open share workout modal
+ * Uses @click.stop to prevent card click navigation
+ */
+function handleShareClick() {
+  showShareModal.value = true
+}
+
+/**
+ * Handle successful workout share
+ * @param {string} postId - ID of the created post
+ */
+function handleWorkoutShared(postId) {
+  console.log('[WorkoutHistoryCard] Workout shared successfully:', postId)
+  // Modal already shows toast and handles navigation
 }
 </script>

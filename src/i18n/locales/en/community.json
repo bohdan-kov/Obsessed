@@ -2,8 +2,11 @@
   "title": "Community",
   "subtitle": "Connect and share with other athletes",
   "empty": {
-    "title": "Community not available yet",
-    "description": "Social features will be available soon",
+    "title": "No posts",
+    "description": "Follow users to see their workouts here",
+    "noWorkouts": "This user hasn't shared any workouts yet",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet",
     "features": {
       "intro": "Join the community to:",
       "connect": "Connect with athletes at your gym",
@@ -12,14 +15,220 @@
       "learn": "Learn from experienced lifters"
     }
   },
-  "comingSoon": {
-    "title": "Coming Soon",
-    "description": "We're preparing the ability for you to share achievements, find workout partners, and motivate each other."
+  "profile": {
+    "createPrompt": "Want to connect with the community?",
+    "displayName": "Display Name",
+    "bio": "Bio",
+    "privacyMode": "Privacy",
+    "visibleStats": "Visible Stats",
+    "followers": "Followers",
+    "following": "Following",
+    "workouts": "Workouts",
+    "achievements": "Achievements",
+    "prs": "PRs",
+    "editProfile": "Edit Profile",
+    "viewProfile": "View Profile",
+    "viewMyProfile": "My Profile",
+    "settings": "Settings",
+    "anonymous": "Anonymous",
+    "notFound": "User not found",
+    "notFoundDescription": "This profile doesn't exist or has been deleted",
+    "tabs": {
+      "feed": "Feed",
+      "prs": "PRs",
+      "achievements": "Achievements"
+    },
+    "stats": {
+      "totalWorkouts": "Total Workouts",
+      "totalVolume": "Total Volume",
+      "currentStreak": "Current Streak",
+      "longestStreak": "Longest Streak"
+    }
   },
-  "features": {
-    "findPartners": "Find Workout Partners",
-    "shareAchievements": "Share Achievements",
-    "motivate": "Motivate Each Other",
-    "exchangeTips": "Exchange Tips"
+  "feed": {
+    "title": "Feed",
+    "following": "Following",
+    "discover": "Discover",
+    "you": "You",
+    "exercises": "{count} exercises | {count} exercise | {count} exercises",
+    "showAll": "Show all exercises",
+    "hideExercises": "Hide exercises",
+    "loadingMore": "Loading...",
+    "endOfFeed": "You're all caught up! 🎉",
+    "newPosts": "{count} new posts | {count} new post | {count} new posts",
+    "scrollToTop": "Scroll to top",
+    "emptyFollowing": "Follow users to see their workouts here",
+    "emptyDiscover": "No public workouts yet. Be the first to share!",
+    "emptyYou": "Share your first workout to build your profile"
+  },
+  "share": {
+    "button": "Share Workout",
+    "caption": "Add a caption...",
+    "visibility": "Who can see this?",
+    "public": "Everyone",
+    "followers": "Followers Only",
+    "success": "Workout shared!",
+    "viewInFeed": "View in Feed",
+    "delete": "Delete Post",
+    "deleteConfirm": "Remove this post from your feed?",
+    "edit": "Edit Caption",
+    "cancel": "Cancel",
+    "save": "Save",
+    "shared": "Shared"
+  },
+  "follow": {
+    "button": "Follow",
+    "requested": "Requested",
+    "following": "Following",
+    "unfollow": "Unfollow",
+    "unfollowConfirm": "Unfollow @{username}?",
+    "followers": "Followers",
+    "following": "Following",
+    "followBack": "Follow Back",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet"
+  },
+  "like": {
+    "button": "Like",
+    "liked": "Liked",
+    "count": "{count} likes | {count} like | {count} likes",
+    "likedBy": "Liked by"
+  },
+  "comment": {
+    "add": "Add a comment...",
+    "submit": "Post",
+    "viewAll": "View all {count} comments | View {count} comment | View all {count} comments",
+    "delete": "Delete Comment",
+    "deleteConfirm": "Delete this comment?",
+    "placeholder": "Write a comment...",
+    "empty": "No comments yet",
+    "count": "{count} comments | {count} comment | {count} comments"
+  },
+  "privacy": {
+    "title": "Privacy Settings",
+    "profileVisibility": "Profile Visibility",
+    "profileVisibilityDescription": "Who can see your profile and workouts",
+    "public": "Public",
+    "publicDescription": "Everyone can see your profile and workouts",
+    "friendsOnly": "Friends Only",
+    "friendsOnlyDescription": "Only followers can see workouts (follow requests require approval)",
+    "private": "Private",
+    "privateDescription": "Profile hidden, workouts cannot be shared",
+    "workoutDataVisibility": "Workout Data Visibility",
+    "workoutDataVisibilityDescription": "What others can see in your workouts",
+    "showSetsRepsWeight": "Show sets, reps, and weight",
+    "showSetsRepsWeightDescription": "Others see detailed exercise information",
+    "showDuration": "Show duration",
+    "showDurationDescription": "Show how long the workout lasted",
+    "showMuscleGroups": "Show muscle groups",
+    "showMuscleGroupsDescription": "Show which muscle groups were trained",
+    "discoverySettings": "Discovery Settings",
+    "allowSearch": "Allow others to find me via search",
+    "allowSearchDescription": "Your profile will appear in search results",
+    "allowDiscovery": "Suggest my profile to similar users",
+    "allowDiscoveryDescription": "System will recommend your profile to users with similar goals",
+    "allowLeaderboards": "Show my lifts on leaderboards",
+    "allowLeaderboardsDescription": "Your records will be visible on leaderboards",
+    "blockedUsers": "Blocked Users",
+    "saveSuccess": "Privacy settings saved",
+    "saveError": "Failed to save settings",
+    "description": {
+      "public": "Anyone can view your profile, follow, and see workouts",
+      "friendsOnly": "Only followers can view profile and workouts (requires approval to follow)",
+      "private": "Profile hidden from search, workouts not shareable"
+    },
+    "updated": "Privacy settings updated"
+  },
+  "block": {
+    "title": "Block {username}?",
+    "blockUser": "Block User",
+    "confirmation": "Are you sure you want to block this user?",
+    "effectsTitle": "When you block this user:",
+    "effects": {
+      "hidePosts": "Their posts will disappear from your feed",
+      "unfollowBoth": "You'll automatically unfollow each other",
+      "hideComments": "Their comments will be hidden",
+      "preventInteraction": "They won't be able to interact with your content"
+    },
+    "reversible": "You can unblock this user at any time in privacy settings.",
+    "confirm": "Block",
+    "blocking": "Blocking...",
+    "success": "Blocked {username}",
+    "error": "Failed to block user",
+    "unblock": "Unblock",
+    "unblockConfirm": "Unblock @{username}?",
+    "unblockSuccess": "User unblocked"
+  },
+  "report": {
+    "reportPost": "Report Post",
+    "reportComment": "Report Comment",
+    "reportUser": "Report User",
+    "title": {
+      "post": "Report Post",
+      "comment": "Report Comment",
+      "user": "Report User"
+    },
+    "description": "Help us keep the community safe and friendly. Your report will be reviewed by moderators.",
+    "selectReasonLabel": "Select a reason for reporting",
+    "selectReason": "Please select a reason for reporting",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "hateSpeech": "Hate Speech",
+      "inappropriate": "Inappropriate Content",
+      "other": "Other"
+    },
+    "reasonDescriptions": {
+      "spam": "Commercial content, scams, or manipulation",
+      "harassment": "Bullying, threats, or targeted abuse",
+      "hateSpeech": "Slurs or attacks based on race, ethnicity, religion, etc.",
+      "inappropriate": "Obscene or offensive content",
+      "other": "Other issue not listed above"
+    },
+    "additionalDetails": "Additional Details",
+    "detailsPlaceholder": "Describe the issue in more detail (optional)...",
+    "detailsTooLong": "Details must not exceed {max} characters",
+    "submit": "Submit Report",
+    "submitted": "Report submitted",
+    "submitError": "Failed to submit report",
+    "thankYou": "Thank you for reporting",
+    "reviewMessage": "We'll review your report shortly",
+    "types": {
+      "post": "post",
+      "comment": "comment",
+      "user": "user"
+    }
+  },
+  "workout": {
+    "exercises": "{count} exercises | {count} exercise | {count} exercises",
+    "volume": "Volume",
+    "duration": "Duration",
+    "sets": "{count} sets | {count} set | {count} sets",
+    "details": "Workout Details"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago",
+    "weeksAgo": "{count}w ago",
+    "monthsAgo": "{count}mo ago"
+  },
+  "errors": {
+    "loadProfileFailed": "Failed to load profile",
+    "loadFeedFailed": "Failed to load feed",
+    "shareFailed": "Failed to share workout",
+    "followFailed": "Failed to follow",
+    "unfollowFailed": "Failed to unfollow",
+    "likeFailed": "Failed to like",
+    "commentFailed": "Failed to add comment",
+    "deleteFailed": "Failed to delete",
+    "updateFailed": "Failed to update",
+    "blockFailed": "Failed to block",
+    "reportFailed": "Failed to submit report",
+    "authRequired": "Authentication required",
+    "indexBuilding": "Preparing feed...",
+    "indexBuildingDescription": "Database is updating. This may take a few minutes.",
+    "retrying": "Retrying in {seconds}s..."
   }
 }
