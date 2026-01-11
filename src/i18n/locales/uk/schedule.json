@@ -1,25 +1,257 @@
 {
   "title": "Розклад",
   "subtitle": "Плануйте свої тренування наперед",
+  "thisWeek": "Цей тиждень",
+  "lastWeek": "Минулий тиждень",
+  "nextWeek": "Наступний тиждень",
+  "weekOf": "Тиждень від {date}",
+  "days": {
+    "monday": "Понеділок",
+    "tuesday": "Вівторок",
+    "wednesday": "Середа",
+    "thursday": "Четвер",
+    "friday": "П'ятниця",
+    "saturday": "Субота",
+    "sunday": "Неділя"
+  },
+  "daysShort": {
+    "monday": "Пн",
+    "tuesday": "Вт",
+    "wednesday": "Ср",
+    "thursday": "Чт",
+    "friday": "Пт",
+    "saturday": "Сб",
+    "sunday": "Нд"
+  },
+  "status": {
+    "completed": "Виконано",
+    "planned": "Заплановано",
+    "missed": "Пропущено",
+    "rest": "Відпочинок"
+  },
+  "templates": {
+    "title": "Шаблони тренувань",
+    "create": "Створити шаблон",
+    "edit": "Редагувати шаблон",
+    "delete": "Видалити шаблон",
+    "duplicate": "Дублювати шаблон",
+    "deleteConfirm": "Ви впевнені, що хочете видалити цей шаблон? Цю дію неможливо скасувати.",
+    "noTemplates": "Немає шаблонів",
+    "noTemplatesDescription": "Створіть свій перший шаблон тренування",
+    "search": "Пошук шаблонів...",
+    "filterByMuscle": "Фільтр за м'язами",
+    "allMuscles": "Всі м'язи",
+    "sortBy": "Сортувати за",
+    "sortByUsage": "Використанням",
+    "sortByName": "Назвою",
+    "sortByRecent": "Останнім використанням",
+    "usageCount": "{count} використань",
+    "lastUsed": "Останнє використання: {date}",
+    "neverUsed": "Ще не використовувався",
+    "estimatedDuration": "Приблизна тривалість: {minutes} хв",
+    "recentTemplates": "Останні шаблони",
+    "allTemplates": "Всі шаблони",
+    "noResults": "Шаблони не знайдено",
+    "tryDifferentSearch": "Спробуйте інший пошуковий запит",
+    "createFirst": "Створіть свій перший шаблон, щоб почати"
+  },
+  "form": {
+    "templateName": "Назва шаблону",
+    "templateNamePlaceholder": "наприклад, Push Day",
+    "selectMuscleGroups": "Оберіть м'язові групи",
+    "addExercise": "Додати вправу",
+    "removeExercise": "Видалити вправу",
+    "exerciseName": "Назва вправи",
+    "exercises": "Вправи",
+    "sets": "Підходи",
+    "reps": "Повторення",
+    "targetWeight": "Цільова вага",
+    "restTime": "Час відпочинку",
+    "estimatedDuration": "Приблизна тривалість (хв)",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "searchExercises": "Пошук вправ...",
+    "noExercisesFound": "Вправи не знайдено",
+    "noExercisesAdded": "Вправи ще не додано. Натисніть 'Додати вправу', щоб почати.",
+    "createDescription": "Створіть новий шаблон тренування з вправами, підходами та повтореннями.",
+    "editDescription": "Редагуйте свій шаблон тренування."
+  },
+  "assign": {
+    "title": "Призначити шаблон",
+    "selectTemplate": "Виберіть шаблон для {day}",
+    "clear": "Очистити день",
+    "assign": "Призначити"
+  },
+  "adherence": {
+    "title": "Дотримання розкладу",
+    "completed": "Виконано",
+    "planned": "Заплановано",
+    "missed": "Пропущено",
+    "rate": "{rate}% дотримання",
+    "noPlanned": "Немає запланованих тренувань",
+    "overallRate": "Загальне дотримання",
+    "currentStreak": "Серія тижнів",
+    "longestStreak": "Найкраща серія",
+    "avgPerWeek": "Серед/тиждень",
+    "consistency": "Послідовність",
+    "weeklyProgress": "Прогрес за 12 тижнів",
+    "adherenceRate": "Дотримання",
+    "workouts": "тренувань",
+    "noData": "Поки немає даних про дотримання",
+    "trend": {
+      "improving": "Покращення",
+      "stable": "Стабільно",
+      "declining": "Погіршення"
+    }
+  },
+  "todaysWorkout": {
+    "title": "Сьогоднішнє тренування",
+    "noWorkout": "Сьогодні немає запланованого тренування",
+    "restDay": "Сьогодні день відпочинку",
+    "start": "Почати тренування",
+    "alreadyCompleted": "Вже виконано",
+    "exercises": "{count} вправ",
+    "duration": "~{minutes} хв"
+  },
   "empty": {
     "title": "Розклад порожній",
     "description": "Почніть планувати свої тренування"
   },
-  "comingSoon": {
-    "title": "Незабаром",
-    "description": "Скоро ви зможете планувати тренування в календарі, отримувати нагадування та відстежувати дотримання розкладу."
-  },
   "calendar": {
     "today": "Сьогодні",
     "thisWeek": "Цей тиждень",
-    "upcoming": "Найближчі"
+    "upcoming": "Найближчі",
+    "previousWeek": "Попередній тиждень",
+    "nextWeek": "Наступний тиждень",
+    "prev": "Попередній",
+    "next": "Наступний",
+    "restDay": "Відпочинок",
+    "changeTemplate": "Змінити шаблон",
+    "markRestDay": "День відпочинку",
+    "yesterday": "Вчора"
   },
-  "features": {
-    "upcoming": "Майбутні тренування",
-    "upcomingDescription": "Заплануйте тренування заздалегідь",
-    "reminders": "Нагадування",
-    "remindersDescription": "Ніколи не пропускайте тренування",
-    "timeBlocks": "Часові блоки",
-    "timeBlocksDescription": "Заплануйте свій час у залі"
+  "daysAgo": "{count} днів тому",
+  "quickStart": {
+    "button": "Почати"
+  },
+  "tabs": {
+    "calendar": "Календар",
+    "templates": "Шаблони",
+    "stats": "Статистика"
+  },
+  "errors": {
+    "failedToLoadTemplates": "Не вдалося завантажити шаблони",
+    "failedToLoadSchedule": "Не вдалося завантажити розклад",
+    "failedToCreateTemplate": "Не вдалося створити шаблон",
+    "failedToUpdateTemplate": "Не вдалося оновити шаблон",
+    "failedToDeleteTemplate": "Не вдалося видалити шаблон",
+    "failedToAssignTemplate": "Не вдалося призначити шаблон",
+    "failedToMarkCompleted": "Не вдалося позначити як виконане",
+    "failedToClearDay": "Не вдалося очистити день",
+    "failedToStartWorkout": "Не вдалося розпочати тренування"
+  },
+  "success": {
+    "templateCreated": "Шаблон створено",
+    "templateUpdated": "Шаблон оновлено",
+    "templateDeleted": "Шаблон видалено",
+    "templateAssigned": "Шаблон призначено",
+    "dayCleared": "День очищено",
+    "workoutCompleted": "Тренування виконано"
+  },
+  "dayDetail": {
+    "restDayDescription": "На цей день не заплановано тренування",
+    "viewWorkout": "Переглянути тренування",
+    "workoutCompleted": "Тренування виконано",
+    "wellDone": "Чудова робота! Продовжуйте в тому ж дусі!",
+    "noWorkoutPlanned": "Використайте цей день для відпочинку та відновлення",
+    "assignTemplate": "Призначити шаблон"
+  },
+  "achievements": {
+    "title": "Досягнення",
+    "streaks": "Серії",
+    "adherence": "Дотримання",
+    "celebration": "Нове досягнення розблоковано!",
+    "keepGoing": "Продовжуйте! {streak} тижнів поспіль!",
+    "noAchievements": "Поки немає досягнень",
+    "startEarning": "Виконуйте тренування, щоб отримати значки",
+    "on-fire": {
+      "name": "Вогонь",
+      "description": "2 тижні поспіль"
+    },
+    "unstoppable": {
+      "name": "Нестримний",
+      "description": "4 тижні поспіль"
+    },
+    "legendary": {
+      "name": "Легендарний",
+      "description": "8 тижнів поспіль"
+    },
+    "obsessed": {
+      "name": "Одержимий",
+      "description": "12 тижнів поспіль"
+    },
+    "consistent": {
+      "name": "Послідовний",
+      "description": "80%+ дотримання"
+    },
+    "dedicated": {
+      "name": "Відданий",
+      "description": "90%+ дотримання"
+    },
+    "perfect": {
+      "name": "Ідеальний",
+      "description": "100% дотримання"
+    },
+    "streak-master": {
+      "name": "Майстер серій",
+      "description": "Найкраща серія досягнута"
+    }
+  },
+  "presets": {
+    "title": "Готові програми тренувань",
+    "subtitle": "Виберіть готову програму тренувань відповідно до вашого рівня",
+    "workouts": "Тренування",
+    "categories": {
+      "beginner": "Початківець",
+      "intermediate": "Середній рівень",
+      "advanced": "Просунутий"
+    },
+    "difficulty": "Рівень складності",
+    "frequency": "{count} тренувань на тиждень",
+    "frequencyShort": "{count}x/тиждень",
+    "selectPreset": "Вибрати програму",
+    "viewDetails": "Детальніше",
+    "applyPreset": "Застосувати програму",
+    "fullBody3x": {
+      "name": "Все тіло 3р/тиждень",
+      "description": "Ідеально для початківців. Тренуйте всі основні м'язи 3 рази на тиждень.",
+      "fullBodyA": "Все тіло A",
+      "fullBodyB": "Все тіло B",
+      "fullBodyC": "Все тіло C"
+    },
+    "upperLower4x": {
+      "name": "Верх/Низ 4р/тиждень",
+      "description": "Тренуйте верхню частину 2 рази та нижню частину 2 рази на тиждень для збалансованого розвитку.",
+      "upperA": "Верх тіла A",
+      "lowerA": "Низ тіла A",
+      "upperB": "Верх тіла B",
+      "lowerB": "Низ тіла B"
+    },
+    "ppl6x": {
+      "name": "Жим Тяга Ноги",
+      "description": "Класичний спліт бодібілдингу. Тренуйте кожну м'язову групу двічі на тиждень з оптимальним об'ємом.",
+      "pushDay": "День жиму",
+      "pullDay": "День тяги",
+      "legDay": "День ніг"
+    },
+    "arnoldSplit": {
+      "name": "Спліт Арнольда",
+      "description": "Легендарний 6-денний спліт Арнольда Шварценеггера для максимального росту м'язів.",
+      "chestBack": "Груди та Спина",
+      "shouldersArms": "Плечі та Руки",
+      "legs": "Ноги"
+    },
+    "applySuccess": "Програма {presetName} успішно застосована до вашого розкладу",
+    "applyError": "Не вдалося застосувати програму"
   }
 }

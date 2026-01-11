@@ -193,6 +193,18 @@
     "chest": "Chest",
     "legs": "Legs",
     "shoulders": "Shoulders",
+    "arms": "Arms",
+    "biceps": "Biceps",
+    "triceps": "Triceps",
+    "core": "Core",
+    "calves": "Calves"
+  },
+  "muscles": {
+    "back": "Back",
+    "chest": "Chest",
+    "legs": "Legs",
+    "shoulders": "Shoulders",
+    "arms": "Arms",
     "biceps": "Biceps",
     "triceps": "Triceps",
     "core": "Core",

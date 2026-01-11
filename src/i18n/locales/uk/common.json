@@ -193,6 +193,18 @@
     "chest": "Груди",
     "legs": "Ноги",
     "shoulders": "Плечі",
+    "arms": "Руки",
+    "biceps": "Біцепс",
+    "triceps": "Тріцепс",
+    "core": "Корпус",
+    "calves": "Литки"
+  },
+  "muscles": {
+    "back": "Спина",
+    "chest": "Груди",
+    "legs": "Ноги",
+    "shoulders": "Плечі",
+    "arms": "Руки",
     "biceps": "Біцепс",
     "triceps": "Тріцепс",
     "core": "Корпус",

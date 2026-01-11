@@ -738,7 +738,7 @@ This project includes a fully configured **CI/CD pipeline** that automatically d
 #### Detailed Documentation
 
 For complete setup instructions, troubleshooting, and advanced features:
-- [CI/CD Documentation](.github/README.md) - Full setup guide and instructions
+- [CI/CD Documentation](.github/DEPLOYMENT.md) - Full setup guide and instructions
 
 ### Manual Deployment Options
 

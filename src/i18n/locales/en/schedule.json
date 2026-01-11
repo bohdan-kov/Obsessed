@@ -1,25 +1,257 @@
 {
   "title": "Schedule",
   "subtitle": "Plan your workouts ahead",
+  "thisWeek": "This Week",
+  "lastWeek": "Last Week",
+  "nextWeek": "Next Week",
+  "weekOf": "Week of {date}",
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  },
+  "daysShort": {
+    "monday": "Mon",
+    "tuesday": "Tue",
+    "wednesday": "Wed",
+    "thursday": "Thu",
+    "friday": "Fri",
+    "saturday": "Sat",
+    "sunday": "Sun"
+  },
+  "status": {
+    "completed": "Completed",
+    "planned": "Planned",
+    "missed": "Missed",
+    "rest": "Rest"
+  },
+  "templates": {
+    "title": "Workout Templates",
+    "create": "Create Template",
+    "edit": "Edit Template",
+    "delete": "Delete Template",
+    "duplicate": "Duplicate Template",
+    "deleteConfirm": "Are you sure you want to delete this template? This action cannot be undone.",
+    "noTemplates": "No Templates",
+    "noTemplatesDescription": "Create your first workout template",
+    "search": "Search templates...",
+    "filterByMuscle": "Filter by muscle",
+    "allMuscles": "All muscles",
+    "sortBy": "Sort by",
+    "sortByUsage": "Usage",
+    "sortByName": "Name",
+    "sortByRecent": "Recent",
+    "usageCount": "{count} uses",
+    "lastUsed": "Last used: {date}",
+    "neverUsed": "Never used",
+    "estimatedDuration": "Estimated duration: {minutes} min",
+    "recentTemplates": "Recent Templates",
+    "allTemplates": "All Templates",
+    "noResults": "No templates found",
+    "tryDifferentSearch": "Try a different search term",
+    "createFirst": "Create your first template to get started"
+  },
+  "form": {
+    "templateName": "Template Name",
+    "templateNamePlaceholder": "e.g., Push Day",
+    "selectMuscleGroups": "Select muscle groups",
+    "addExercise": "Add Exercise",
+    "removeExercise": "Remove Exercise",
+    "exerciseName": "Exercise Name",
+    "exercises": "Exercises",
+    "sets": "Sets",
+    "reps": "Reps",
+    "targetWeight": "Target Weight",
+    "restTime": "Rest Time",
+    "estimatedDuration": "Estimated Duration (min)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "searchExercises": "Search exercises...",
+    "noExercisesFound": "No exercises found",
+    "noExercisesAdded": "No exercises added yet. Click 'Add Exercise' to get started.",
+    "createDescription": "Create a new workout template with exercises, sets, and reps.",
+    "editDescription": "Edit your workout template."
+  },
+  "assign": {
+    "title": "Assign Template",
+    "selectTemplate": "Select template for {day}",
+    "clear": "Clear Day",
+    "assign": "Assign"
+  },
+  "adherence": {
+    "title": "Schedule Adherence",
+    "completed": "Completed",
+    "planned": "Planned",
+    "missed": "Missed",
+    "rate": "{rate}% adherence",
+    "noPlanned": "No planned workouts",
+    "overallRate": "Overall Adherence",
+    "currentStreak": "Week Streak",
+    "longestStreak": "Best Streak",
+    "avgPerWeek": "Avg/Week",
+    "consistency": "Consistency",
+    "weeklyProgress": "12-Week Progress",
+    "adherenceRate": "Adherence",
+    "workouts": "workouts",
+    "noData": "No adherence data yet",
+    "trend": {
+      "improving": "Improving",
+      "stable": "Stable",
+      "declining": "Declining"
+    }
+  },
+  "todaysWorkout": {
+    "title": "Today's Workout",
+    "noWorkout": "No workout planned for today",
+    "restDay": "Today is a rest day",
+    "start": "Start Workout",
+    "alreadyCompleted": "Already completed",
+    "exercises": "{count} exercises",
+    "duration": "~{minutes} min"
+  },
   "empty": {
     "title": "Schedule is empty",
     "description": "Start planning your workouts"
   },
-  "comingSoon": {
-    "title": "Coming Soon",
-    "description": "Soon you'll be able to plan workouts in a calendar, receive reminders, and track schedule adherence."
-  },
   "calendar": {
     "today": "Today",
     "thisWeek": "This Week",
-    "upcoming": "Upcoming"
+    "upcoming": "Upcoming",
+    "previousWeek": "Previous Week",
+    "nextWeek": "Next Week",
+    "prev": "Prev",
+    "next": "Next",
+    "restDay": "Rest Day",
+    "changeTemplate": "Change Template",
+    "markRestDay": "Rest Day",
+    "yesterday": "Yesterday"
   },
-  "features": {
-    "upcoming": "Upcoming Workouts",
-    "upcomingDescription": "Plan workouts in advance",
-    "reminders": "Reminders",
-    "remindersDescription": "Never miss a workout",
-    "timeBlocks": "Time Blocks",
-    "timeBlocksDescription": "Schedule your gym time"
+  "daysAgo": "{count} days ago",
+  "quickStart": {
+    "button": "Start"
+  },
+  "tabs": {
+    "calendar": "Calendar",
+    "templates": "Templates",
+    "stats": "Stats"
+  },
+  "errors": {
+    "failedToLoadTemplates": "Failed to load templates",
+    "failedToLoadSchedule": "Failed to load schedule",
+    "failedToCreateTemplate": "Failed to create template",
+    "failedToUpdateTemplate": "Failed to update template",
+    "failedToDeleteTemplate": "Failed to delete template",
+    "failedToAssignTemplate": "Failed to assign template",
+    "failedToMarkCompleted": "Failed to mark as completed",
+    "failedToClearDay": "Failed to clear day",
+    "failedToStartWorkout": "Failed to start workout"
+  },
+  "success": {
+    "templateCreated": "Template created",
+    "templateUpdated": "Template updated",
+    "templateDeleted": "Template deleted",
+    "templateAssigned": "Template assigned",
+    "dayCleared": "Day cleared",
+    "workoutCompleted": "Workout completed"
+  },
+  "dayDetail": {
+    "restDayDescription": "No workout planned for this day",
+    "viewWorkout": "View Workout",
+    "workoutCompleted": "Workout Completed",
+    "wellDone": "Great job! Keep up the good work!",
+    "noWorkoutPlanned": "Take this day to rest and recover",
+    "assignTemplate": "Assign Template"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "streaks": "Streaks",
+    "adherence": "Adherence",
+    "celebration": "New Achievement Unlocked!",
+    "keepGoing": "Keep going! {streak} week streak!",
+    "noAchievements": "No achievements yet",
+    "startEarning": "Complete workouts to earn badges",
+    "on-fire": {
+      "name": "On Fire",
+      "description": "2 week streak"
+    },
+    "unstoppable": {
+      "name": "Unstoppable",
+      "description": "4 week streak"
+    },
+    "legendary": {
+      "name": "Legendary",
+      "description": "8 week streak"
+    },
+    "obsessed": {
+      "name": "Obsessed",
+      "description": "12 week streak"
+    },
+    "consistent": {
+      "name": "Consistent",
+      "description": "80%+ adherence"
+    },
+    "dedicated": {
+      "name": "Dedicated",
+      "description": "90%+ adherence"
+    },
+    "perfect": {
+      "name": "Perfect",
+      "description": "100% adherence"
+    },
+    "streak-master": {
+      "name": "Streak Master",
+      "description": "Best streak achieved"
+    }
+  },
+  "presets": {
+    "title": "Pre-built Workout Programs",
+    "subtitle": "Choose a ready-made workout program based on your level",
+    "workouts": "Workouts",
+    "categories": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "difficulty": "Difficulty Level",
+    "frequency": "{count} workouts per week",
+    "frequencyShort": "{count}x/week",
+    "selectPreset": "Select Program",
+    "viewDetails": "View Details",
+    "applyPreset": "Apply Program",
+    "fullBody3x": {
+      "name": "Full Body 3x/week",
+      "description": "Perfect for beginners. Train all major muscle groups 3 times per week.",
+      "fullBodyA": "Full Body A",
+      "fullBodyB": "Full Body B",
+      "fullBodyC": "Full Body C"
+    },
+    "upperLower4x": {
+      "name": "Upper/Lower 4x/week",
+      "description": "Train upper body 2x and lower body 2x per week for balanced development.",
+      "upperA": "Upper Body A",
+      "lowerA": "Lower Body A",
+      "upperB": "Upper Body B",
+      "lowerB": "Lower Body B"
+    },
+    "ppl6x": {
+      "name": "Push Pull Legs",
+      "description": "Classic bodybuilding split. Train each muscle group twice per week with optimal volume.",
+      "pushDay": "Push Day",
+      "pullDay": "Pull Day",
+      "legDay": "Leg Day"
+    },
+    "arnoldSplit": {
+      "name": "Arnold Split",
+      "description": "Arnold Schwarzenegger's legendary 6-day split for maximum muscle growth.",
+      "chestBack": "Chest & Back",
+      "shouldersArms": "Shoulders & Arms",
+      "legs": "Legs"
+    },
+    "applySuccess": "Program {presetName} successfully applied to your schedule",
+    "applyError": "Failed to apply program"
   }
 }

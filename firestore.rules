@@ -105,6 +105,47 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
       }
 
+      // Nested workout templates subcollection (for schedule feature)
+      match /workoutTemplates/{templateId} {
+        allow read: if isOwner(userId);
+
+        // Validation helper for workout templates
+        function isValidTemplate(template) {
+          return template.keys().hasAll(['name', 'exercises', 'muscleGroups', 'estimatedDuration']) &&
+                 template.name is string &&
+                 template.name.size() >= 2 &&
+                 template.name.size() <= 100 &&
+                 template.exercises is list &&
+                 template.exercises.size() >= 1 &&
+                 template.exercises.size() <= 20 &&
+                 template.muscleGroups is list &&
+                 template.estimatedDuration is number &&
+                 template.estimatedDuration >= 0 &&
+                 template.estimatedDuration <= 300;
+        }
+
+        allow create: if isOwner(userId) && isValidTemplate(request.resource.data);
+        allow update: if isOwner(userId) && isValidTemplate(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Nested schedules subcollection (for weekly workout schedules)
+      match /schedules/{weekId} {
+        allow read: if isOwner(userId);
+
+        // Validation helper for weekly schedules
+        function isValidSchedule(schedule) {
+          return schedule.keys().hasAll(['userId', 'weekStart', 'days']) &&
+                 schedule.userId == request.auth.uid &&
+                 schedule.days is map &&
+                 schedule.days.keys().hasAll(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+        }
+
+        allow create: if isOwner(userId) && isValidSchedule(request.resource.data);
+        allow update: if isOwner(userId) && isValidSchedule(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
       // COMMUNITY: Followers subcollection
       // Anyone authenticated can read to check follow relationships
       match /followers/{followerId} {

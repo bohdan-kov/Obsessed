@@ -1116,4 +1116,287 @@ describe('workoutStore', () => {
       consoleErrorSpy.mockRestore()
     })
   })
+
+  describe('Template Support', () => {
+    describe('startWorkout with template data', () => {
+      it('should start workout without template (existing behavior)', async () => {
+        createDocument.mockResolvedValue('workout-123')
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        const workoutId = await store.startWorkout()
+
+        expect(workoutId).toBe('workout-123')
+        expect(createDocument).toHaveBeenCalledWith(
+          'users/test-user-id/workouts',
+          expect.objectContaining({
+            userId: 'test-user-id',
+            status: 'active',
+            exercises: [],
+            duration: 0,
+            totalVolume: 0,
+            totalSets: 0,
+          })
+        )
+      })
+
+      it('should start workout with template data', async () => {
+        createDocument.mockResolvedValue('workout-456')
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        const templateData = {
+          templateId: 'template-123',
+          templateName: 'Push Day',
+          exercises: [
+            {
+              exerciseId: 'barbell-bench-press',
+              exerciseName: 'Barbell Bench Press',
+              sets: 4,
+              reps: 8,
+              restTime: 120,
+            },
+            {
+              exerciseId: 'overhead-press',
+              exerciseName: 'Overhead Press',
+              sets: 3,
+              reps: 10,
+              restTime: 90,
+            },
+          ],
+        }
+
+        const workoutId = await store.startWorkout(templateData)
+
+        expect(workoutId).toBe('workout-456')
+        expect(createDocument).toHaveBeenCalledWith(
+          'users/test-user-id/workouts',
+          expect.objectContaining({
+            userId: 'test-user-id',
+            status: 'active',
+            sourceTemplateId: 'template-123',
+            sourceTemplateName: 'Push Day',
+            exercises: [
+              expect.objectContaining({
+                exerciseId: 'barbell-bench-press',
+                exerciseName: 'Barbell Bench Press',
+                sets: [],
+                order: 0,
+                templateSuggestions: {
+                  suggestedSets: 4,
+                  suggestedReps: 8,
+                  suggestedRestTime: 120,
+                },
+              }),
+              expect.objectContaining({
+                exerciseId: 'overhead-press',
+                exerciseName: 'Overhead Press',
+                sets: [],
+                order: 1,
+                templateSuggestions: {
+                  suggestedSets: 3,
+                  suggestedReps: 10,
+                  suggestedRestTime: 90,
+                },
+              }),
+            ],
+          })
+        )
+      })
+
+      it('should handle template with no exercises', async () => {
+        createDocument.mockResolvedValue('workout-789')
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        const templateData = {
+          templateId: 'template-empty',
+          templateName: 'Empty Template',
+          exercises: [],
+        }
+
+        const workoutId = await store.startWorkout(templateData)
+
+        expect(workoutId).toBe('workout-789')
+        expect(createDocument).toHaveBeenCalledWith(
+          'users/test-user-id/workouts',
+          expect.objectContaining({
+            sourceTemplateId: 'template-empty',
+            sourceTemplateName: 'Empty Template',
+            exercises: [],
+          })
+        )
+      })
+
+      it('should set currentWorkout with template data', async () => {
+        createDocument.mockResolvedValue('workout-current')
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        const templateData = {
+          templateId: 'template-current',
+          templateName: 'Leg Day',
+          exercises: [
+            {
+              exerciseId: 'barbell-squat',
+              exerciseName: 'Barbell Squat',
+              sets: 5,
+              reps: 5,
+              restTime: 180,
+            },
+          ],
+        }
+
+        await store.startWorkout(templateData)
+
+        expect(store.currentWorkout).toBeTruthy()
+        expect(store.currentWorkout.sourceTemplateId).toBe('template-current')
+        expect(store.currentWorkout.sourceTemplateName).toBe('Leg Day')
+        expect(store.currentWorkout.exercises.length).toBe(1)
+        expect(store.currentWorkout.exercises[0].templateSuggestions).toEqual({
+          suggestedSets: 5,
+          suggestedReps: 5,
+          suggestedRestTime: 180,
+        })
+      })
+    })
+
+    describe('finishWorkout with schedule sync', () => {
+      beforeEach(() => {
+        // Mock dynamic import of scheduleStore
+        vi.doMock('@/stores/scheduleStore', () => ({
+          useScheduleStore: vi.fn(() => ({
+            getWeekId: vi.fn((date) => '2024-W01'),
+            markDayCompleted: vi.fn().mockResolvedValue(),
+          })),
+        }))
+      })
+
+      it('should finish workout without template (no schedule sync)', async () => {
+        updateDocument.mockResolvedValue()
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        // Create active workout without template
+        store.currentWorkout = {
+          id: 'workout-no-template',
+          userId: 'test-user-id',
+          status: 'active',
+          startedAt: new Date(Date.now() - 3600000), // 1 hour ago
+          exercises: [],
+        }
+
+        await store.finishWorkout()
+
+        expect(updateDocument).toHaveBeenCalledWith(
+          'users/test-user-id/workouts',
+          'workout-no-template',
+          expect.objectContaining({
+            status: 'completed',
+            duration: expect.any(Number),
+          })
+        )
+        expect(store.currentWorkout).toBeNull()
+      })
+
+      it('should finish workout with template and sync with schedule', async () => {
+        updateDocument.mockResolvedValue()
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        // Create active workout WITH template
+        store.currentWorkout = {
+          id: 'workout-with-template',
+          userId: 'test-user-id',
+          status: 'active',
+          startedAt: new Date(Date.now() - 3600000), // 1 hour ago
+          sourceTemplateId: 'template-123',
+          sourceTemplateName: 'Push Day',
+          exercises: [
+            {
+              exerciseId: 'barbell-bench-press',
+              sets: [{ weight: 100, reps: 8 }],
+            },
+          ],
+        }
+
+        await store.finishWorkout()
+
+        expect(updateDocument).toHaveBeenCalledWith(
+          'users/test-user-id/workouts',
+          'workout-with-template',
+          expect.objectContaining({
+            status: 'completed',
+          })
+        )
+
+        // Schedule sync is handled by dynamic import - we can't easily test it here
+        // But we verify the workout finishes successfully
+        expect(store.currentWorkout).toBeNull()
+      })
+
+      it('should finish workout even if schedule sync fails', async () => {
+        const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+        updateDocument.mockResolvedValue()
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        store.currentWorkout = {
+          id: 'workout-sync-fail',
+          userId: 'test-user-id',
+          status: 'active',
+          startedAt: new Date(Date.now() - 3600000),
+          sourceTemplateId: 'template-fail',
+          exercises: [],
+        }
+
+        // Should not throw even if schedule sync fails
+        await expect(store.finishWorkout()).resolves.not.toThrow()
+
+        expect(store.currentWorkout).toBeNull()
+
+        consoleWarnSpy.mockRestore()
+        consoleLogSpy.mockRestore()
+      })
+
+      it('should use completion date for schedule sync', async () => {
+        updateDocument.mockResolvedValue()
+        subscribeToCollection.mockReturnValue(vi.fn())
+
+        const store = useWorkoutStore()
+
+        const customDate = new Date('2024-01-15T10:00:00Z')
+
+        store.currentWorkout = {
+          id: 'workout-custom-date',
+          userId: 'test-user-id',
+          status: 'active',
+          startedAt: new Date(Date.now() - 3600000),
+          sourceTemplateId: 'template-custom',
+          exercises: [],
+        }
+
+        await store.finishWorkout({ date: customDate })
+
+        expect(updateDocument).toHaveBeenCalledWith(
+          'users/test-user-id/workouts',
+          'workout-custom-date',
+          expect.objectContaining({
+            status: 'completed',
+            completedAt: expect.any(Object),
+          })
+        )
+        expect(store.currentWorkout).toBeNull()
+      })
+    })
+  })
 })

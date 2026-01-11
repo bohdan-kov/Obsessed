@@ -128,10 +128,14 @@ export const useWorkoutStore = defineStore('workout', () => {
   // Actions
   /**
    * Start a new workout
+   * @param {Object} [templateData] - Optional template data to pre-populate workout
+   * @param {string} [templateData.templateId] - Schedule template ID
+   * @param {string} [templateData.templateName] - Template name
+   * @param {Array} [templateData.exercises] - Pre-populated exercises from template
    * @returns {Promise<string>} Workout ID
    * @throws {Error} If user not authenticated or active workout exists
    */
-  async function startWorkout() {
+  async function startWorkout(templateData = null) {
     if (!authStore.uid) {
       throw new Error('User must be authenticated to start workout')
     }
@@ -153,6 +157,27 @@ export const useWorkoutStore = defineStore('workout', () => {
         duration: 0,
         totalVolume: 0,
         totalSets: 0,
+      }
+
+      // If starting from a schedule template, add template metadata and exercises
+      if (templateData) {
+        workoutData.sourceTemplateId = templateData.templateId
+        workoutData.sourceTemplateName = templateData.templateName
+
+        // Pre-populate exercises from template with empty sets arrays
+        if (templateData.exercises && templateData.exercises.length > 0) {
+          workoutData.exercises = templateData.exercises.map((ex, index) => ({
+            exerciseId: ex.exerciseId,
+            exerciseName: ex.exerciseName,
+            sets: [],
+            order: index,
+            templateSuggestions: {
+              suggestedSets: ex.sets || null,
+              suggestedReps: ex.reps || null,
+              suggestedRestTime: ex.restTime || null,
+            },
+          }))
+        }
       }
 
       const workoutPath = `users/${authStore.uid}/workouts`
@@ -841,11 +866,47 @@ export const useWorkoutStore = defineStore('workout', () => {
       const validDuration = Math.max(0, Math.floor(duration))
 
       const workoutPath = `users/${authStore.uid}/workouts`
-      await updateDocument(workoutPath, activeWorkout.value.id, {
+      const workoutId = activeWorkout.value.id
+
+      await updateDocument(workoutPath, workoutId, {
         status: 'completed',
         completedAt: Timestamp.fromDate(completedDate), // ✅ FIX: Use Timestamp.fromDate for proper Firebase serialization
         duration: validDuration,
       })
+
+      // If workout was started from a schedule template, sync completion with schedule
+      if (activeWorkout.value.sourceTemplateId) {
+        try {
+          // Import scheduleStore dynamically to avoid circular dependency
+          const { useScheduleStore } = await import('./scheduleStore')
+          const scheduleStore = useScheduleStore()
+
+          // Get week ID for the completion date
+          const weekId = scheduleStore.getWeekId(completedDate)
+
+          // Get day name (e.g., 'monday', 'tuesday', etc.)
+          const dayName = completedDate
+            .toLocaleDateString('en-US', { weekday: 'long' })
+            .toLowerCase()
+
+          // Mark the scheduled day as completed
+          await scheduleStore.markDayCompleted(weekId, dayName, workoutId)
+
+          if (import.meta.env.DEV) {
+            console.log(
+              `[workoutStore] Synced workout completion with schedule: weekId=${weekId}, day=${dayName}`
+            )
+          }
+        } catch (scheduleErr) {
+          // Schedule sync is non-critical - log error but don't fail workout completion
+          if (import.meta.env.DEV) {
+            console.warn(
+              '[workoutStore] Failed to sync workout with schedule:',
+              scheduleErr
+            )
+          }
+        }
+      }
 
       currentWorkout.value = null
 

@@ -127,7 +127,7 @@ const router = createRouter({
         {
           path: 'schedule',
           name: 'Schedule',
-          component: () => import('@/pages/schedule/ScheduleView.vue'),
+          component: () => import('@/pages/schedule/SchedulePage.vue'),
           meta: { title: 'Schedule' },
         },
         {
