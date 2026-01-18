@@ -18,9 +18,47 @@
 
 ## 🎥 Screenshots
 
-### Desktop Views
+### Mobile Views
 
 <details open>
+<summary>Click to expand Mobile screenshots</summary>
+
+#### Quick Log Exercise Selection
+![Quick Log Sheet](./screenshots/02-quick-log-sheet.png)
+*Mobile-optimized quick logging interface with exercise search, recent exercises section, and full exercise library. Designed for thumb-friendly interactions with 44x44px minimum touch targets.*
+
+#### Active Workout Tracking
+![Active Workout](./screenshots/03-active-workout.png)
+*Live workout tracking screen with running timer, exercise list, set logging interface, and quick actions. Optimized for gym use with large, high-contrast buttons.*
+
+#### Mobile Navigation
+![Mobile Navigation](./screenshots/08-mobile-navigation.png)
+*Bottom navigation bar with Home, Workouts, Analytics, and Settings tabs. Clean, minimalist design for one-handed operation.*
+
+</details>
+
+### Tablet Views
+
+<details>
+<summary>Click to expand Tablet screenshots</summary>
+
+#### Analytics Dashboard - Volume Tracking
+![Analytics Volume Heatmap Tablet](./screenshots/09-analytics-tablet.png)
+*365-day volume heatmap and progressive overload charts on iPad portrait view. The vertical tablet format is perfect for reviewing extended training history while tracking workouts in the gym, showing weeks of data with clear color-coded intensity levels.*
+
+#### Dashboard Overview
+![Dashboard Tablet](./screenshots/10-dashboard-tablet.png)
+*Main dashboard on iPad portrait showing stat cards, trend charts, and exercise table. The portrait orientation provides a natural scrolling experience for reviewing all metrics and recent workouts—ideal for analyzing performance between sets with a larger, more comfortable display than phone.*
+
+#### Exercise Progress Comparison
+![Exercise Progress Table Tablet](./screenshots/11-exercises-tablet.png)
+*Exercise progress table on iPad portrait displaying 10+ exercises with estimated 1RM, trend indicators, and mini progress charts. Search, filter, and sort controls are all visible simultaneously for efficient analysis of which lifts need more focus without switching views.*
+
+</details>
+
+### Desktop Views
+
+<details>
 <summary>Click to expand Desktop screenshots</summary>
 
 #### Dashboard Overview
@@ -37,30 +75,11 @@
 
 #### Analytics Dashboard with Charts
 ![Analytics Charts](./screenshots/06-analytics-charts.png)
-*Advanced analytics with multiple chart types: weekly volume breakdown, muscle group distribution pie chart, training frequency heatmap, and period-over-period progress comparison.*
+*Workout duration analytics with scatter plot visualization showing workout length trends over time. Each point represents a workout, color-coded by training volume (low/medium/high), with dynamic point sizing and a trend line for pattern analysis. Includes stats cards showing average, shortest, and longest workout durations.*
 
 #### Settings Page
 ![Settings Page](./screenshots/07-settings-page.png)
 *User preferences including profile settings, locale selection (Ukrainian/English), weight unit conversion (kg/lbs), and account management.*
-
-</details>
-
-### Mobile Views
-
-<details>
-<summary>Click to expand Mobile screenshots</summary>
-
-#### Quick Log Exercise Selection
-![Quick Log Sheet](./screenshots/02-quick-log-sheet.png)
-*Mobile-optimized quick logging interface with exercise search, recent exercises section, and full exercise library. Designed for thumb-friendly interactions with 44x44px minimum touch targets.*
-
-#### Active Workout Tracking
-![Active Workout](./screenshots/03-active-workout.png)
-*Live workout tracking screen with running timer, exercise list, set logging interface, and quick actions. Optimized for gym use with large, high-contrast buttons.*
-
-#### Mobile Navigation
-![Mobile Navigation](./screenshots/08-mobile-navigation.png)
-*Bottom navigation bar with Home, Workouts, Analytics, and Settings tabs. Clean, minimalist design for one-handed operation.*
 
 </details>
 
