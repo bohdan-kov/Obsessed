@@ -33,8 +33,8 @@
             type="number"
             inputmode="decimal"
             step="0.5"
-            :min="CONFIG.workout.MIN_WEIGHT"
-            :max="CONFIG.workout.MAX_WEIGHT"
+            :min="minWeight"
+            :max="maxWeight"
             :class="['h-14 text-center text-lg', { 'border-destructive': weightError }]"
             @focus="$event.target.select()"
           />
@@ -172,7 +172,7 @@ const props = defineProps({
 const emit = defineEmits(['update:open', 'submit'])
 
 const { t, locale } = useI18n()
-const { weightUnit, unitLabel, fromStorageUnit } = useUnits()
+const { weightUnit, unitLabel, fromStorageUnit, toStorageUnit } = useUnits()
 
 const exerciseStore = useExerciseStore()
 const { allExercises } = storeToRefs(exerciseStore)
@@ -221,15 +221,17 @@ const weightIncrements = computed(() => {
   return [-5, -2.5, 2.5, 5]
 })
 
+// Min/max weight in display unit
+const minWeight = computed(() => fromStorageUnit(CONFIG.workout.MIN_WEIGHT))
+const maxWeight = computed(() => fromStorageUnit(CONFIG.workout.MAX_WEIGHT))
+
 // Validation errors (computed)
 const weightError = computed(() => {
   if (!weight.value) return null
 
-  // Note: weight is already in display unit, need to validate based on storage unit
-  // But for simplicity, we'll validate the display value directly
-  // The validation utilities expect kg, so we'd need to convert
-  // However, the CONFIG limits are in kg, so let's use a simpler approach
-  const validation = validateWeight(weight.value)
+  // Convert to storage unit (kg) for validation
+  const weightInKg = toStorageUnit(weight.value)
+  const validation = validateWeight(weightInKg)
 
   if (!validation.valid) {
     if (validation.error === 'min') {

@@ -883,6 +883,9 @@ export const useWorkoutStore = defineStore('workout', () => {
       const workoutPath = `users/${authStore.uid}/workouts`
       const workoutId = activeWorkout.value.id
 
+      // Store sourceTemplateId before update (in case listener clears activeWorkout)
+      const sourceTemplateId = activeWorkout.value?.sourceTemplateId
+
       await updateDocument(workoutPath, workoutId, {
         status: 'completed',
         completedAt: Timestamp.fromDate(completedDate), // ✅ FIX: Use Timestamp.fromDate for proper Firebase serialization
@@ -890,7 +893,7 @@ export const useWorkoutStore = defineStore('workout', () => {
       })
 
       // If workout was started from a schedule template, sync completion with schedule
-      if (activeWorkout.value.sourceTemplateId) {
+      if (sourceTemplateId) {
         try {
           // Import scheduleStore dynamically to avoid circular dependency
           const { useScheduleStore } = await import('./scheduleStore')

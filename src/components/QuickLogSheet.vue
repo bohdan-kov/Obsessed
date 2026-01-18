@@ -29,7 +29,7 @@ import { CONFIG } from '@/constants/config'
 import { validateWeight, validateReps, validateRPE } from '@/utils/setValidation'
 
 const { t } = useI18n()
-const { unitLabel, toStorageUnit } = useUnits()
+const { unitLabel, toStorageUnit, fromStorageUnit } = useUnits()
 
 defineProps({
   open: Boolean,
@@ -52,6 +52,10 @@ const saving = ref(false)
 
 // Remember last values
 const lastWeight = ref(localStorage.getItem('obsessed_lastWeight') || '')
+
+// Min/max weight in display unit
+const minWeight = computed(() => fromStorageUnit(CONFIG.workout.MIN_WEIGHT))
+const maxWeight = computed(() => fromStorageUnit(CONFIG.workout.MAX_WEIGHT))
 
 // Validation errors (computed)
 const weightError = computed(() => {
@@ -269,8 +273,8 @@ function handleClose(open) {
               v-model="weight"
               type="number"
               inputmode="decimal"
-              :min="CONFIG.workout.MIN_WEIGHT"
-              :max="CONFIG.workout.MAX_WEIGHT"
+              :min="minWeight"
+              :max="maxWeight"
               step="0.5"
               placeholder="0"
               :aria-label="`${t('workout.quickLog.weight')} (${unitLabel})`"
