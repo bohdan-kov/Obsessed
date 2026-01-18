@@ -167,7 +167,7 @@ function formatDateLabel(index) {
 function formatYAxisValue(value) {
   if (typeof value !== 'number') return String(value)
 
-  return formatWeight(value, { precision: 0, showUnit: false })
+  return formatWeight(value, { precision: 0, showUnit: false, compact: 'auto' })
 }
 
 /**
@@ -178,7 +178,7 @@ function formatTooltipValue(value, key) {
 
   // Only format if the key is a muscle group (skip 'week' key)
   if (MUSCLES.includes(key)) {
-    return formatWeight(value, { precision: 0 })
+    return formatWeight(value, { precision: 0, compact: false })
   }
 
   return String(value)

@@ -199,7 +199,7 @@ const formattedDuration = computed(() => {
 
 // Format volume with unit
 const formatVolume = (volume) => {
-  return formatWeight(volume, { precision: 0, includeUnit: true })
+  return formatWeight(volume, { precision: 0, includeUnit: true, compact: true })
 }
 
 // Exercise count

@@ -22,12 +22,14 @@ import {
 } from '@/components/ui/chart'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useFullscreenChart } from '@/composables/useFullscreenChart'
+import { useUnits } from '@/composables/useUnits'
 import FullscreenChartOverlay from '@/components/charts/FullscreenChartOverlay.vue'
 import { CONFIG } from '@/constants/config'
 
 const { t } = useI18n()
 const analyticsStore = useAnalyticsStore()
 const { volumeByDay, periodLabel, period } = storeToRefs(analyticsStore)
+const { formatWeight } = useUnits()
 
 // Mobile detection
 const isMobile = useMediaQuery('(max-width: 640px)')
@@ -231,6 +233,7 @@ onMounted(async () => {
               :tick-line="false"
               :domain-line="false"
               :grid-line="true"
+              :tick-format="(value) => formatWeight(value, { precision: 0, showUnit: false, compact: 'auto' })"
             />
 
             <!-- Secondary Y-Axis (Exercises) - Right -->
@@ -257,14 +260,13 @@ onMounted(async () => {
                 valueFormatter: (value, key) => {
                   if (typeof value !== 'number') return String(value)
 
-                  // Add 'kg' unit for volume field
-                  const formattedNumber = value.toLocaleString('uk-UA', {
-                    maximumFractionDigits: 0
-                  })
+                  // Use formatWeight for volume with full precision (no compact)
+                  if (key === 'volume') {
+                    return formatWeight(value, { precision: 0, compact: false })
+                  }
 
-                  return key === 'volume'
-                    ? `${formattedNumber} ${t('common.units.kg')}`
-                    : formattedNumber
+                  // Format other values (exercises) normally
+                  return value.toLocaleString('uk-UA', { maximumFractionDigits: 0 })
                 },
               })"
               :color="(_d, i) => {
@@ -365,6 +367,7 @@ onMounted(async () => {
                 :tick-line="false"
                 :domain-line="false"
                 :grid-line="true"
+                :tick-format="(value) => formatWeight(value, { precision: 0, showUnit: false, compact: 'auto' })"
               />
 
               <!-- Secondary Y-Axis (Exercises) - Right -->
@@ -391,14 +394,13 @@ onMounted(async () => {
                   valueFormatter: (value, key) => {
                     if (typeof value !== 'number') return String(value)
 
-                    // Add 'kg' unit for volume field
-                    const formattedNumber = value.toLocaleString('uk-UA', {
-                      maximumFractionDigits: 0
-                    })
+                    // Use formatWeight for volume with full precision (no compact)
+                    if (key === 'volume') {
+                      return formatWeight(value, { precision: 0, compact: false })
+                    }
 
-                    return key === 'volume'
-                      ? `${formattedNumber} ${t('common.units.kg')}`
-                      : formattedNumber
+                    // Format other values (exercises) normally
+                    return value.toLocaleString('uk-UA', { maximumFractionDigits: 0 })
                   },
                 })"
                 :color="(_d, i) => {

@@ -130,7 +130,7 @@ function formatTooltipText(cell) {
     return `${dateFormatted}\n${t('analytics.volume.heatmap.noWorkout')}`
   }
 
-  return `${dateFormatted}\n${formatWeight(volume)}`
+  return `${dateFormatted}\n${formatWeight(volume, { precision: 0, compact: 'auto' })}`
 }
 
 /**

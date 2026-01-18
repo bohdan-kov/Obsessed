@@ -101,7 +101,7 @@ const exerciseVolume = computed(() => {
     </div>
 
     <div class="mt-3 text-right font-semibold text-sm">
-      {{ t('workout.detail.exerciseTotal') }}: {{ formatWeight(exerciseVolume) }}
+      {{ t('workout.detail.exerciseTotal') }}: {{ formatWeight(exerciseVolume, { precision: 0, compact: 'auto' }) }}
     </div>
   </Card>
 </template>

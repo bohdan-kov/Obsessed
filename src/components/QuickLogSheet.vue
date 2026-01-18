@@ -25,6 +25,8 @@ import { useWorkoutStore } from '@/stores/workoutStore'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { useUnits } from '@/composables/useUnits'
 import { storeToRefs } from 'pinia'
+import { CONFIG } from '@/constants/config'
+import { validateWeight, validateReps, validateRPE } from '@/utils/setValidation'
 
 const { t } = useI18n()
 const { unitLabel, toStorageUnit } = useUnits()
@@ -51,8 +53,68 @@ const saving = ref(false)
 // Remember last values
 const lastWeight = ref(localStorage.getItem('obsessed_lastWeight') || '')
 
+// Validation errors (computed)
+const weightError = computed(() => {
+  if (!weight.value) return null
+
+  // Convert to storage unit (kg) for validation
+  const weightInKg = toStorageUnit(parseFloat(weight.value))
+  const validation = validateWeight(weightInKg)
+
+  if (!validation.valid) {
+    if (validation.error === 'min') {
+      return t('errors.validation.weightMin', { min: CONFIG.workout.MIN_WEIGHT })
+    }
+    if (validation.error === 'max') {
+      return t('errors.validation.weightMax', { max: CONFIG.workout.MAX_WEIGHT })
+    }
+  }
+
+  return null
+})
+
+const repsError = computed(() => {
+  if (!reps.value) return null
+
+  const validation = validateReps(parseInt(reps.value))
+
+  if (!validation.valid) {
+    if (validation.error === 'min') {
+      return t('errors.validation.repsMin', { min: CONFIG.workout.MIN_REPS })
+    }
+    if (validation.error === 'max') {
+      return t('errors.validation.repsMax', { max: CONFIG.workout.MAX_REPS })
+    }
+  }
+
+  return null
+})
+
+const rpeError = computed(() => {
+  if (!rpe.value) return null
+
+  const validation = validateRPE(parseInt(rpe.value))
+
+  if (!validation.valid && validation.error === 'range') {
+    return t('errors.validation.rpeRange', {
+      min: CONFIG.workout.RPE_MIN,
+      max: CONFIG.workout.RPE_MAX,
+    })
+  }
+
+  return null
+})
+
 const canSubmit = computed(() => {
-  return selectedExercise.value && weight.value && reps.value && !saving.value
+  return (
+    selectedExercise.value &&
+    weight.value &&
+    reps.value &&
+    !weightError.value &&
+    !repsError.value &&
+    !rpeError.value &&
+    !saving.value
+  )
 })
 
 function selectExercise(exercise) {
@@ -207,10 +269,16 @@ function handleClose(open) {
               v-model="weight"
               type="number"
               inputmode="decimal"
+              :min="CONFIG.workout.MIN_WEIGHT"
+              :max="CONFIG.workout.MAX_WEIGHT"
+              step="0.5"
               placeholder="0"
               :aria-label="`${t('workout.quickLog.weight')} (${unitLabel})`"
-              class="text-3xl h-16 text-center font-mono"
+              :class="['text-3xl h-16 text-center font-mono', { 'border-destructive': weightError }]"
             />
+            <p v-if="weightError" class="text-xs text-destructive mt-1">
+              {{ weightError }}
+            </p>
           </div>
           <div class="space-y-2">
             <Label for="reps" class="text-base">{{ t('workout.quickLog.reps') }}</Label>
@@ -219,10 +287,15 @@ function handleClose(open) {
               v-model="reps"
               type="number"
               inputmode="numeric"
+              :min="CONFIG.workout.MIN_REPS"
+              :max="CONFIG.workout.MAX_REPS"
               placeholder="0"
               :aria-label="t('workout.quickLog.reps')"
-              class="text-3xl h-16 text-center font-mono"
+              :class="['text-3xl h-16 text-center font-mono', { 'border-destructive': repsError }]"
             />
+            <p v-if="repsError" class="text-xs text-destructive mt-1">
+              {{ repsError }}
+            </p>
           </div>
         </div>
 
@@ -233,12 +306,15 @@ function handleClose(open) {
             v-model="rpe"
             type="number"
             inputmode="numeric"
-            min="1"
-            max="10"
+            :min="CONFIG.workout.RPE_MIN"
+            :max="CONFIG.workout.RPE_MAX"
             placeholder="1-10"
             :aria-label="t('workout.quickLog.rpe')"
-            class="h-12 text-center font-mono"
+            :class="['h-12 text-center font-mono', { 'border-destructive': rpeError }]"
           />
+          <p v-if="rpeError" class="text-xs text-destructive mt-1">
+            {{ rpeError }}
+          </p>
         </div>
       </div>
 

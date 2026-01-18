@@ -33,10 +33,14 @@
             type="number"
             inputmode="decimal"
             step="0.5"
-            min="0"
-            class="h-14 text-center text-lg"
+            :min="CONFIG.workout.MIN_WEIGHT"
+            :max="CONFIG.workout.MAX_WEIGHT"
+            :class="['h-14 text-center text-lg', { 'border-destructive': weightError }]"
             @focus="$event.target.select()"
           />
+          <p v-if="weightError" class="text-xs text-destructive mt-1">
+            {{ weightError }}
+          </p>
         </div>
 
         <!-- Reps Input -->
@@ -58,8 +62,9 @@
               v-model.number="reps"
               type="number"
               inputmode="numeric"
-              min="1"
-              class="h-14 text-center text-lg"
+              :min="CONFIG.workout.MIN_REPS"
+              :max="CONFIG.workout.MAX_REPS"
+              :class="['h-14 text-center text-lg', { 'border-destructive': repsError }]"
               @focus="$event.target.select()"
             />
 
@@ -72,6 +77,9 @@
               <Plus class="h-5 w-5" />
             </Button>
           </div>
+          <p v-if="repsError" class="text-xs text-destructive mt-1">
+            {{ repsError }}
+          </p>
         </div>
 
         <!-- RPE Input (Optional) -->
@@ -144,6 +152,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Minus } from 'lucide-vue-next'
 import { CONFIG } from '@/constants/config'
+import { validateWeight, validateReps, validateRPE } from '@/utils/setValidation'
 
 const props = defineProps({
   open: {
@@ -212,9 +221,69 @@ const weightIncrements = computed(() => {
   return [-5, -2.5, 2.5, 5]
 })
 
+// Validation errors (computed)
+const weightError = computed(() => {
+  if (!weight.value) return null
+
+  // Note: weight is already in display unit, need to validate based on storage unit
+  // But for simplicity, we'll validate the display value directly
+  // The validation utilities expect kg, so we'd need to convert
+  // However, the CONFIG limits are in kg, so let's use a simpler approach
+  const validation = validateWeight(weight.value)
+
+  if (!validation.valid) {
+    if (validation.error === 'min') {
+      return t('errors.validation.weightMin', { min: CONFIG.workout.MIN_WEIGHT })
+    }
+    if (validation.error === 'max') {
+      return t('errors.validation.weightMax', { max: CONFIG.workout.MAX_WEIGHT })
+    }
+  }
+
+  return null
+})
+
+const repsError = computed(() => {
+  if (!reps.value) return null
+
+  const validation = validateReps(reps.value)
+
+  if (!validation.valid) {
+    if (validation.error === 'min') {
+      return t('errors.validation.repsMin', { min: CONFIG.workout.MIN_REPS })
+    }
+    if (validation.error === 'max') {
+      return t('errors.validation.repsMax', { max: CONFIG.workout.MAX_REPS })
+    }
+  }
+
+  return null
+})
+
+const rpeError = computed(() => {
+  if (!rpe.value) return null
+
+  const validation = validateRPE(rpe.value)
+
+  if (!validation.valid && validation.error === 'range') {
+    return t('errors.validation.rpeRange', {
+      min: CONFIG.workout.RPE_MIN,
+      max: CONFIG.workout.RPE_MAX,
+    })
+  }
+
+  return null
+})
+
 // Validation
 const isValid = computed(() => {
-  return weight.value > 0 && reps.value > 0
+  return (
+    weight.value > 0 &&
+    reps.value > 0 &&
+    !weightError.value &&
+    !repsError.value &&
+    !rpeError.value
+  )
 })
 
 // Adjust weight by increment

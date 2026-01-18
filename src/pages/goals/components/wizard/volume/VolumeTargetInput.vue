@@ -111,7 +111,7 @@ function applyRecommendation() {
               {{ t('goals.wizard.currentVolume') }} ({{ period === 'week' ? t('goals.wizard.periods.week') : t('goals.wizard.periods.month') }})
             </p>
             <p class="text-lg font-bold">
-              {{ formatWeight(currentVolume, { precision: 0 }) }}
+              {{ formatWeight(currentVolume, { precision: 0, compact: 'auto' }) }}
             </p>
           </div>
         </div>
@@ -148,7 +148,7 @@ function applyRecommendation() {
               {{ t('goals.wizard.recommendationDescription') }}
             </p>
             <p class="text-lg font-bold text-blue-500">
-              {{ formatWeight(recommendedTarget, { precision: 0 }) }}
+              {{ formatWeight(recommendedTarget, { precision: 0, compact: 'auto' }) }}
             </p>
           </div>
         </div>

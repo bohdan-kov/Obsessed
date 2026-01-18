@@ -59,7 +59,7 @@ const stats = computed(() => {
     },
     {
       title: t('dashboard.stats.volumeLoad'),
-      value: formatWeight(periodVolume.value),
+      value: formatWeight(periodVolume.value, { precision: 0, compact: 'auto' }),
       trend: hasTrend.value ? volumeTrend.value : null,
       periodLabel: t(periodLabel.value),
       insight: volumeInsight.value,

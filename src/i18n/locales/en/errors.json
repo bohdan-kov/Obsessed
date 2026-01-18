@@ -38,7 +38,14 @@
   "validation": {
     "invalidInput": "Invalid data",
     "weightOutOfRange": "Weight must be between {min} and {max} {unit}",
-    "repsOutOfRange": "Reps must be between {min} and {max}"
+    "repsOutOfRange": "Reps must be between {min} and {max}",
+    "weightMin": "Weight must be at least {min} kg",
+    "weightMax": "Weight must be no more than {max} kg",
+    "weightRange": "Weight must be between {min} kg and {max} kg",
+    "repsMin": "Reps must be at least {min}",
+    "repsMax": "Reps must be no more than {max}",
+    "repsRange": "Reps must be between {min} and {max}",
+    "rpeRange": "RPE must be between {min} and {max}"
   },
   "notFound": "Not Found",
   "exerciseNotFound": "Exercise not found"

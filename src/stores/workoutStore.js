@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from '@/firebase/firestore'
+import { validateSetData } from '@/utils/setValidation'
 
 /**
  * @typedef {Object} WorkoutSet
@@ -351,6 +352,20 @@ export const useWorkoutStore = defineStore('workout', () => {
   async function addSet(exerciseId, { weight, reps, rpe, type = 'normal' }) {
     if (!activeWorkout.value) {
       throw new Error('No active workout')
+    }
+
+    // Validate set data
+    const validation = validateSetData({
+      weight, // Already in kg (storage unit)
+      reps,
+      rpe,
+    })
+
+    if (!validation.valid) {
+      if (import.meta.env.DEV) {
+        console.error('[WorkoutStore] Invalid set data:', validation.errors)
+      }
+      throw new Error('Invalid set data')
     }
 
     loading.value = true

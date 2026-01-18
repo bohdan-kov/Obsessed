@@ -34,7 +34,7 @@ function formatDuration(seconds) {
   <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
     <Card class="p-4 text-center">
       <Weight class="w-8 h-8 mx-auto mb-2 text-primary" />
-      <div class="text-xl sm:text-2xl font-bold">{{ formatWeight(stats.totalVolume) }}</div>
+      <div class="text-xl sm:text-2xl font-bold">{{ formatWeight(stats.totalVolume, { precision: 0, compact: 'auto' }) }}</div>
       <div class="text-xs sm:text-sm text-muted-foreground">
         {{ t('workout.stats.totalVolume') }}
       </div>

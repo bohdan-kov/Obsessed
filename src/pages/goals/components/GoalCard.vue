@@ -48,10 +48,10 @@ const goalIcon = computed(() => {
 // Format target display
 const targetDisplay = computed(() => {
   if (props.goal.type === 'strength') {
-    return formatWeight(props.goal.targetWeight, { precision: 0 })
+    return formatWeight(props.goal.targetWeight, { precision: 0, compact: 'auto' })
   }
   if (props.goal.type === 'volume') {
-    return formatWeight(props.goal.target, { precision: 0 })
+    return formatWeight(props.goal.target, { precision: 0, compact: 'auto' })
   }
   return props.goal.targetCount || props.goal.targetDays || props.goal.targetWeeks
 })
@@ -59,10 +59,10 @@ const targetDisplay = computed(() => {
 // Format current display
 const currentDisplay = computed(() => {
   if (props.goal.type === 'strength') {
-    return formatWeight(props.goal.current1RM || 0, { precision: 0 })
+    return formatWeight(props.goal.current1RM || 0, { precision: 0, compact: 'auto' })
   }
   if (props.goal.type === 'volume') {
-    return formatWeight(props.goal.currentVolume || 0, { precision: 0 })
+    return formatWeight(props.goal.currentVolume || 0, { precision: 0, compact: 'auto' })
   }
   return props.goal.currentCount || props.goal.currentStreak || 0
 })

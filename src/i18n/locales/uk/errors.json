@@ -38,7 +38,14 @@
   "validation": {
     "invalidInput": "Некоректні дані",
     "weightOutOfRange": "Вага повинна бути від {min} до {max} {unit}",
-    "repsOutOfRange": "Повтори повинні бути від {min} до {max}"
+    "repsOutOfRange": "Повтори повинні бути від {min} до {max}",
+    "weightMin": "Вага має бути не менше {min} кг",
+    "weightMax": "Вага має бути не більше {max} кг",
+    "weightRange": "Вага має бути від {min} кг до {max} кг",
+    "repsMin": "Кількість повторів має бути не менше {min}",
+    "repsMax": "Кількість повторів має бути не більше {max}",
+    "repsRange": "Кількість повторів має бути від {min} до {max}",
+    "rpeRange": "RPE має бути від {min} до {max}"
   },
   "notFound": "Не знайдено",
   "exerciseNotFound": "Вправу не знайдено"

@@ -168,7 +168,7 @@ const yDomain = computed(() => {
             {{ t('analytics.volume.progressiveOverload.stats.nextTarget') }}
           </div>
           <div class="text-lg font-semibold mt-1">
-            {{ formatWeight(progressiveOverloadStats.nextWeekTarget, { precision: 0 }) }}
+            {{ formatWeight(progressiveOverloadStats.nextWeekTarget, { precision: 0, compact: 'auto' }) }}
           </div>
         </div>
       </div>
@@ -214,7 +214,7 @@ const yDomain = computed(() => {
                 :tick-line="false"
                 :domain-line="false"
                 :grid-line="false"
-                :tick-format="(value) => Math.round(value).toString()"
+                :tick-format="(value) => formatWeight(value, { precision: 0, showUnit: false, compact: 'auto' })"
               />
 
               <ChartTooltip />
@@ -227,7 +227,7 @@ const yDomain = computed(() => {
                   },
                   valueFormatter: (value, key) => {
                     if (key === 'volume') {
-                      return formatWeight(value, { precision: 0 })
+                      return formatWeight(value, { precision: 0, compact: false })
                     }
                     return String(value)
                   },
@@ -319,7 +319,7 @@ const yDomain = computed(() => {
                 :tick-line="false"
                 :domain-line="false"
                 :grid-line="false"
-                :tick-format="(value) => Math.round(value).toString()"
+                :tick-format="(value) => formatWeight(value, { precision: 0, showUnit: false, compact: 'auto' })"
               />
 
               <ChartTooltip />
@@ -332,7 +332,7 @@ const yDomain = computed(() => {
                   },
                   valueFormatter: (value, key) => {
                     if (key === 'volume') {
-                      return formatWeight(value, { precision: 0 })
+                      return formatWeight(value, { precision: 0, compact: false })
                     }
                     return String(value)
                   },

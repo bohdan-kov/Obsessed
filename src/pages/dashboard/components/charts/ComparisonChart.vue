@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
+import { useUnits } from '@/composables/useUnits'
 import {
   Card,
   CardContent,
@@ -11,7 +12,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const { formatWeight } = useUnits()
 const analyticsStore = useAnalyticsStore()
 const { periodComparison, periodConfig, hasTrend, period } = storeToRefs(analyticsStore)
 
@@ -32,7 +34,7 @@ const comparisonData = computed(() => {
       previous: previous.volume,
       max: maxVolume,
       change: change.volumePercentage,
-      format: (val) => val.toLocaleString(locale.value),
+      format: (val) => formatWeight(val, { precision: 0, compact: 'auto' }),
     },
     {
       label: t('dashboard.charts.workoutsCount'),
@@ -54,7 +56,7 @@ const comparisonData = computed(() => {
                 100
             )
           : 0,
-      format: (val) => val.toLocaleString(locale.value) + ' ' + t('common.units.kg'),
+      format: (val) => formatWeight(val, { precision: 0, compact: 'auto' }),
     },
   ]
 })

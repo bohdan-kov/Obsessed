@@ -31,8 +31,8 @@ export const CONFIG = {
     RPE_MAX: 10,
 
     // Set tracking
-    MIN_WEIGHT: 0, // kg
-    MAX_WEIGHT: 1000, // kg
+    MIN_WEIGHT: 0.5, // kg - minimum for small dumbbells
+    MAX_WEIGHT: 600, // kg - covers extreme powerlifting
     MIN_REPS: 1,
     MAX_REPS: 100,
   },

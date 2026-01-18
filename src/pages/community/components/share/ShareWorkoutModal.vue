@@ -140,7 +140,7 @@ const handleShare = async () => {
             </div>
             <div class="flex items-center gap-1.5">
               <Zap class="w-4 h-4" />
-              <span>{{ formatWeight(totalVolume, { precision: 0 }) }}</span>
+              <span>{{ formatWeight(totalVolume, { precision: 0, compact: 'auto' }) }}</span>
             </div>
             <div v-if="duration" class="flex items-center gap-1.5">
               <Clock class="w-4 h-4" />

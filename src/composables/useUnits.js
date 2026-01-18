@@ -95,37 +95,72 @@ export function useUnits() {
   }
 
   /**
+   * Format large numbers with compact notation (k/M suffixes)
+   * @param {number} value - Number to format
+   * @param {string} locale - Locale for number formatting
+   * @param {number} precision - Decimal places for compact notation
+   * @returns {string}
+   */
+  function formatCompact(value, locale, precision = 1) {
+    const absValue = Math.abs(value)
+
+    if (absValue >= 1_000_000) {
+      // Millions: 1,500,000 → "1.5M"
+      const millions = value / 1_000_000
+      return `${millions.toFixed(precision)}M`
+    } else if (absValue >= 10_000) {
+      // Thousands: 150,000 → "150k"
+      const thousands = value / 1_000
+      return `${thousands.toFixed(precision)}k`
+    }
+
+    // Small values: normal format with separators
+    return new Intl.NumberFormat(locale, {
+      maximumFractionDigits: precision
+    }).format(value)
+  }
+
+  /**
    * Format weight with unit label
    * @param {number|null|undefined} value - Weight in storage unit (kg)
    * @param {Object} options - Format options
    * @param {number} [options.precision=1] - Decimal places
    * @param {boolean} [options.showUnit=true] - Include unit label
    * @param {'kg'|'lbs'} [options.from='kg'] - Source unit
+   * @param {boolean|'auto'} [options.compact=false] - Use compact notation (k/M suffixes). 'auto' activates at ≥10k
    * @returns {string}
    */
   function formatWeight(value, options = {}) {
     const precision = options.precision ?? 1
     const showUnit = options.showUnit ?? true
     const from = options.from || 'kg'
+    const compact = options.compact ?? false
 
     // Handle edge cases
     if (value === null || value === undefined) return '—'
     if (typeof value !== 'number' || isNaN(value)) return '—'
 
-    // Convert to display unit
+    // Convert to display unit WITHOUT precision rounding yet
+    // We need the full value to determine if compact formatting applies
     const converted = convertWeight(value, {
       from,
       to: weightUnit.value,
-      precision,
+      precision: 2, // Use higher precision for conversion, format later
     })
 
     if (converted === null) return '—'
 
-    // Format with locale-aware number formatting
-    const formatted = new Intl.NumberFormat(locale.value, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: precision,
-    }).format(converted)
+    // Choose format based on compact option
+    let formatted
+    if (compact === true || (compact === 'auto' && Math.abs(converted) >= 10_000)) {
+      formatted = formatCompact(converted, locale.value, precision)
+    } else {
+      // Standard format with locale-aware number formatting
+      formatted = new Intl.NumberFormat(locale.value, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: precision,
+      }).format(converted)
+    }
 
     return showUnit ? `${formatted} ${unitLabel.value}` : formatted
   }

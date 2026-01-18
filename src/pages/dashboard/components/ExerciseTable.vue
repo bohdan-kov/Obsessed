@@ -878,7 +878,7 @@ onUnmounted(() => {
               <TableCell>{{ workout.exercises }}</TableCell>
               <TableCell>{{ formatDuration(workout.duration) }}</TableCell>
               <TableCell class="font-mono">
-                {{ formatWeight(workout.volume, { from: 'kg', showUnit: true }) }}
+                {{ formatWeight(workout.volume, { from: 'kg', showUnit: true, precision: 0, compact: 'auto' }) }}
               </TableCell>
               <TableCell>
                 <Badge :variant="getStatusVariant(workout.status)">
@@ -930,7 +930,7 @@ onUnmounted(() => {
               </TableCell>
               <TableCell class="font-mono">{{ exercise.totalSets }}</TableCell>
               <TableCell class="font-mono">
-                {{ formatWeight(exercise.totalVolume, { from: 'kg', showUnit: true }) }}
+                {{ formatWeight(exercise.totalVolume, { from: 'kg', showUnit: true, precision: 0, compact: 'auto' }) }}
               </TableCell>
               <TableCell class="font-mono">
                 {{ exercise.timesPerformed }}

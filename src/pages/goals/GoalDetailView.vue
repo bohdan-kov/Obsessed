@@ -250,10 +250,10 @@ const statusColor = computed(() => {
 const currentDisplay = computed(() => {
   if (!goal.value) return '-'
   if (goal.value.type === 'strength') {
-    return formatWeight(goal.value.current1RM || 0, { precision: 0 })
+    return formatWeight(goal.value.current1RM || 0, { precision: 0, compact: 'auto' })
   }
   if (goal.value.type === 'volume') {
-    return formatWeight(goal.value.currentVolume || 0, { precision: 0 })
+    return formatWeight(goal.value.currentVolume || 0, { precision: 0, compact: 'auto' })
   }
   return goal.value.currentCount || goal.value.currentStreak || 0
 })
@@ -261,10 +261,10 @@ const currentDisplay = computed(() => {
 const targetDisplay = computed(() => {
   if (!goal.value) return '-'
   if (goal.value.type === 'strength') {
-    return formatWeight(goal.value.targetWeight, { precision: 0 })
+    return formatWeight(goal.value.targetWeight, { precision: 0, compact: 'auto' })
   }
   if (goal.value.type === 'volume') {
-    return formatWeight(goal.value.target, { precision: 0 })
+    return formatWeight(goal.value.target, { precision: 0, compact: 'auto' })
   }
   return goal.value.targetCount || goal.value.targetDays || goal.value.targetWeeks
 })
@@ -632,7 +632,7 @@ async function handleDeleteConfirm() {
                 {{ t('goals.detail.predictions.currentPace') }}
               </p>
               <p class="mt-1 text-lg font-semibold">
-                {{ formatWeight(Math.abs(predictions.currentPace), { precision: 1 }) }}
+                {{ formatWeight(Math.abs(predictions.currentPace), { precision: 1, compact: 'auto' }) }}
                 <span class="text-sm font-normal text-muted-foreground">
                   {{ t('goals.detail.predictions.perWeek') }}
                 </span>

@@ -193,7 +193,7 @@ const totalVolume = computed(() => {
 
 // Format volume with unit
 const formattedVolume = computed(() => {
-  return formatWeight(totalVolume.value)
+  return formatWeight(totalVolume.value, { precision: 0, compact: 'auto' })
 })
 
 // Format selected date for display

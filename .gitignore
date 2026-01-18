@@ -44,3 +44,6 @@ __screenshots__/
 firebase-debug.log
 firebase-debug.*.log
 .env.production
+
+# Claude Code
+.claude

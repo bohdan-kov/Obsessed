@@ -64,7 +64,7 @@
                     <div class="text-lg font-semibold">{{ formatWeight(session.maxWeight) }}</div>
                     <div class="text-xs text-muted-foreground">
                       {{ t('workout.session.sets', { count: session.sets }) }} •
-                      {{ t('workout.session.volume') }}: {{ formatWeight(session.volume) }}
+                      {{ t('workout.session.volume') }}: {{ formatWeight(session.volume, { precision: 0, compact: 'auto' }) }}
                     </div>
                   </div>
                 </div>

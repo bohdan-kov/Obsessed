@@ -71,6 +71,6 @@ const totalVolume = computed(() => {
 // Format volume with unit
 const formattedVolume = computed(() => {
   // Volume is already in storage unit (kg), so we need to format it
-  return formatWeight(totalVolume.value, { showUnit: false })
+  return formatWeight(totalVolume.value, { precision: 0, showUnit: false, compact: 'auto' })
 })
 </script>
