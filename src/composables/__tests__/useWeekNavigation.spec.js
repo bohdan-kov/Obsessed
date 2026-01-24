@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useWeekNavigation } from '../useWeekNavigation'
+import { useWeekNavigation } from '@/composables/useWeekNavigation'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { nextTick } from 'vue'
 import * as firestoreModule from '@/firebase/firestore'

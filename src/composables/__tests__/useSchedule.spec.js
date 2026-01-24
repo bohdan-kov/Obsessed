@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useSchedule } from '../useSchedule'
+import { useSchedule } from '@/composables/useSchedule'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { getWeekId } from '@/utils/scheduleUtils'
 

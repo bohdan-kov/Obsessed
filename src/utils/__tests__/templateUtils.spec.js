@@ -6,7 +6,7 @@ import {
   formatTemplateForDisplay,
   createDefaultTemplateExercise,
   validateTemplateExercise,
-} from '../templateUtils'
+} from '@/utils/templateUtils'
 
 describe('templateUtils', () => {
   describe('validateTemplate', () => {

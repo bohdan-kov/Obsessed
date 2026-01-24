@@ -13,6 +13,7 @@ import {
   browserLocalPersistence,
 } from 'firebase/auth'
 import { app } from './config'
+import i18n from '@/i18n'
 
 /**
  * Firebase Auth instance
@@ -175,26 +176,29 @@ export function onAuthChange(callback) {
 
 /**
  * Get user-friendly error messages for Firebase auth errors
+ * Uses i18n for internationalization
  * @param {string} errorCode - Firebase error code
  * @returns {string} User-friendly error message
  */
 function getAuthErrorMessage(errorCode) {
-  const errorMessages = {
-    'auth/email-already-in-use': 'This email is already registered',
-    'auth/invalid-email': 'Invalid email address',
-    'auth/operation-not-allowed': 'This sign-in method is not enabled',
-    'auth/weak-password': 'Password should be at least 6 characters',
-    'auth/user-disabled': 'This account has been disabled',
-    'auth/user-not-found': 'No account found with this email',
-    'auth/wrong-password': 'Incorrect password',
-    'auth/invalid-credential': 'Invalid email or password',
-    'auth/too-many-requests':
-      'Too many failed attempts. Please try again later',
-    'auth/popup-closed-by-user': 'Sign-in cancelled',
-    'auth/cancelled-popup-request': 'Sign-in cancelled',
-    'auth/popup-blocked': 'Pop-up was blocked by your browser',
-    'auth/network-request-failed': 'Network error. Please check your connection',
+  const { t } = i18n.global
+
+  const errorKeyMap = {
+    'auth/email-already-in-use': 'errors.auth.emailInUse',
+    'auth/invalid-email': 'errors.auth.invalidEmail',
+    'auth/operation-not-allowed': 'errors.auth.operationNotAllowed',
+    'auth/weak-password': 'errors.auth.weakPassword',
+    'auth/user-disabled': 'errors.auth.userDisabled',
+    'auth/user-not-found': 'errors.auth.userNotFound',
+    'auth/wrong-password': 'errors.auth.wrongPassword',
+    'auth/invalid-credential': 'errors.auth.invalidCredential',
+    'auth/too-many-requests': 'errors.auth.tooManyRequests',
+    'auth/popup-closed-by-user': 'errors.auth.popupClosedByUser',
+    'auth/cancelled-popup-request': 'errors.auth.cancelledPopupRequest',
+    'auth/popup-blocked': 'errors.auth.popupBlocked',
+    'auth/network-request-failed': 'errors.auth.networkRequestFailed',
   }
 
-  return errorMessages[errorCode] || 'An unexpected error occurred'
+  const i18nKey = errorKeyMap[errorCode]
+  return i18nKey ? t(i18nKey) : t('errors.auth.unexpected')
 }

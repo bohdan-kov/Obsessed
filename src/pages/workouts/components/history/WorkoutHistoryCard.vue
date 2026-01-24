@@ -153,7 +153,9 @@ const formattedDate = computed(() => {
 
     // Validate that the date is valid
     if (isNaN(date.getTime())) {
-      console.warn('[WorkoutHistoryCard] Invalid workout date:', props.workout.completedAt)
+      if (import.meta.env.DEV) {
+        console.warn('[WorkoutHistoryCard] Invalid workout date:', props.workout.completedAt)
+      }
       return t('workout.history.card.dateUnknown', 'Unknown date')
     }
 
@@ -163,7 +165,9 @@ const formattedDate = computed(() => {
       day: 'numeric',
     }).format(date)
   } catch (error) {
-    console.error('[WorkoutHistoryCard] Error formatting workout date:', error, props.workout.completedAt)
+    if (import.meta.env.DEV) {
+      console.error('[WorkoutHistoryCard] Error formatting workout date:', error, props.workout.completedAt)
+    }
     return t('workout.history.card.dateUnknown', 'Unknown date')
   }
 })
@@ -251,7 +255,9 @@ function handleShareClick() {
  * @param {string} postId - ID of the created post
  */
 function handleWorkoutShared(postId) {
-  console.log('[WorkoutHistoryCard] Workout shared successfully:', postId)
+  if (import.meta.env.DEV) {
+    console.log('[WorkoutHistoryCard] Workout shared successfully:', postId)
+  }
   // Modal already shows toast and handles navigation
 }
 </script>

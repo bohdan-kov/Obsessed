@@ -8,7 +8,7 @@ import {
   getPresetName,
   getPresetDescription,
   getTemplateName,
-} from '../splitPresets'
+} from '@/constants/splitPresets'
 
 describe('splitPresets', () => {
   describe('SPLIT_PRESETS structure', () => {

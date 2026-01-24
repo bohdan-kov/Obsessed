@@ -24,7 +24,21 @@
     "passwordResetFailed": "Password reset failed",
     "verificationEmailFailed": "Failed to send verification email",
     "signOutFailed": "Sign out failed",
-    "updateProfileFailed": "Failed to update profile"
+    "updateProfileFailed": "Failed to update profile",
+    "emailInUse": "This email is already registered",
+    "invalidEmail": "Invalid email address",
+    "operationNotAllowed": "This sign-in method is not enabled",
+    "weakPassword": "Password should be at least 6 characters",
+    "userDisabled": "This account has been disabled",
+    "userNotFound": "No account found with this email",
+    "wrongPassword": "Incorrect password",
+    "invalidCredential": "Invalid email or password",
+    "tooManyRequests": "Too many failed attempts. Please try again later",
+    "popupClosedByUser": "Sign-in cancelled",
+    "cancelledPopupRequest": "Sign-in cancelled",
+    "popupBlocked": "Pop-up was blocked by your browser",
+    "networkRequestFailed": "Network error. Please check your connection",
+    "unexpected": "An unexpected error occurred"
   },
   "workout": {
     "noActive": "No active workout",

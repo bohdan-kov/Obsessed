@@ -142,9 +142,13 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       await setDocument(COLLECTIONS.USERS, userId, updates, { merge: true })
-      console.log('[authStore] Created public profile for existing user:', userId)
+      if (import.meta.env.DEV) {
+        console.log('[authStore] Created public profile for existing user:', userId)
+      }
     } catch (err) {
-      console.error('[authStore] Failed to create public profile:', err)
+      if (import.meta.env.DEV) {
+        console.error('[authStore] Failed to create public profile:', err)
+      }
     }
   }
 

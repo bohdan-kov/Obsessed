@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useWorkoutTemplates } from '../useWorkoutTemplates'
+import { useWorkoutTemplates } from '@/composables/useWorkoutTemplates'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { nextTick } from 'vue'
 

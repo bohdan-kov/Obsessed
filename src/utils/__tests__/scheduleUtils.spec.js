@@ -13,7 +13,7 @@ import {
   createEmptyDaySchedule,
   createEmptyWeekSchedule,
   getDayStatus,
-} from '../scheduleUtils'
+} from '@/utils/scheduleUtils'
 
 describe('scheduleUtils', () => {
   describe('getWeekId', () => {

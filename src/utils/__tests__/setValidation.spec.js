@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { validateWeight, validateReps, validateRPE, validateSetData } from '../setValidation'
+import { validateWeight, validateReps, validateRPE, validateSetData } from '@/utils/setValidation'
 import { CONFIG } from '@/constants/config'
 
 describe('setValidation', () => {

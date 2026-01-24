@@ -541,7 +541,9 @@ export const useGoalsStore = defineStore('goals', () => {
       const rawGoal = goals.value.find((g) => g.id === progressGoal.id)
 
       if (rawGoal && progressGoal.progressPercent >= 100 && rawGoal.status === 'active') {
-        console.log(`[Goals] Auto-completing strength goal: ${progressGoal.exerciseName} - ${progressGoal.progressPercent}%`)
+        if (import.meta.env.DEV) {
+          console.log(`[Goals] Auto-completing strength goal: ${progressGoal.exerciseName} - ${progressGoal.progressPercent}%`)
+        }
         completeGoal(progressGoal.id)
       }
     })
@@ -551,7 +553,9 @@ export const useGoalsStore = defineStore('goals', () => {
       const rawGoal = goals.value.find((g) => g.id === progressGoal.id)
 
       if (rawGoal && progressGoal.progressPercent >= 100 && rawGoal.status === 'active') {
-        console.log(`[Goals] Auto-completing volume goal: ${progressGoal.exerciseName || 'Volume goal'} - ${progressGoal.progressPercent}%`)
+        if (import.meta.env.DEV) {
+          console.log(`[Goals] Auto-completing volume goal: ${progressGoal.exerciseName || 'Volume goal'} - ${progressGoal.progressPercent}%`)
+        }
         completeGoal(progressGoal.id)
       }
     })
@@ -561,7 +565,9 @@ export const useGoalsStore = defineStore('goals', () => {
       const rawGoal = goals.value.find((g) => g.id === progressGoal.id)
 
       if (rawGoal && progressGoal.progressPercent >= 100 && rawGoal.status === 'active') {
-        console.log(`[Goals] Auto-completing frequency goal: ${progressGoal.exerciseName || 'Frequency goal'} - ${progressGoal.progressPercent}%`)
+        if (import.meta.env.DEV) {
+          console.log(`[Goals] Auto-completing frequency goal: ${progressGoal.exerciseName || 'Frequency goal'} - ${progressGoal.progressPercent}%`)
+        }
         completeGoal(progressGoal.id)
       }
     })
@@ -571,7 +577,9 @@ export const useGoalsStore = defineStore('goals', () => {
       const rawGoal = goals.value.find((g) => g.id === progressGoal.id)
 
       if (rawGoal && progressGoal.progressPercent >= 100 && rawGoal.status === 'active') {
-        console.log(`[Goals] Auto-completing streak goal - ${progressGoal.progressPercent}%`)
+        if (import.meta.env.DEV) {
+          console.log(`[Goals] Auto-completing streak goal - ${progressGoal.progressPercent}%`)
+        }
         completeGoal(progressGoal.id)
       }
     })
@@ -585,7 +593,9 @@ export const useGoalsStore = defineStore('goals', () => {
         const deadline = new Date(progressGoal.deadline)
 
         if (now > deadline && progressGoal.progressPercent < 100) {
-          console.log(`[Goals] Auto-failing goal: ${progressGoal.id} - deadline passed`)
+          if (import.meta.env.DEV) {
+            console.log(`[Goals] Auto-failing goal: ${progressGoal.id} - deadline passed`)
+          }
           failGoal(progressGoal.id)
         }
       }
@@ -620,7 +630,9 @@ export const useGoalsStore = defineStore('goals', () => {
 
       if (newLength > oldLength) {
         // New workout added
-        console.log('[Goals] New workout detected, updating progress...')
+        if (import.meta.env.DEV) {
+          console.log('[Goals] New workout detected, updating progress...')
+        }
         nextTick(() => {
           updateAllGoalProgress()
         })

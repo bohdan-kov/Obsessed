@@ -5,8 +5,8 @@
 
 import { setActivePinia, createPinia } from 'pinia'
 import { beforeEach, describe, it, expect, vi } from 'vitest'
-import { useCommunityStore } from '../communityStore'
-import { useAuthStore } from '../authStore'
+import { useCommunityStore } from '@/stores/communityStore'
+import { useAuthStore } from '@/stores/authStore'
 
 // Mock Firebase functions
 const mockSetDoc = vi.fn()

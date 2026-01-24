@@ -84,7 +84,9 @@ const handleViewAll = async () => {
     try {
       await feedStore.fetchComments(props.postId)
     } catch (error) {
-      console.error('[CommentSection] Error fetching comments:', error)
+      if (import.meta.env.DEV) {
+        console.error('[CommentSection] Error fetching comments:', error)
+      }
       toast({
         title: t('community.errors.loadFeedFailed'),
         variant: 'destructive',
@@ -116,7 +118,9 @@ const handleSubmit = async () => {
       title: t('community.comment.submit'),
     })
   } catch (error) {
-    console.error('[CommentSection] Error adding comment:', error)
+    if (import.meta.env.DEV) {
+      console.error('[CommentSection] Error adding comment:', error)
+    }
     toast({
       title: t('community.errors.commentFailed'),
       variant: 'destructive',
@@ -128,7 +132,9 @@ const handleSubmit = async () => {
 
 const handleCommentDeleted = (commentId) => {
   // Optimistic update handled by store
-  console.log('[CommentSection] Comment deleted:', commentId)
+  if (import.meta.env.DEV) {
+    console.log('[CommentSection] Comment deleted:', commentId)
+  }
 }
 </script>
 

@@ -174,9 +174,7 @@ export const useFeedStore = defineStore('feed', () => {
     }
 
     if (!hasMore.value && !refresh) {
-      if (import.meta.env.DEV) {
-        console.log('[feedStore] No more posts to load')
-      }
+      console.log('[feedStore] No more posts to load')
       return
     }
 
@@ -332,11 +330,9 @@ export const useFeedStore = defineStore('feed', () => {
           retryDelay.value = Math.ceil(delay / 1000) // Convert to seconds for UI
           retryCount.value++
 
-          if (import.meta.env.DEV) {
-            console.log(
-              `[feedStore] Index building detected. Retry ${retryCount.value}/${maxRetries.value} in ${retryDelay.value}s`
-            )
-          }
+          console.log(
+            `[feedStore] Index building detected. Retry ${retryCount.value}/${maxRetries.value} in ${retryDelay.value}s`
+          )
 
           // Wait and retry
           await wait(delay)
@@ -347,16 +343,12 @@ export const useFeedStore = defineStore('feed', () => {
         } else {
           // Max retries reached, show error
           error.value = 'Index building timeout - please try again in a few minutes'
-          if (import.meta.env.DEV) {
-            console.error('[feedStore] Max retries reached for index building')
-          }
+          console.error('[feedStore] Max retries reached for index building')
         }
       } else {
         // Other errors
         error.value = err.message || 'Failed to load feed'
-        if (import.meta.env.DEV) {
-          console.error('[feedStore] Error fetching feed:', err)
-        }
+        console.error('[feedStore] Error fetching feed:', err)
       }
 
       throw err
@@ -381,9 +373,7 @@ export const useFeedStore = defineStore('feed', () => {
     // Ensure user has a public profile before posting
     const userProfile = authStore.userProfile
     if (!userProfile?.profile?.displayName) {
-      if (import.meta.env.DEV) {
-        console.warn('[feedStore] User missing public profile, will use fallback name')
-      }
+      console.warn('[feedStore] User missing public profile, will use fallback name')
     }
 
     error.value = null
@@ -419,9 +409,7 @@ export const useFeedStore = defineStore('feed', () => {
       return postRef.id
     } catch (err) {
       error.value = err.message || 'Failed to share workout'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error sharing workout:', err)
-      }
+      console.error('[feedStore] Error sharing workout:', err)
       throw err
     }
   }
@@ -450,9 +438,7 @@ export const useFeedStore = defineStore('feed', () => {
       feedPosts.value = feedPosts.value.filter((p) => p.id !== postId)
     } catch (err) {
       error.value = err.message || 'Failed to delete post'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error deleting post:', err)
-      }
+      console.error('[feedStore] Error deleting post:', err)
       throw err
     }
   }
@@ -485,9 +471,7 @@ export const useFeedStore = defineStore('feed', () => {
       }
     } catch (err) {
       error.value = err.message || 'Failed to update post'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error updating post caption:', err)
-      }
+      console.error('[feedStore] Error updating post caption:', err)
       throw err
     }
   }
@@ -510,16 +494,12 @@ export const useFeedStore = defineStore('feed', () => {
     // Optimistic update
     const post = feedPosts.value.find((p) => p.id === postId)
     if (!post) {
-      if (import.meta.env.DEV) {
-        console.warn('[feedStore] Post not found:', postId)
-      }
+      console.warn('[feedStore] Post not found:', postId)
       return
     }
 
     if (post.isLiked) {
-      if (import.meta.env.DEV) {
-        console.warn('[feedStore] Already liked this post')
-      }
+      console.warn('[feedStore] Already liked this post')
       return
     }
 
@@ -549,9 +529,7 @@ export const useFeedStore = defineStore('feed', () => {
       post.isLiked = false
 
       error.value = err.message || 'Failed to like post'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error liking post:', err)
-      }
+      console.error('[feedStore] Error liking post:', err)
       throw err
     }
   }
@@ -570,16 +548,12 @@ export const useFeedStore = defineStore('feed', () => {
     // Optimistic update
     const post = feedPosts.value.find((p) => p.id === postId)
     if (!post) {
-      if (import.meta.env.DEV) {
-        console.warn('[feedStore] Post not found:', postId)
-      }
+      console.warn('[feedStore] Post not found:', postId)
       return
     }
 
     if (!post.isLiked) {
-      if (import.meta.env.DEV) {
-        console.warn('[feedStore] Not liked this post')
-      }
+      console.warn('[feedStore] Not liked this post')
       return
     }
 
@@ -607,9 +581,7 @@ export const useFeedStore = defineStore('feed', () => {
       post.isLiked = true
 
       error.value = err.message || 'Failed to unlike post'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error unliking post:', err)
-      }
+      console.error('[feedStore] Error unliking post:', err)
       throw err
     }
   }
@@ -645,9 +617,7 @@ export const useFeedStore = defineStore('feed', () => {
       return likes.value
     } catch (err) {
       error.value = err.message || 'Failed to load likes'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error fetching likes:', err)
-      }
+      console.error('[feedStore] Error fetching likes:', err)
       throw err
     } finally {
       likesLoading.value = false
@@ -717,9 +687,7 @@ export const useFeedStore = defineStore('feed', () => {
       return commentId
     } catch (err) {
       error.value = err.message || 'Failed to add comment'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error adding comment:', err)
-      }
+      console.error('[feedStore] Error adding comment:', err)
       throw err
     }
   }
@@ -773,9 +741,7 @@ export const useFeedStore = defineStore('feed', () => {
       }
     } catch (err) {
       error.value = err.message || 'Failed to delete comment'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error deleting comment:', err)
-      }
+      console.error('[feedStore] Error deleting comment:', err)
       throw err
     }
   }
@@ -811,9 +777,7 @@ export const useFeedStore = defineStore('feed', () => {
       return comments.value
     } catch (err) {
       error.value = err.message || 'Failed to load comments'
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error fetching comments:', err)
-      }
+      console.error('[feedStore] Error fetching comments:', err)
       throw err
     } finally {
       commentsLoading.value = false
@@ -852,9 +816,7 @@ export const useFeedStore = defineStore('feed', () => {
       userProfileCache.set(userId, profile)
       return profile
     } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error('[feedStore] Error fetching user profile:', err)
-      }
+      console.error('[feedStore] Error fetching user profile:', err)
       return {
         uid: userId,
         displayName: 'Anonymous',
@@ -876,9 +838,7 @@ export const useFeedStore = defineStore('feed', () => {
 
     const removedCount = initialCount - feedPosts.value.length
     if (removedCount > 0) {
-      if (import.meta.env.DEV) {
-        console.log(`[feedStore] Removed ${removedCount} posts from user ${userId}`)
-      }
+      console.log(`[feedStore] Removed ${removedCount} posts from user ${userId}`)
     }
   }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useScheduleStore } from '../scheduleStore'
-import { useAuthStore } from '../authStore'
+import { useScheduleStore } from '@/stores/scheduleStore'
+import { useAuthStore } from '@/stores/authStore'
 import { getWeekId } from '@/utils/scheduleUtils'
 import * as firestoreModule from '@/firebase/firestore'
 

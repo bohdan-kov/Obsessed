@@ -126,12 +126,41 @@ export function useNavigation() {
   })
 
   /**
+   * Parent route mapping for nested/detail pages
+   * Maps child route names to their parent navigation item
+   */
+  const parentRouteMap = {
+    // Workouts section
+    WorkoutDetail: 'Workouts',
+
+    // Goals section
+    GoalDetail: 'Goals',
+
+    // Exercises section
+    ExerciseDetail: 'Exercises',
+
+    // Community section
+    UserProfile: 'Community',
+    UserFollowers: 'Community',
+    UserFollowing: 'Community',
+    CommunityPrivacySettings: 'Community',
+  }
+
+  /**
    * Check if a route is currently active
+   * Handles both exact matches and child/detail routes
    * @param {string} routeName - Route name to check
-   * @returns {boolean} True if route is active
+   * @returns {boolean} True if route is active or is a child of the route
    */
   function isActive(routeName) {
-    return route.name === routeName
+    // Exact match
+    if (route.name === routeName) return true
+
+    // Check if current route is a child of the specified route
+    const parentRoute = parentRouteMap[route.name]
+    if (parentRoute === routeName) return true
+
+    return false
   }
 
   /**

@@ -146,9 +146,7 @@ export const useCommunityStore = defineStore('community', () => {
       return currentProfile.value
     } catch (err) {
       error.value = err.message || 'Failed to load user profile'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error fetching user profile:', err)
-      }
+      console.error('[communityStore] Error fetching user profile:', err)
       throw err
     } finally {
       currentProfileLoading.value = false
@@ -184,15 +182,11 @@ export const useCommunityStore = defineStore('community', () => {
 
       await setDocument(COLLECTIONS.USERS, authStore.uid, updates, { merge: true })
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Profile updated successfully')
-      }
+      console.log('[communityStore] Profile updated successfully')
       // Update authStore's userProfile (real-time listener will handle this)
     } catch (err) {
       error.value = err.message || 'Failed to update profile'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error updating profile:', err)
-      }
+      console.error('[communityStore] Error updating profile:', err)
       throw err
     }
   }
@@ -215,9 +209,7 @@ export const useCommunityStore = defineStore('community', () => {
     }
 
     if (isFollowing.value(userId)) {
-      if (import.meta.env.DEV) {
-        console.warn('[communityStore] Already following this user')
-      }
+      console.warn('[communityStore] Already following this user')
       return
     }
 
@@ -248,9 +240,7 @@ export const useCommunityStore = defineStore('community', () => {
       await updateFollowCounts(authStore.uid, userId)
     } catch (err) {
       error.value = err.message || 'Failed to follow user'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error following user:', err)
-      }
+      console.error('[communityStore] Error following user:', err)
       throw err
     }
   }
@@ -265,9 +255,7 @@ export const useCommunityStore = defineStore('community', () => {
     }
 
     if (!isFollowing.value(userId)) {
-      if (import.meta.env.DEV) {
-        console.warn('[communityStore] Not following this user')
-      }
+      console.warn('[communityStore] Not following this user')
       return
     }
 
@@ -294,9 +282,7 @@ export const useCommunityStore = defineStore('community', () => {
       await updateFollowCounts(authStore.uid, userId)
     } catch (err) {
       error.value = err.message || 'Failed to unfollow user'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error unfollowing user:', err)
-      }
+      console.error('[communityStore] Error unfollowing user:', err)
       throw err
     }
   }
@@ -307,9 +293,7 @@ export const useCommunityStore = defineStore('community', () => {
    * @param {string} targetUserId - Target user's ID
    */
   async function updateFollowCounts(currentUserId, targetUserId) {
-    if (import.meta.env.DEV) {
-      console.log('[communityStore] updateFollowCounts CALLED', { currentUserId, targetUserId })
-    }
+    console.log('[communityStore] updateFollowCounts CALLED', { currentUserId, targetUserId })
 
     try {
       // Get follower count for target user
@@ -317,48 +301,32 @@ export const useCommunityStore = defineStore('community', () => {
       const followersSnap = await getDocs(followersColl)
       const followerCount = followersSnap.size
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Target user follower count:', followerCount)
-      }
+      console.log('[communityStore] Target user follower count:', followerCount)
 
       // Get following count for current user
       const followingColl = collection(db, COLLECTIONS.USERS, currentUserId, 'following')
       const followingSnap = await getDocs(followingColl)
       const followingCount = followingSnap.size
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Current user following count:', followingCount)
-      }
+      console.log('[communityStore] Current user following count:', followingCount)
 
       // Update target user's follower count
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Updating target user document:', targetUserId, { 'profile.followerCount': followerCount })
-      }
+      console.log('[communityStore] Updating target user document:', targetUserId, { 'profile.followerCount': followerCount })
       await updateDocument(COLLECTIONS.USERS, targetUserId, {
         'profile.followerCount': followerCount,
       })
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Target user document updated successfully')
-      }
+      console.log('[communityStore] Target user document updated successfully')
 
       // Update current user's following count
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Updating current user document:', currentUserId, { 'profile.followingCount': followingCount })
-      }
+      console.log('[communityStore] Updating current user document:', currentUserId, { 'profile.followingCount': followingCount })
       await updateDocument(COLLECTIONS.USERS, currentUserId, {
         'profile.followingCount': followingCount,
       })
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Current user document updated successfully')
-      }
+      console.log('[communityStore] Current user document updated successfully')
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] updateFollowCounts COMPLETED successfully')
-      }
+      console.log('[communityStore] updateFollowCounts COMPLETED successfully')
     } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error updating follow counts:', err)
-      }
+      console.error('[communityStore] Error updating follow counts:', err)
       // Don't throw - this is a background operation
     }
   }
@@ -405,9 +373,7 @@ export const useCommunityStore = defineStore('community', () => {
       return followers.value
     } catch (err) {
       error.value = err.message || 'Failed to load followers'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error fetching followers:', err)
-      }
+      console.error('[communityStore] Error fetching followers:', err)
       throw err
     } finally {
       followersLoading.value = false
@@ -456,9 +422,7 @@ export const useCommunityStore = defineStore('community', () => {
       return following.value
     } catch (err) {
       error.value = err.message || 'Failed to load following'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error fetching following:', err)
-      }
+      console.error('[communityStore] Error fetching following:', err)
       throw err
     } finally {
       followingLoading.value = false
@@ -484,9 +448,7 @@ export const useCommunityStore = defineStore('community', () => {
         fetchFollowers(authStore.uid)
       },
       (err) => {
-        if (import.meta.env.DEV) {
-          console.error('[communityStore] Followers subscription error:', err)
-        }
+        console.error('[communityStore] Followers subscription error:', err)
       }
     )
 
@@ -500,9 +462,7 @@ export const useCommunityStore = defineStore('community', () => {
         fetchFollowing(authStore.uid)
       },
       (err) => {
-        if (import.meta.env.DEV) {
-          console.error('[communityStore] Following subscription error:', err)
-        }
+        console.error('[communityStore] Following subscription error:', err)
       }
     )
   }
@@ -542,9 +502,7 @@ export const useCommunityStore = defineStore('community', () => {
       blockedUsers.value.push({ id: userId, blockedAt: new Date().toISOString() })
     } catch (err) {
       error.value = err.message || 'Failed to block user'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error blocking user:', err)
-      }
+      console.error('[communityStore] Error blocking user:', err)
       throw err
     }
   }
@@ -568,9 +526,7 @@ export const useCommunityStore = defineStore('community', () => {
       blockedUsers.value = blockedUsers.value.filter((b) => b.id !== userId)
     } catch (err) {
       error.value = err.message || 'Failed to unblock user'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error unblocking user:', err)
-      }
+      console.error('[communityStore] Error unblocking user:', err)
       throw err
     }
   }
@@ -613,9 +569,7 @@ export const useCommunityStore = defineStore('community', () => {
       return blockedUsers.value
     } catch (err) {
       error.value = err.message || 'Failed to load blocked users'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error fetching blocked users:', err)
-      }
+      console.error('[communityStore] Error fetching blocked users:', err)
       throw err
     } finally {
       blockedUsersLoading.value = false
@@ -641,9 +595,7 @@ export const useCommunityStore = defineStore('community', () => {
       privacySettings.value = settings
     } catch (err) {
       error.value = err.message || 'Failed to update privacy settings'
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error updating privacy settings:', err)
-      }
+      console.error('[communityStore] Error updating privacy settings:', err)
       throw err
     }
   }
@@ -662,9 +614,7 @@ export const useCommunityStore = defineStore('community', () => {
       privacySettings.value = settingsDoc || getDefaultPrivacySettings()
       return privacySettings.value
     } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error('[communityStore] Error fetching privacy settings:', err)
-      }
+      console.error('[communityStore] Error fetching privacy settings:', err)
       privacySettings.value = getDefaultPrivacySettings()
       return privacySettings.value
     }

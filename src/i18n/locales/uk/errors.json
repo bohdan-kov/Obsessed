@@ -24,7 +24,21 @@
     "passwordResetFailed": "Не вдалося скинути пароль",
     "verificationEmailFailed": "Не вдалося надіслати email підтвердження",
     "signOutFailed": "Не вдалося вийти",
-    "updateProfileFailed": "Не вдалося оновити профіль"
+    "updateProfileFailed": "Не вдалося оновити профіль",
+    "emailInUse": "Ця електронна адреса вже зареєстрована",
+    "invalidEmail": "Невірна електронна адреса",
+    "operationNotAllowed": "Цей метод входу не увімкнено",
+    "weakPassword": "Пароль має містити щонайменше 6 символів",
+    "userDisabled": "Цей обліковий запис було заблоковано",
+    "userNotFound": "Не знайдено облікового запису з такою адресою",
+    "wrongPassword": "Невірний пароль",
+    "invalidCredential": "Невірний email або пароль",
+    "tooManyRequests": "Забагато невдалих спроб. Спробуйте пізніше",
+    "popupClosedByUser": "Вхід скасовано",
+    "cancelledPopupRequest": "Вхід скасовано",
+    "popupBlocked": "Спливаюче вікно заблоковано браузером",
+    "networkRequestFailed": "Помилка мережі. Перевірте підключення",
+    "unexpected": "Сталася неочікувана помилка"
   },
   "workout": {
     "noActive": "Немає активного тренування",
