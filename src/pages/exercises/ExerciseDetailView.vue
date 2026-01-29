@@ -18,24 +18,30 @@
 
     <!-- Exercise details -->
     <div v-else class="space-y-6">
-      <!-- Header -->
-      <div class="flex items-start justify-between gap-4">
-        <div class="flex-1 min-w-0">
-          <!-- Back button -->
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="handleBack"
-            class="mb-2 -ml-2"
-          >
-            <ArrowLeft class="h-4 w-4 mr-2" />
-            {{ t('exercises.detail.back') }}
-          </Button>
+      <!-- Back button -->
+      <Button
+        variant="ghost"
+        size="sm"
+        @click="handleBack"
+        class="-ml-2"
+      >
+        <ArrowLeft class="h-4 w-4 mr-2" />
+        {{ t('exercises.detail.back') }}
+      </Button>
 
-          <!-- Exercise name (hidden on mobile, shown in AppLayout mobile header) -->
-          <h1 class="hidden md:block text-3xl font-bold tracking-tight mb-2">
-            {{ exerciseName }}
-          </h1>
+      <!-- Header with date filter -->
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="flex-1 min-w-0">
+          <!-- Exercise name with favorite button (hidden on mobile, shown in AppLayout mobile header) -->
+          <div class="hidden md:flex items-center gap-2 mb-2">
+            <h1 class="text-3xl font-bold tracking-tight">
+              {{ exerciseName }}
+            </h1>
+            <FavoriteButton
+              :exercise-id="exercise.id"
+              :is-favorite="isFavorite"
+            />
+          </div>
 
           <!-- Meta info -->
           <div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -80,37 +86,57 @@
           </p>
         </div>
 
-        <!-- Actions -->
-        <div class="flex items-start gap-2 shrink-0">
-          <FavoriteButton
-            :exercise-id="exercise.id"
-            :is-favorite="isFavorite"
-          />
-
-          <!-- Edit button (only for custom exercises) -->
-          <Button
-            v-if="exercise.isCustom"
-            variant="outline"
-            size="icon"
-            @click="handleEdit"
-            :aria-label="t('exercises.detail.edit')"
-            class="min-h-11 min-w-11"
-          >
-            <Edit class="h-4 w-4" />
-          </Button>
-
-          <!-- Delete button (only for custom exercises) -->
-          <Button
-            v-if="exercise.isCustom"
-            variant="outline"
-            size="icon"
-            @click="handleDelete"
-            :aria-label="t('exercises.detail.delete')"
-            class="min-h-11 min-w-11"
-          >
-            <Trash2 class="h-4 w-4" />
-          </Button>
+        <!-- Date Range Selector -->
+        <div class="period-selector">
+          <Select :model-value="selectedPeriod" @update:model-value="handlePeriodChange">
+            <SelectTrigger class="w-[180px]" :aria-label="t('analytics.filters.selectPeriod')">
+              <div class="flex items-center gap-2">
+                <Calendar class="h-4 w-4" />
+                <SelectValue />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem v-for="option in periodOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+
+      <!-- Favorite button for mobile (shown on mobile only) -->
+      <div class="flex md:hidden">
+        <FavoriteButton
+          :exercise-id="exercise.id"
+          :is-favorite="isFavorite"
+        />
+      </div>
+
+      <!-- Actions (only for custom exercises) -->
+      <div v-if="exercise.isCustom" class="flex items-center gap-2">
+        <!-- Edit button -->
+        <Button
+          variant="outline"
+          size="icon"
+          @click="handleEdit"
+          :aria-label="t('exercises.detail.edit')"
+          class="min-h-11 min-w-11"
+        >
+          <Edit class="h-4 w-4" />
+        </Button>
+
+        <!-- Delete button -->
+        <Button
+          variant="outline"
+          size="icon"
+          @click="handleDelete"
+          :aria-label="t('exercises.detail.delete')"
+          class="min-h-11 min-w-11"
+        >
+          <Trash2 class="h-4 w-4" />
+        </Button>
       </div>
 
       <!-- Video (if available) -->
@@ -175,11 +201,19 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { usePageMeta } from '@/composables/usePageMeta'
-import { ArrowLeft, Edit, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, Edit, Trash2, Calendar } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import FavoriteButton from './components/FavoriteButton.vue'
 import ExerciseStats from './components/ExerciseStats.vue'
 import ExerciseHistory from './components/ExerciseHistory.vue'
@@ -219,6 +253,7 @@ let unsubscribeWorkouts = null
 // Local state
 const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
+const selectedPeriod = ref('all')
 
 // Get exercise
 const exercise = computed(() => exerciseStore.getExerciseById(props.id))
@@ -305,6 +340,26 @@ const exerciseTypeLabel = computed(() => {
 })
 
 /**
+ * Period options for date filter
+ */
+const periodOptions = computed(() => [
+  { value: 'week', label: t('analytics.filters.week') },
+  { value: 'month', label: t('analytics.filters.month') },
+  { value: 'quarter', label: t('analytics.filters.quarter') },
+  { value: 'year', label: t('analytics.filters.year') },
+  { value: 'all', label: t('analytics.filters.allTime') },
+])
+
+/**
+ * Handle period change
+ */
+function handlePeriodChange(newPeriod) {
+  selectedPeriod.value = newPeriod
+  // Reload workout data with new period
+  workoutStore.ensureDataLoaded({ period: newPeriod, subscribe: true })
+}
+
+/**
  * Handle back navigation
  */
 function handleBack() {
@@ -357,8 +412,8 @@ onMounted(async () => {
         : Promise.resolve(),
       // Load custom exercises
       exerciseStore.fetchCustomExercises(),
-      // Load workout data for exercise stats
-      workoutStore.ensureDataLoaded({ period: 'month', subscribe: true }),
+      // Load workout data for exercise stats (all time for complete history)
+      workoutStore.ensureDataLoaded({ period: 'all', subscribe: true }),
     ])
 
     // Store unsubscribe function from ensureDataLoaded (3rd promise result)

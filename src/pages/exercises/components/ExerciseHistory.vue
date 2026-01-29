@@ -115,6 +115,12 @@ const stats = useExerciseStats(props.exerciseId)
 function formatDate(date) {
   if (!date) return ''
   const dateObj = date instanceof Date ? date : new Date(date)
+
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    return ''
+  }
+
   return d(dateObj, 'short')
 }
 </script>

@@ -8,7 +8,6 @@ import errors from './errors.json'
 import exercises from './exercises.json'
 import plans from './plans.json'
 import profile from './profile.json'
-import search from './search.json'
 import help from './help.json'
 import community from './community.json'
 import goals from './goals.json'
@@ -27,7 +26,6 @@ export default {
   exercises,
   plans,
   profile,
-  search,
   help,
   community,
   goals,

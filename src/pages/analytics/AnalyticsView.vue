@@ -9,6 +9,7 @@ import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { usePageMeta } from '@/composables/usePageMeta'
 import PeriodSelector from './components/shared/PeriodSelector.vue'
+import MuscleMapVisualization from './components/muscles/MuscleMapVisualization.vue'
 import MuscleVolumeChart from './components/muscles/MuscleVolumeChart.vue'
 import DurationTrendChart from './components/duration/DurationTrendChart.vue'
 import VolumeHeatmap from './components/volume/VolumeHeatmap.vue'
@@ -208,7 +209,10 @@ watch(
         <div v-if="workoutStore.loading" class="flex items-center justify-center py-12">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-        <MuscleVolumeChart v-else />
+        <template v-else>
+          <MuscleMapVisualization />
+          <MuscleVolumeChart />
+        </template>
       </TabsContent>
 
       <!-- Duration Tab Content -->

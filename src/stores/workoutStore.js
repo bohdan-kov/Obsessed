@@ -909,12 +909,6 @@ export const useWorkoutStore = defineStore('workout', () => {
 
           // Mark the scheduled day as completed
           await scheduleStore.markDayCompleted(weekId, dayName, workoutId)
-
-          if (import.meta.env.DEV) {
-            console.log(
-              `[workoutStore] Synced workout completion with schedule: weekId=${weekId}, day=${dayName}`
-            )
-          }
         } catch (scheduleErr) {
           // Schedule sync is non-critical - log error but don't fail workout completion
           if (import.meta.env.DEV) {
@@ -946,7 +940,7 @@ export const useWorkoutStore = defineStore('workout', () => {
 
   /**
    * Fetch workouts for a specific period
-   * @param {'week'|'month'|'quarter'|'year'} period - Time period
+   * @param {'week'|'month'|'quarter'|'year'|'all'} period - Time period
    * @returns {Promise<void>}
    */
   async function fetchWorkouts(period = 'month') {
@@ -959,28 +953,42 @@ export const useWorkoutStore = defineStore('workout', () => {
 
     try {
       const now = new Date()
-      let startDate = new Date()
+      let startDate = null
 
       switch (period) {
         case 'week':
+          startDate = new Date()
           startDate.setDate(now.getDate() - 7)
           break
         case 'month':
+          startDate = new Date()
           startDate.setMonth(now.getMonth() - 1)
           break
         case 'quarter':
+          startDate = new Date()
           startDate.setMonth(now.getMonth() - 3)
           break
         case 'year':
+          startDate = new Date()
           startDate.setFullYear(now.getFullYear() - 1)
+          break
+        case 'all':
+          // No date filter - fetch all workouts
+          startDate = null
           break
       }
 
       const workoutPath = `users/${authStore.uid}/workouts`
-      const fetchedWorkouts = await fetchCollection(workoutPath, {
-        where: [['startedAt', '>=', startDate]],
+      const fetchOptions = {
         orderBy: [['startedAt', 'desc']],
-      })
+      }
+
+      // Only add date filter if startDate is set
+      if (startDate !== null) {
+        fetchOptions.where = [['startedAt', '>=', startDate]]
+      }
+
+      const fetchedWorkouts = await fetchCollection(workoutPath, fetchOptions)
 
       workouts.value = fetchedWorkouts
     } catch (err) {
@@ -1034,7 +1042,7 @@ export const useWorkoutStore = defineStore('workout', () => {
 
   /**
    * Subscribe to all workouts real-time updates
-   * @param {'week'|'month'|'quarter'|'year'} period - Time period
+   * @param {'week'|'month'|'quarter'|'year'|'all'} period - Time period
    * @returns {Function|null} Unsubscribe function
    */
   function subscribeToWorkouts(period = 'month') {
@@ -1046,31 +1054,45 @@ export const useWorkoutStore = defineStore('workout', () => {
     }
 
     const now = new Date()
-    let startDate = new Date()
+    let startDate = null
 
     switch (period) {
       case 'week':
+        startDate = new Date()
         startDate.setDate(now.getDate() - 7)
         break
       case 'month':
+        startDate = new Date()
         startDate.setMonth(now.getMonth() - 1)
         break
       case 'quarter':
+        startDate = new Date()
         startDate.setMonth(now.getMonth() - 3)
         break
       case 'year':
+        startDate = new Date()
         startDate.setFullYear(now.getFullYear() - 1)
+        break
+      case 'all':
+        // No date filter - subscribe to all workouts
+        startDate = null
         break
     }
 
     const workoutPath = `users/${authStore.uid}/workouts`
 
+    const subscribeOptions = {
+      orderBy: [['startedAt', 'desc']],
+    }
+
+    // Only add date filter if startDate is set
+    if (startDate !== null) {
+      subscribeOptions.where = [['startedAt', '>=', startDate]]
+    }
+
     unsubscribeWorkouts = subscribeToCollection(
       workoutPath,
-      {
-        where: [['startedAt', '>=', startDate]],
-        orderBy: [['startedAt', 'desc']],
-      },
+      subscribeOptions,
       (fetchedWorkouts) => {
         workouts.value = fetchedWorkouts
       },
@@ -1138,7 +1160,7 @@ export const useWorkoutStore = defineStore('workout', () => {
   /**
    * Smart data loading with caching, request coalescing, and subscription management
    * @param {Object} options - Loading options
-   * @param {'week'|'month'|'quarter'|'year'} options.period - Time period to load
+   * @param {'week'|'month'|'quarter'|'year'|'all'} options.period - Time period to load
    * @param {boolean} options.subscribe - Whether to subscribe to real-time updates
    * @param {boolean} options.force - Force reload even if data is fresh
    * @returns {Promise<void>}

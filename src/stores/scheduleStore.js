@@ -224,9 +224,6 @@ export const useScheduleStore = defineStore('schedule', () => {
       return docId
     } catch (err) {
       error.value = err.message
-      if (import.meta.env.DEV) {
-        console.error('[scheduleStore] Failed to create template:', err)
-      }
       throw err
     } finally {
       loading.value = false
@@ -406,9 +403,6 @@ export const useScheduleStore = defineStore('schedule', () => {
       await fetchScheduleForWeek(weekId)
     } catch (err) {
       error.value = err.message
-      if (import.meta.env.DEV) {
-        console.error('[scheduleStore] Failed to assign template:', err)
-      }
       throw err
     } finally {
       loading.value = false
@@ -518,9 +512,6 @@ export const useScheduleStore = defineStore('schedule', () => {
       await fetchScheduleForWeek(weekId)
     } catch (err) {
       error.value = err.message
-      if (import.meta.env.DEV) {
-        console.error('[scheduleStore] Failed to assign template to multiple days:', err)
-      }
       throw err
     } finally {
       loading.value = false
@@ -570,9 +561,6 @@ export const useScheduleStore = defineStore('schedule', () => {
       return templateIds
     } catch (err) {
       error.value = err.message
-      if (import.meta.env.DEV) {
-        console.error('[scheduleStore] Failed to create templates from preset:', err)
-      }
       throw err
     } finally {
       loading.value = false

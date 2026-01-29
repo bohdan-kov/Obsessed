@@ -109,10 +109,7 @@ export function useFullscreenChart() {
       }
     }
 
-    if (import.meta.env.DEV) {
-      console.warn('[useFullscreenChart] Failed to lock orientation after all retry attempts')
-    }
-
+    // Failed after all retry attempts - fail silently
     return false
   }
 

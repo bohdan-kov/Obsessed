@@ -184,9 +184,6 @@ export const useCommunityStore = defineStore('community', () => {
 
       await setDocument(COLLECTIONS.USERS, authStore.uid, updates, { merge: true })
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Profile updated successfully')
-      }
       // Update authStore's userProfile (real-time listener will handle this)
     } catch (err) {
       error.value = err.message || 'Failed to update profile'
@@ -307,54 +304,26 @@ export const useCommunityStore = defineStore('community', () => {
    * @param {string} targetUserId - Target user's ID
    */
   async function updateFollowCounts(currentUserId, targetUserId) {
-    if (import.meta.env.DEV) {
-      console.log('[communityStore] updateFollowCounts CALLED', { currentUserId, targetUserId })
-    }
-
     try {
       // Get follower count for target user
       const followersColl = collection(db, COLLECTIONS.USERS, targetUserId, 'followers')
       const followersSnap = await getDocs(followersColl)
       const followerCount = followersSnap.size
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Target user follower count:', followerCount)
-      }
-
       // Get following count for current user
       const followingColl = collection(db, COLLECTIONS.USERS, currentUserId, 'following')
       const followingSnap = await getDocs(followingColl)
       const followingCount = followingSnap.size
 
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Current user following count:', followingCount)
-      }
-
       // Update target user's follower count
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Updating target user document:', targetUserId, { 'profile.followerCount': followerCount })
-      }
       await updateDocument(COLLECTIONS.USERS, targetUserId, {
         'profile.followerCount': followerCount,
       })
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Target user document updated successfully')
-      }
 
       // Update current user's following count
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Updating current user document:', currentUserId, { 'profile.followingCount': followingCount })
-      }
       await updateDocument(COLLECTIONS.USERS, currentUserId, {
         'profile.followingCount': followingCount,
       })
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] Current user document updated successfully')
-      }
-
-      if (import.meta.env.DEV) {
-        console.log('[communityStore] updateFollowCounts COMPLETED successfully')
-      }
     } catch (err) {
       if (import.meta.env.DEV) {
         console.error('[communityStore] Error updating follow counts:', err)

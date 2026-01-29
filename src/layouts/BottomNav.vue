@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Activity, BarChart3, Search } from 'lucide-vue-next'
+import { LayoutDashboard, Activity, BarChart3, Dumbbell } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -30,10 +30,10 @@ const navItems = computed(() => [
     ariaLabel: t('common.nav.analytics.description'),
   },
   {
-    name: t('common.nav.search.name'),
-    route: 'Search',
-    icon: Search,
-    ariaLabel: t('common.nav.search.description'),
+    name: t('common.nav.exercises.name'),
+    route: 'Exercises',
+    icon: Dumbbell,
+    ariaLabel: t('common.nav.exercises.description'),
   },
 ])
 

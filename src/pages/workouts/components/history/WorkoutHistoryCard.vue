@@ -153,9 +153,7 @@ const formattedDate = computed(() => {
 
     // Validate that the date is valid
     if (isNaN(date.getTime())) {
-      if (import.meta.env.DEV) {
-        console.warn('[WorkoutHistoryCard] Invalid workout date:', props.workout.completedAt)
-      }
+      // Return fallback text for invalid dates
       return t('workout.history.card.dateUnknown', 'Unknown date')
     }
 

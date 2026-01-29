@@ -26,6 +26,14 @@
     "quarter": "Quarter",
     "year": "Year"
   },
+  "filters": {
+    "week": "Last week",
+    "month": "Last month",
+    "quarter": "Last quarter",
+    "year": "Last year",
+    "allTime": "All time",
+    "selectPeriod": "Select period"
+  },
   "empty": {
     "title": "No data to analyze",
     "description": "Start working out to see your analytics",
@@ -44,6 +52,16 @@
     "noWorkouts": "Complete workouts to see analytics"
   },
   "muscles": {
+    "map": {
+      "title": "Muscle Training Map",
+      "description": "Visual representation of training volume across muscle groups",
+      "emptyState": "No training data for this period",
+      "legend": {
+        "title": "Volume Intensity",
+        "low": "Low",
+        "high": "High"
+      }
+    },
     "volumeOverTime": {
       "title": "Muscle Volume Over Time",
       "description": "Track training volume trends across different muscle groups during the selected period",

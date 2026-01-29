@@ -21,13 +21,32 @@ export function useExerciseStats(exerciseId) {
     const sets = []
     const sessionMap = new Map()
 
-    workoutStore.workouts.forEach((workout) => {
+    // Only include completed workouts in statistics
+    workoutStore.completedWorkouts.forEach((workout) => {
       const exercise = workout.exercises?.find((ex) => ex.exerciseId === exerciseId)
 
       if (exercise && exercise.sets.length > 0) {
-        const workoutDate = workout.startedAt?.toDate
-          ? workout.startedAt.toDate()
-          : new Date(workout.startedAt)
+        const dateSource = workout.completedAt || workout.startedAt
+
+        let workoutDate
+        // Handle Firestore Timestamp with toDate method
+        if (dateSource?.toDate && typeof dateSource.toDate === 'function') {
+          workoutDate = dateSource.toDate()
+        }
+        // Handle Firestore Timestamp plain object (serialized format)
+        else if (typeof dateSource === 'object' && 'seconds' in dateSource && typeof dateSource.seconds === 'number') {
+          const milliseconds = dateSource.seconds * 1000 + (dateSource.nanoseconds || 0) / 1000000
+          workoutDate = new Date(milliseconds)
+        }
+        // Handle Date object or string
+        else {
+          workoutDate = new Date(dateSource)
+        }
+
+        // Skip workouts with invalid dates
+        if (!workoutDate || isNaN(workoutDate.getTime()) || workoutDate.getTime() === 0) {
+          return
+        }
 
         // Add sets with workout context
         exercise.sets.forEach((set) => {

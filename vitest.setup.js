@@ -255,6 +255,33 @@ const localStorageMock = (() => {
 
 globalThis.localStorage = localStorageMock
 
+// Mock sessionStorage for jsdom compatibility
+const sessionStorageMock = (() => {
+  let store = {}
+
+  return {
+    getItem: vi.fn((key) => store[key] || null),
+    setItem: vi.fn((key, value) => {
+      store[key] = value.toString()
+    }),
+    removeItem: vi.fn((key) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+    get length() {
+      return Object.keys(store).length
+    },
+    key: vi.fn((index) => {
+      const keys = Object.keys(store)
+      return keys[index] || null
+    }),
+  }
+})()
+
+globalThis.sessionStorage = sessionStorageMock
+
 // Mock SVG element methods for @unovis/vue charts
 // jsdom doesn't fully support SVG DOM methods like getBBox()
 if (typeof SVGElement !== 'undefined') {

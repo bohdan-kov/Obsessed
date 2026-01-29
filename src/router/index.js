@@ -149,12 +149,6 @@ const router = createRouter({
           meta: { title: 'Get Help' },
         },
         {
-          path: 'search',
-          name: 'Search',
-          component: () => import('@/pages/search/SearchView.vue'),
-          meta: { title: 'Search' },
-        },
-        {
           path: 'me',
           name: 'MyProfile',
           component: () => import('@/pages/profile/ProfileView.vue'),
