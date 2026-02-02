@@ -68,23 +68,28 @@ export function convertToAnatomicalMuscles(muscleDistribution) {
 
 /**
  * Calculates opacity for a muscle based on its training volume
- * Maps volume to opacity range [0.3, 1.0] so even minimal values are visible
+ * Uses quadratic scaling (x²) to provide better visual contrast between muscle groups
+ * Maps volume to opacity range [0.2, 1.0] so even minimal values are visible
  *
  * @param {number} volume - Training volume in kg
  * @param {number} maxVolume - Maximum volume across all muscle groups
- * @returns {number} Opacity value between 0.3 and 1.0
+ * @returns {number} Opacity value between 0.2 and 1.0
  */
 export function calculateMuscleOpacity(volume, maxVolume) {
   if (volume === 0 || maxVolume === 0) {
-    return 0.3 // Minimum opacity for visibility
+    return 0.2 // Minimum opacity for visibility
   }
 
   // Calculate relative intensity (0-1)
   const intensity = Math.min(volume / maxVolume, 1)
 
-  // Map to opacity range [0.3, 1.0]
-  // 0.3 = minimum visible, 1.0 = maximum intensity
-  const opacity = 0.3 + intensity * 0.7
+  // Apply quadratic function for better visual contrast
+  // Low values become even lower, high values remain high
+  const normalizedIntensity = Math.pow(intensity, 2)
+
+  // Map to opacity range [0.2, 1.0]
+  // 0.2 = minimum visible, 1.0 = maximum intensity
+  const opacity = 0.2 + normalizedIntensity * 0.8
 
   // Round to 2 decimal places for cleaner values
   return Math.round(opacity * 100) / 100
@@ -102,50 +107,6 @@ export function getMuscleColor(appGroup) {
 }
 
 /**
- * Groups anatomical muscles by intensity level for rendering
- * Uses relative ranking: only top muscle group (with >60% of max volume) gets primary color
- * This ensures visual hierarchy based on actual training emphasis
- *
- * @param {Array<{name: string, opacity: number, volume: number, appGroup: string}>} anatomicalData - Anatomical muscle data
- * @returns {{primary: string[], secondary: string[]}} Grouped muscle names
- */
-export function groupMusclesByIntensity(anatomicalData) {
-  if (!anatomicalData.length) {
-    return { primary: [], secondary: [] }
-  }
-
-  // Group by appGroup to calculate totals per muscle group
-  const groupTotals = new Map()
-  anatomicalData.forEach((muscle) => {
-    const current = groupTotals.get(muscle.appGroup) || 0
-    groupTotals.set(muscle.appGroup, current + muscle.volume)
-  })
-
-  // Find max volume across groups
-  const maxGroupVolume = Math.max(...groupTotals.values())
-
-  // Only groups with >60% of max volume get primary highlight (typically just the top group)
-  const PRIMARY_PERCENTAGE = 0.6
-  const PRIMARY_THRESHOLD = maxGroupVolume * PRIMARY_PERCENTAGE
-
-  const primary = []
-  const secondary = []
-
-  anatomicalData.forEach((muscle) => {
-    const groupVolume = groupTotals.get(muscle.appGroup)
-    const isTopGroup = groupVolume >= PRIMARY_THRESHOLD
-
-    if (isTopGroup) {
-      primary.push(muscle.name)
-    } else {
-      secondary.push(muscle.name)
-    }
-  })
-
-  return { primary, secondary }
-}
-
-/**
  * Finds the maximum volume value in muscle distribution data
  *
  * @param {Array<{value: number}>} muscleDistribution - Muscle distribution array
@@ -157,4 +118,48 @@ export function findMaxVolume(muscleDistribution) {
   }
 
   return Math.max(...muscleDistribution.map((m) => m.value))
+}
+
+/**
+ * Groups anatomical muscles by intensity into primary and secondary categories
+ * Primary muscles: appGroup volume >= 60% of max appGroup volume
+ * Secondary muscles: appGroup volume < 60% of max appGroup volume
+ *
+ * @param {Array<{name: string, volume: number, appGroup: string}>} anatomicalData - Anatomical muscle data
+ * @returns {{primary: string[], secondary: string[]}} Muscle names grouped by intensity
+ */
+export function groupMusclesByIntensity(anatomicalData) {
+  if (!anatomicalData || anatomicalData.length === 0) {
+    return { primary: [], secondary: [] }
+  }
+
+  // Group anatomical muscles by appGroup and sum their volumes
+  const appGroupVolumes = {}
+  anatomicalData.forEach((muscle) => {
+    if (!appGroupVolumes[muscle.appGroup]) {
+      appGroupVolumes[muscle.appGroup] = 0
+    }
+    appGroupVolumes[muscle.appGroup] += muscle.volume
+  })
+
+  // Find max appGroup volume
+  const maxGroupVolume = Math.max(...Object.values(appGroupVolumes))
+
+  // Primary threshold: 60% of max volume
+  const primaryThreshold = maxGroupVolume * 0.6
+
+  // Categorize anatomical muscles based on their appGroup's total volume
+  const primary = []
+  const secondary = []
+
+  anatomicalData.forEach((muscle) => {
+    const groupVolume = appGroupVolumes[muscle.appGroup]
+    if (groupVolume >= primaryThreshold) {
+      primary.push(muscle.name)
+    } else {
+      secondary.push(muscle.name)
+    }
+  })
+
+  return { primary, secondary }
 }

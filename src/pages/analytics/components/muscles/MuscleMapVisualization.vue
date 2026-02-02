@@ -1,19 +1,15 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { User } from 'lucide-vue-next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { HumanMuscleAnatomy } from '@lucawahlen/vue-human-muscle-anatomy'
+import { MuscleAnatomy } from '@/components/ui/muscle-anatomy'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useUserStore } from '@/stores/userStore'
 import { useUnits } from '@/composables/useUnits'
-import {
-  convertToAnatomicalMuscles,
-  groupMusclesByIntensity,
-  findMaxVolume,
-} from '@/utils/muscleMapUtils'
+import { convertToAnatomicalMuscles, findMaxVolume } from '@/utils/muscleMapUtils'
 
 const { t } = useI18n()
 const { formatWeight } = useUnits()
@@ -22,6 +18,11 @@ const analyticsStore = useAnalyticsStore()
 const workoutStore = useWorkoutStore()
 const userStore = useUserStore()
 const { muscleDistributionByVolume } = storeToRefs(analyticsStore)
+
+// Tooltip state
+const activeMuscle = ref(null)
+const showTooltip = ref(false)
+const tooltipPosition = ref({ x: 0, y: 0 })
 
 // Loading state from workoutStore
 const loading = computed(() => workoutStore.loading)
@@ -36,24 +37,25 @@ const userGender = computed(() => {
   return profileGender === 'female' ? 'female' : 'male'
 })
 
-// Convert app muscle groups to anatomical muscles
-const anatomicalData = computed(() => {
-  if (!hasData.value) return []
-  return convertToAnatomicalMuscles(muscleDistributionByVolume.value)
-})
+// Convert app muscle groups to anatomical muscles with individual styling
+const muscleData = computed(() => {
+  if (!hasData.value) return {}
 
-// Group muscles by intensity
-const groupedMuscles = computed(() => {
-  if (!anatomicalData.value.length) {
-    return { primary: [], secondary: [] }
-  }
-  return groupMusclesByIntensity(anatomicalData.value)
-})
+  const anatomicalMuscles = convertToAnatomicalMuscles(muscleDistributionByVolume.value)
+  const result = {}
 
-// WORKAROUND: Package bug - show all muscles for now with single color
-// User can still see intensity difference through muscle group sizes
-const allMuscles = computed(() => {
-  return [...groupedMuscles.value.primary, ...groupedMuscles.value.secondary]
+  // Build muscle data object: { muscleName: { color, opacity, volume, percentage, appGroup } }
+  anatomicalMuscles.forEach((muscle) => {
+    result[muscle.name] = {
+      color: primaryHighlightColor,
+      opacity: muscle.opacity,
+      volume: muscle.volume,
+      percentage: muscle.percentage,
+      appGroup: muscle.appGroup, // Store original app group for tooltip
+    }
+  })
+
+  return result
 })
 
 // Theme colors for muscle map
@@ -66,12 +68,8 @@ const backgroundColor = computed(() => (isDark.value ? '#18181b' : '#ffffff'))
 const defaultMuscleColor = computed(() => (isDark.value ? '#27272a' : '#e5e5e5'))
 
 // Primary highlight color - destructive red from project theme (oklch(0.637 0.237 25.331))
-// This is a vibrant red that stands out against the default muscle color
+// Opacity will be controlled per-muscle based on their training volume
 const primaryHighlightColor = '#ef4444' // red-500 (approximates oklch(0.637 0.237 25.331))
-
-// Secondary highlight color - darker red for lower intensity muscles
-// Creates a subtle gradient effect from high to low volume
-const secondaryHighlightColor = '#b91c1c' // red-700 (darker shade)
 
 /**
  * Get max volume for legend
@@ -80,6 +78,139 @@ const maxVolume = computed(() => {
   if (!muscleDistributionByVolume.value.length) return 0
   return findMaxVolume(muscleDistributionByVolume.value)
 })
+
+/**
+ * Handle muscle hover (desktop)
+ */
+function handleMuscleHover(event) {
+  const target = event.target
+
+  // Try to find muscle ID from target or parent elements
+  let muscleId = target.id
+
+  // If target doesn't have ID, check parent <g> element
+  if (!muscleId) {
+    const parentGroup = target.closest('g[id], path[id]')
+    muscleId = parentGroup?.id
+  }
+
+  if (!muscleId) {
+    return
+  }
+
+  // Get muscle data directly by anatomical muscle name (key in muscleData)
+  const muscle = muscleData.value[muscleId]
+
+  if (!muscle) {
+    return
+  }
+
+  activeMuscle.value = {
+    name: muscleId,
+    appGroup: muscle.appGroup,
+    volume: muscle.volume,
+    percentage: muscle.percentage,
+  }
+  showTooltip.value = true
+
+  // Get bounding box from the actual muscle element
+  const muscleElement = target.closest('[id]') || target
+  const rect = muscleElement.getBoundingClientRect()
+  tooltipPosition.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.top - 8,
+  }
+}
+
+/**
+ * Handle muscle leave
+ */
+function handleMuscleLeave() {
+  showTooltip.value = false
+  activeMuscle.value = null
+}
+
+/**
+ * Animate muscle flash on click
+ * Simple gentle blink - just opacity fade
+ */
+function animateMuscleFlash(muscleElement) {
+  if (!muscleElement) return
+
+  const originalOpacity = muscleElement.style.opacity || '1'
+
+  // Subtle gentle blink - minimal opacity change for smooth effect
+  const frames = [
+    { opacity: '1' },
+    { opacity: '0.65' },
+    { opacity: '1' },
+  ]
+
+  const timing = {
+    duration: 800, // Longer, smoother animation
+    iterations: 1,
+    easing: 'cubic-bezier(0.4, 0, 0.2, 1)', // Smooth project-standard easing
+  }
+
+  // Use Web Animations API for smooth animation
+  const animation = muscleElement.animate(frames, timing)
+
+  // Restore original styles after animation
+  animation.onfinish = () => {
+    muscleElement.style.opacity = originalOpacity
+  }
+}
+
+/**
+ * Handle muscle click (mobile)
+ */
+function handleMuscleClick(event) {
+  const target = event.target
+
+  // Try to find muscle ID from target or parent elements
+  let muscleId = target.id
+  let muscleElement = target
+
+  if (!muscleId) {
+    const parentGroup = target.closest('g[id], path[id]')
+    muscleId = parentGroup?.id
+    muscleElement = parentGroup
+  }
+
+  // If clicked outside a muscle, close tooltip
+  if (!muscleId) {
+    showTooltip.value = false
+    activeMuscle.value = null
+    return
+  }
+
+  // Get muscle data to check if it's a valid muscle
+  const muscle = muscleData.value[muscleId]
+  if (!muscle) {
+    showTooltip.value = false
+    activeMuscle.value = null
+    return
+  }
+
+  // Find all muscles in the same app group and animate them all
+  const appGroup = muscle.appGroup
+  Object.keys(muscleData.value).forEach((anatomicalMuscleName) => {
+    const muscleInfo = muscleData.value[anatomicalMuscleName]
+    if (muscleInfo.appGroup === appGroup) {
+      const element = document.getElementById(anatomicalMuscleName)
+      if (element) {
+        animateMuscleFlash(element)
+      }
+    }
+  })
+
+  if (activeMuscle.value?.name === muscleId && showTooltip.value) {
+    showTooltip.value = false
+    activeMuscle.value = null
+  } else {
+    handleMuscleHover(event)
+  }
+}
 </script>
 
 <template>
@@ -106,16 +237,18 @@ const maxVolume = computed(() => {
       <!-- Muscle Map -->
       <div v-else class="muscle-map-container muscle-map-entrance">
         <!-- Muscle Anatomy Visualization -->
-        <!-- NOTE: Package bug - selectedSecondaryMuscleGroups doesn't work -->
-        <!-- Showing all muscles with primaryHighlightColor as workaround -->
-        <div class="muscle-map-wrapper mx-auto">
-          <HumanMuscleAnatomy
+        <div
+          class="muscle-map-wrapper mx-auto"
+          @mouseenter="handleMuscleHover"
+          @mouseleave="handleMuscleLeave"
+          @click="handleMuscleClick"
+        >
+          <MuscleAnatomy
             :gender="userGender"
-            :default-muscle-color="defaultMuscleColor"
+            view="both"
+            :muscle-data="muscleData"
+            :default-color="defaultMuscleColor"
             :background-color="backgroundColor"
-            :primary-highlight-color="primaryHighlightColor"
-            :primary-opacity="0.9"
-            :selected-primary-muscle-groups="allMuscles"
           />
         </div>
 
@@ -128,7 +261,7 @@ const maxVolume = computed(() => {
           </div>
           <div class="mt-2 flex items-center gap-1">
             <div
-              v-for="level in [0.3, 0.45, 0.6, 0.75, 0.9, 1.0]"
+              v-for="level in [0.2, 0.4, 0.6, 0.8, 1.0]"
               :key="level"
               class="legend-cell h-4 flex-1 rounded-sm"
               :style="{ backgroundColor: primaryHighlightColor, opacity: level }"
@@ -142,6 +275,85 @@ const maxVolume = computed(() => {
             <span class="font-medium">{{ formatWeight(maxVolume, { precision: 0 }) }}</span>
           </div>
         </div>
+
+        <!-- Tooltip -->
+        <Teleport to="body">
+          <div
+            v-if="showTooltip && activeMuscle"
+            class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200"
+            :style="{
+              left: `${tooltipPosition.x}px`,
+              top: `${tooltipPosition.y}px`,
+            }"
+          >
+            <!-- Tooltip container with inline styles matching chart tooltips -->
+            <div
+              data-tooltip-content="true"
+              :style="{
+                background: 'oklch(0.35 0 0)',
+                border: '1px solid oklch(0.269 0 0)',
+                borderRadius: '8px',
+                padding: '12px',
+                color: 'oklch(0.985 0 0)',
+                fontSize: '14px',
+                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
+                margin: '0',
+              }"
+            >
+              <!-- Muscle name header -->
+              <div
+                :style="{
+                  fontWeight: '500',
+                  marginBottom: '8px',
+                  paddingBottom: '8px',
+                  borderBottom: '1px solid oklch(0.269 0 0)',
+                }"
+              >
+                {{ t(`common.muscles.${activeMuscle.appGroup}`) }}
+              </div>
+
+              <!-- Tooltip rows -->
+              <div :style="{ display: 'flex', flexDirection: 'column', gap: '6px' }">
+                <!-- Volume row -->
+                <div :style="{ display: 'flex', alignItems: 'center', gap: '8px' }">
+                  <div
+                    :style="{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: primaryHighlightColor,
+                    }"
+                  />
+                  <span :style="{ color: 'oklch(0.708 0 0)', flex: '1' }">
+                    {{ t('common.volume') }}:
+                  </span>
+                  <span :style="{ fontWeight: '600' }">
+                    {{ formatWeight(activeMuscle.volume, { precision: 0 }) }}
+                  </span>
+                </div>
+
+                <!-- Percentage row -->
+                <div :style="{ display: 'flex', alignItems: 'center', gap: '8px' }">
+                  <div
+                    :style="{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: primaryHighlightColor,
+                      opacity: '0.6',
+                    }"
+                  />
+                  <span :style="{ color: 'oklch(0.708 0 0)', flex: '1' }">
+                    {{ t('analytics.muscles.percentage') }}:
+                  </span>
+                  <span :style="{ fontWeight: '600' }">
+                    {{ activeMuscle.percentage.toFixed(1) }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Teleport>
       </div>
     </CardContent>
   </Card>
@@ -169,6 +381,23 @@ const maxVolume = computed(() => {
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
+}
+
+/* Make SVG muscles interactive */
+.muscle-map-wrapper :deep(svg) {
+  pointer-events: bounding-box;
+}
+
+.muscle-map-wrapper :deep(svg path[id]),
+.muscle-map-wrapper :deep(svg g[id] path) {
+  cursor: pointer;
+  transition: opacity 150ms ease;
+  pointer-events: auto;
+}
+
+.muscle-map-wrapper :deep(svg path[id]:hover),
+.muscle-map-wrapper :deep(svg g[id] path:hover) {
+  opacity: 0.85;
 }
 
 /* Mobile responsiveness */

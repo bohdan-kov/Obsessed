@@ -25,7 +25,6 @@
     "firebase:logout": "firebase logout"
   },
   "dependencies": {
-    "@lucawahlen/vue-human-muscle-anatomy": "^1.1.0",
     "@unovis/ts": "^1.6.2",
     "@unovis/vue": "^1.6.2",
     "@vee-validate/zod": "^4.15.1",

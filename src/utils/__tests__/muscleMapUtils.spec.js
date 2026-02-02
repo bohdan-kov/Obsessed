@@ -54,41 +54,67 @@ describe('muscleMapUtils', () => {
   })
 
   describe('calculateMuscleOpacity', () => {
-    it('should return 0.3 for zero volume', () => {
-      expect(calculateMuscleOpacity(0, 1000)).toBe(0.3)
+    it('should return 0.2 for zero volume', () => {
+      expect(calculateMuscleOpacity(0, 1000)).toBe(0.2)
     })
 
-    it('should return 0.3 for zero maxVolume', () => {
-      expect(calculateMuscleOpacity(500, 0)).toBe(0.3)
+    it('should return 0.2 for zero maxVolume', () => {
+      expect(calculateMuscleOpacity(500, 0)).toBe(0.2)
     })
 
     it('should return 1.0 for max volume', () => {
       expect(calculateMuscleOpacity(1000, 1000)).toBe(1.0)
     })
 
-    it('should return 0.65 for half of max volume', () => {
-      // 0.3 + (0.5 * 0.7) = 0.3 + 0.35 = 0.65
-      expect(calculateMuscleOpacity(500, 1000)).toBe(0.65)
+    it('should apply quadratic scaling for half of max volume', () => {
+      // 0.2 + (0.5)² * 0.8 = 0.2 + 0.25 * 0.8 = 0.2 + 0.2 = 0.4
+      expect(calculateMuscleOpacity(500, 1000)).toBe(0.4)
     })
 
-    it('should return 0.475 for 25% of max volume', () => {
-      // 0.3 + (0.25 * 0.7) = 0.3 + 0.175 = 0.475
-      expect(calculateMuscleOpacity(250, 1000)).toBe(0.48)
+    it('should apply quadratic scaling for 25% of max volume', () => {
+      // 0.2 + (0.25)² * 0.8 = 0.2 + 0.0625 * 0.8 = 0.2 + 0.05 = 0.25
+      expect(calculateMuscleOpacity(250, 1000)).toBe(0.25)
     })
 
-    it('should return 0.825 for 75% of max volume', () => {
-      // 0.3 + (0.75 * 0.7) = 0.3 + 0.525 = 0.825
-      expect(calculateMuscleOpacity(750, 1000)).toBe(0.83)
+    it('should apply quadratic scaling for 75% of max volume', () => {
+      // 0.2 + (0.75)² * 0.8 = 0.2 + 0.5625 * 0.8 = 0.2 + 0.45 = 0.65
+      expect(calculateMuscleOpacity(750, 1000)).toBe(0.65)
+    })
+
+    it('should apply quadratic scaling for 10% of max volume', () => {
+      // 0.2 + (0.1)² * 0.8 = 0.2 + 0.01 * 0.8 = 0.2 + 0.008 = 0.208 ≈ 0.21
+      expect(calculateMuscleOpacity(100, 1000)).toBe(0.21)
+    })
+
+    it('should apply quadratic scaling for 33% of max volume', () => {
+      // 0.2 + (0.33)² * 0.8 = 0.2 + 0.1089 * 0.8 ≈ 0.2 + 0.0871 ≈ 0.29
+      expect(calculateMuscleOpacity(330, 1000)).toBe(0.29)
     })
 
     it('should handle decimal values correctly', () => {
       const result = calculateMuscleOpacity(666.67, 1000)
-      expect(result).toBeGreaterThanOrEqual(0.3)
+      expect(result).toBeGreaterThanOrEqual(0.2)
       expect(result).toBeLessThanOrEqual(1.0)
     })
 
     it('should cap at 1.0 even if volume exceeds maxVolume', () => {
       expect(calculateMuscleOpacity(1500, 1000)).toBe(1.0)
+    })
+
+    it('should provide better contrast than linear scaling', () => {
+      // Compare 33% vs 100% contrast with quadratic scaling
+      const opacity33 = calculateMuscleOpacity(330, 1000) // ~0.29
+      const opacity100 = calculateMuscleOpacity(1000, 1000) // 1.0
+
+      // Quadratic contrast: 1.0 - 0.29 = 0.71
+      const quadraticContrast = opacity100 - opacity33
+
+      // Linear would be: (0.3 + 0.33*0.7) ≈ 0.53 → contrast = 1.0 - 0.53 = 0.47
+      const expectedLinearContrast = 0.47
+
+      // Verify quadratic provides more contrast
+      expect(quadraticContrast).toBeGreaterThan(expectedLinearContrast)
+      expect(quadraticContrast).toBeCloseTo(0.71, 1)
     })
   })
 
@@ -212,15 +238,17 @@ describe('muscleMapUtils', () => {
       expect(chestMuscle.opacity).toBe(1.0) // max opacity
 
       // Find back muscles (should all have same opacity)
+      // 750/1500 = 0.5, quadratic: 0.2 + (0.5)² * 0.8 = 0.2 + 0.2 = 0.4
       const backMuscles = result.filter((m) => m.appGroup === 'back')
       backMuscles.forEach((muscle) => {
-        expect(muscle.opacity).toBe(0.65) // 0.3 + (0.5 * 0.7)
+        expect(muscle.opacity).toBe(0.4)
       })
 
       // Find leg muscles
+      // 375/1500 = 0.25, quadratic: 0.2 + (0.25)² * 0.8 = 0.2 + 0.05 = 0.25
       const legMuscles = result.filter((m) => m.appGroup === 'legs')
       legMuscles.forEach((muscle) => {
-        expect(muscle.opacity).toBe(0.48) // 0.3 + (0.25 * 0.7) = 0.475 rounded to 0.48
+        expect(muscle.opacity).toBe(0.25)
       })
     })
 

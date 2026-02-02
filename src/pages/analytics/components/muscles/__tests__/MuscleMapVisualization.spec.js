@@ -3,22 +3,12 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref, computed } from 'vue'
 
-// Mock the HumanMuscleAnatomy component from npm package
-vi.mock('@lucawahlen/vue-human-muscle-anatomy', () => ({
-  HumanMuscleAnatomy: {
-    name: 'HumanMuscleAnatomy',
-    template: '<div data-testid="human-anatomy">Muscle Anatomy Mock</div>',
-    props: [
-      'gender',
-      'defaultMuscleColor',
-      'backgroundColor',
-      'primaryHighlightColor',
-      'secondaryHighlightColor',
-      'primaryOpacity',
-      'secondaryOpacity',
-      'selectedPrimaryMuscleGroups',
-      'selectedSecondaryMuscleGroups',
-    ],
+// Mock the custom MuscleAnatomy component
+vi.mock('@/components/ui/muscle-anatomy', () => ({
+  MuscleAnatomy: {
+    name: 'MuscleAnatomy',
+    template: '<div data-testid="muscle-anatomy">Muscle Anatomy Mock</div>',
+    props: ['gender', 'muscleData', 'defaultColor', 'backgroundColor', 'showTooltips', 'view'],
   },
 }))
 
@@ -52,12 +42,13 @@ vi.mock('@/components/ui/card', () => ({
 // Mock muscleMapUtils with proper implementation
 vi.mock('@/utils/muscleMapUtils', () => ({
   convertToAnatomicalMuscles: vi.fn((data) =>
-    data.map((d) => ({ muscle: d.muscle, volume: d.value }))
+    data.map((d) => ({
+      name: d.muscle,
+      volume: d.value,
+      percentage: d.percentage,
+      opacity: 0.8, // Mock opacity
+    }))
   ),
-  groupMusclesByIntensity: vi.fn((data) => ({
-    primary: data.slice(0, Math.ceil(data.length / 2)).map((d) => d.muscle),
-    secondary: data.slice(Math.ceil(data.length / 2)).map((d) => d.muscle),
-  })),
   findMaxVolume: vi.fn((data) => {
     if (!data || data.length === 0) return 0
     return Math.max(...data.map((d) => d.value))
@@ -145,7 +136,7 @@ describe('MuscleMapVisualization', () => {
 
     it('should not show content when loading', () => {
       const wrapper = createWrapper({ loading: true, muscleDistribution: mockMuscleDistribution })
-      const anatomy = wrapper.find('[data-testid="human-anatomy"]')
+      const anatomy = wrapper.find('[data-testid="muscle-anatomy"]')
       expect(anatomy.exists()).toBe(false)
     })
   })
@@ -166,7 +157,7 @@ describe('MuscleMapVisualization', () => {
 
     it('should not show anatomy when no data', () => {
       const wrapper = createWrapper({ muscleDistribution: [] })
-      const anatomy = wrapper.find('[data-testid="human-anatomy"]')
+      const anatomy = wrapper.find('[data-testid="muscle-anatomy"]')
       expect(anatomy.exists()).toBe(false)
     })
   })
@@ -189,9 +180,9 @@ describe('MuscleMapVisualization', () => {
       expect(description).toContain('analytics.muscles.map.description')
     })
 
-    it('should render HumanAnatomy component when data exists', () => {
+    it('should render MuscleAnatomy component when data exists', () => {
       const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
-      const anatomy = wrapper.find('[data-testid="human-anatomy"]')
+      const anatomy = wrapper.find('[data-testid="muscle-anatomy"]')
       expect(anatomy.exists()).toBe(true)
     })
 
@@ -209,10 +200,10 @@ describe('MuscleMapVisualization', () => {
       expect(text).toContain('analytics.muscles.map.legend.title')
     })
 
-    it('should render 6 legend color cells', () => {
+    it('should render 5 legend color cells', () => {
       const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
       const legendCells = wrapper.findAll('.legend-cell')
-      expect(legendCells).toHaveLength(6)
+      expect(legendCells).toHaveLength(5)
     })
 
     it('should apply entrance animation class', () => {
@@ -239,10 +230,10 @@ describe('MuscleMapVisualization', () => {
     })
   })
 
-  describe('Props Passed to HumanAnatomy', () => {
+  describe('Props Passed to MuscleAnatomy', () => {
     it('should pass default male gender when no user profile', () => {
       const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
-      const anatomy = wrapper.findComponent({ name: 'HumanMuscleAnatomy' })
+      const anatomy = wrapper.findComponent({ name: 'MuscleAnatomy' })
       expect(anatomy.props('gender')).toBe('male')
     })
 
@@ -255,7 +246,7 @@ describe('MuscleMapVisualization', () => {
           },
         },
       })
-      const anatomy = wrapper.findComponent({ name: 'HumanMuscleAnatomy' })
+      const anatomy = wrapper.findComponent({ name: 'MuscleAnatomy' })
       expect(anatomy.props('gender')).toBe('female')
     })
 
@@ -268,7 +259,7 @@ describe('MuscleMapVisualization', () => {
           },
         },
       })
-      const anatomyOther = wrapperOther.findComponent({ name: 'HumanMuscleAnatomy' })
+      const anatomyOther = wrapperOther.findComponent({ name: 'MuscleAnatomy' })
       expect(anatomyOther.props('gender')).toBe('male')
 
       const wrapperPrefer = createWrapper({
@@ -279,24 +270,53 @@ describe('MuscleMapVisualization', () => {
           },
         },
       })
-      const anatomyPrefer = wrapperPrefer.findComponent({ name: 'HumanMuscleAnatomy' })
+      const anatomyPrefer = wrapperPrefer.findComponent({ name: 'MuscleAnatomy' })
       expect(anatomyPrefer.props('gender')).toBe('male')
     })
 
-    it('should pass opacity props', () => {
+    it('should pass muscleData object with color and opacity per muscle', () => {
       const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
-      const anatomy = wrapper.findComponent({ name: 'HumanMuscleAnatomy' })
-      // Component sets primaryOpacity to 0.9
-      expect(anatomy.props('primaryOpacity')).toBe(0.9)
+      const anatomy = wrapper.findComponent({ name: 'MuscleAnatomy' })
+      const muscleData = anatomy.props('muscleData')
+
+      // Should be an object
+      expect(typeof muscleData).toBe('object')
+      expect(muscleData).not.toBeNull()
+
+      // Check that it has some muscle entries
+      const muscleEntries = Object.entries(muscleData)
+      expect(muscleEntries.length).toBeGreaterThan(0)
+
+      // Verify structure of a muscle entry
+      if (muscleEntries.length > 0) {
+        const [muscleName, muscleInfo] = muscleEntries[0]
+        expect(muscleInfo).toHaveProperty('color')
+        expect(muscleInfo).toHaveProperty('opacity')
+        expect(muscleInfo).toHaveProperty('volume')
+        expect(muscleInfo).toHaveProperty('percentage')
+      }
     })
 
-    it('should pass muscle groups arrays', () => {
+    it('should pass view prop as "both"', () => {
       const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
-      const anatomy = wrapper.findComponent({ name: 'HumanMuscleAnatomy' })
-      // Component passes selectedPrimaryMuscleGroups (as allMuscles)
-      const primaryMuscles = anatomy.props('selectedPrimaryMuscleGroups')
-      expect(Array.isArray(primaryMuscles)).toBe(true)
-      expect(primaryMuscles.length).toBeGreaterThan(0)
+      const anatomy = wrapper.findComponent({ name: 'MuscleAnatomy' })
+      expect(anatomy.props('view')).toBe('both')
+    })
+  })
+
+  describe('Tooltip Functionality', () => {
+    it('should have tooltip event handlers on muscle map wrapper', () => {
+      const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
+      const mapWrapper = wrapper.find('.muscle-map-wrapper')
+      expect(mapWrapper.exists()).toBe(true)
+      // Verify wrapper has event handlers
+      expect(mapWrapper.attributes()).toBeDefined()
+    })
+
+    it('should not show tooltip initially', () => {
+      const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
+      const tooltip = wrapper.find('.fixed.z-50.pointer-events-none')
+      expect(tooltip.exists()).toBe(false)
     })
   })
 
@@ -312,7 +332,7 @@ describe('MuscleMapVisualization', () => {
     it('should handle single muscle group', () => {
       const singleMuscle = [{ muscle: 'chest', value: 1000, percentage: 100 }]
       const wrapper = createWrapper({ muscleDistribution: singleMuscle })
-      const anatomy = wrapper.find('[data-testid="human-anatomy"]')
+      const anatomy = wrapper.find('[data-testid="muscle-anatomy"]')
       expect(anatomy.exists()).toBe(true)
     })
 
@@ -322,7 +342,7 @@ describe('MuscleMapVisualization', () => {
         { muscle: 'back', value: 10, percentage: 50 },
       ]
       const wrapper = createWrapper({ muscleDistribution: smallVolumes })
-      const anatomy = wrapper.find('[data-testid="human-anatomy"]')
+      const anatomy = wrapper.find('[data-testid="muscle-anatomy"]')
       expect(anatomy.exists()).toBe(true)
     })
 

@@ -52,15 +52,42 @@
     "noWorkouts": "Complete workouts to see analytics"
   },
   "muscles": {
+    "percentage": "Percentage",
     "map": {
       "title": "Muscle Training Map",
       "description": "Visual representation of training volume across muscle groups",
       "emptyState": "No training data for this period",
+      "frontView": "Front View",
+      "backView": "Back View",
+      "frontViewAria": "Anatomical muscle map: front view",
+      "backViewAria": "Anatomical muscle map: back view",
       "legend": {
         "title": "Volume Intensity",
         "low": "Low",
         "high": "High"
       }
+    },
+    "names": {
+      "chest": "Chest",
+      "abs": "Abs",
+      "obliques": "Obliques",
+      "frontDelts": "Front Delts",
+      "sideDelts": "Side Delts",
+      "biceps": "Biceps",
+      "forearms": "Forearms",
+      "quads": "Quads",
+      "adductors": "Adductors",
+      "calves": "Calves",
+      "tibialis": "Tibialis",
+      "traps": "Traps",
+      "lats": "Lats",
+      "lowerBack": "Lower Back",
+      "rotatorCuffs": "Rotator Cuffs",
+      "rearDelts": "Rear Delts",
+      "triceps": "Triceps",
+      "glutes": "Glutes",
+      "hamstrings": "Hamstrings",
+      "abductors": "Abductors"
     },
     "volumeOverTime": {
       "title": "Muscle Volume Over Time",
