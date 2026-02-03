@@ -64,7 +64,8 @@
       "legend": {
         "title": "Volume Intensity",
         "low": "Low",
-        "high": "High"
+        "high": "High",
+        "filterByLevel": "Highlight muscles with intensity"
       }
     },
     "names": {

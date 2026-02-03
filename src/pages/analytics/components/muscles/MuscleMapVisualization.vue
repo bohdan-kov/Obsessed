@@ -10,6 +10,7 @@ import { useWorkoutStore } from '@/stores/workoutStore'
 import { useUserStore } from '@/stores/userStore'
 import { useUnits } from '@/composables/useUnits'
 import { convertToAnatomicalMuscles, findMaxVolume } from '@/utils/muscleMapUtils'
+import { getTooltipColors } from '@/constants/chartTheme'
 
 const { t } = useI18n()
 const { formatWeight } = useUnits()
@@ -23,6 +24,10 @@ const { muscleDistributionByVolume } = storeToRefs(analyticsStore)
 const activeMuscle = ref(null)
 const showTooltip = ref(false)
 const tooltipPosition = ref({ x: 0, y: 0 })
+
+// Legend interaction state
+const activeLegendLevel = ref(null)
+const highlightedMuscles = ref(new Set())
 
 // Loading state from workoutStore
 const loading = computed(() => workoutStore.loading)
@@ -43,12 +48,17 @@ const muscleData = computed(() => {
 
   const anatomicalMuscles = convertToAnatomicalMuscles(muscleDistributionByVolume.value)
   const result = {}
+  const isFiltering = highlightedMuscles.value.size > 0
 
   // Build muscle data object: { muscleName: { color, opacity, volume, percentage, appGroup } }
   anatomicalMuscles.forEach((muscle) => {
+    const isHighlighted = highlightedMuscles.value.has(muscle.name)
+
     result[muscle.name] = {
-      color: primaryHighlightColor,
-      opacity: muscle.opacity,
+      // If filtering: highlighted muscles keep color, others get default color
+      color: isFiltering && !isHighlighted ? defaultMuscleColor.value : primaryHighlightColor,
+      // If filtering: highlighted muscles keep opacity, others get full opacity with default color
+      opacity: isFiltering && !isHighlighted ? 1 : muscle.opacity,
       volume: muscle.volume,
       percentage: muscle.percentage,
       appGroup: muscle.appGroup, // Store original app group for tooltip
@@ -64,12 +74,15 @@ const isDark = computed(() => {
   return document.documentElement.classList.contains('dark')
 })
 
-const backgroundColor = computed(() => (isDark.value ? '#18181b' : '#ffffff'))
+const backgroundColor = computed(() => (isDark.value ? '#18181b' : '#d4d4d8')) // zinc-300 for outline visibility on white card
 const defaultMuscleColor = computed(() => (isDark.value ? '#27272a' : '#e5e5e5'))
 
 // Primary highlight color - destructive red from project theme (oklch(0.637 0.237 25.331))
 // Opacity will be controlled per-muscle based on their training volume
 const primaryHighlightColor = '#ef4444' // red-500 (approximates oklch(0.637 0.237 25.331))
+
+// Tooltip colors - theme aware
+const tooltipColors = computed(() => getTooltipColors(isDark.value))
 
 /**
  * Get max volume for legend
@@ -192,17 +205,34 @@ function handleMuscleClick(event) {
     return
   }
 
-  // Find all muscles in the same app group and animate them all
+  // Find all muscles in the same app group
   const appGroup = muscle.appGroup
+  const musclesToHighlight = []
+
   Object.keys(muscleData.value).forEach((anatomicalMuscleName) => {
     const muscleInfo = muscleData.value[anatomicalMuscleName]
     if (muscleInfo.appGroup === appGroup) {
+      musclesToHighlight.push(anatomicalMuscleName)
+    }
+  })
+
+  // Set highlighted muscles (this will dim all others via muscleData computed)
+  highlightedMuscles.value = new Set(musclesToHighlight)
+
+  // Animate highlighted muscles with a slight delay to allow color transition
+  setTimeout(() => {
+    musclesToHighlight.forEach((anatomicalMuscleName) => {
       const element = document.getElementById(anatomicalMuscleName)
       if (element) {
         animateMuscleFlash(element)
       }
-    }
-  })
+    })
+  }, 100)
+
+  // Clear highlight after animation + display time
+  setTimeout(() => {
+    highlightedMuscles.value = new Set()
+  }, 2500) // 2.5s total: 100ms delay + 800ms animation + 1600ms display
 
   if (activeMuscle.value?.name === muscleId && showTooltip.value) {
     showTooltip.value = false
@@ -210,6 +240,77 @@ function handleMuscleClick(event) {
   } else {
     handleMuscleHover(event)
   }
+}
+
+/**
+ * Get opacity range for a given legend level
+ * @param {number} level - Legend level (0.2, 0.4, 0.6, 0.8, 1.0)
+ * @returns {[number, number]} - [min, max] opacity range
+ */
+function getOpacityRange(level) {
+  const ranges = {
+    0.2: [0.0, 0.3],
+    0.4: [0.3, 0.5],
+    0.6: [0.5, 0.7],
+    0.8: [0.7, 0.9],
+    1.0: [0.9, 1.01], // 1.01 to include 1.0
+  }
+  return ranges[level] || [0, 1]
+}
+
+/**
+ * Get all muscles within a specific opacity range
+ * @param {number} targetLevel - Legend level to filter by
+ * @returns {string[]} - Array of muscle names (anatomical)
+ */
+function getMusclesInOpacityRange(targetLevel) {
+  const [min, max] = getOpacityRange(targetLevel)
+  const muscles = []
+
+  Object.keys(muscleData.value).forEach((muscleName) => {
+    const muscle = muscleData.value[muscleName]
+    if (muscle.opacity >= min && muscle.opacity < max) {
+      muscles.push(muscleName)
+    }
+  })
+
+  return muscles
+}
+
+/**
+ * Handle legend cell click - highlight all muscles in the opacity range
+ * @param {number} level - Legend level clicked (0.2, 0.4, 0.6, 0.8, 1.0)
+ */
+function handleLegendClick(level) {
+  if (!hasData.value) return
+
+  const musclesToHighlight = getMusclesInOpacityRange(level)
+
+  if (musclesToHighlight.length === 0) {
+    return
+  }
+
+  // Set highlighted muscles (this will dim all others via muscleData computed)
+  highlightedMuscles.value = new Set(musclesToHighlight)
+
+  // Animate highlighted muscles with a slight delay to allow color transition
+  setTimeout(() => {
+    musclesToHighlight.forEach((muscleName) => {
+      const element = document.getElementById(muscleName)
+      if (element) {
+        animateMuscleFlash(element)
+      }
+    })
+  }, 100)
+
+  // Set active legend level for visual feedback
+  activeLegendLevel.value = level
+
+  // Clear highlight after animation + display time
+  setTimeout(() => {
+    highlightedMuscles.value = new Set()
+    activeLegendLevel.value = null
+  }, 2500) // 2.5s total: 100ms delay + 800ms animation + 1600ms display
 }
 </script>
 
@@ -263,8 +364,15 @@ function handleMuscleClick(event) {
             <div
               v-for="level in [0.2, 0.4, 0.6, 0.8, 1.0]"
               :key="level"
-              class="legend-cell h-4 flex-1 rounded-sm"
+              class="legend-cell h-4 flex-1 rounded-sm cursor-pointer"
+              :class="{ 'legend-cell-active': activeLegendLevel === level }"
               :style="{ backgroundColor: primaryHighlightColor, opacity: level }"
+              :tabindex="hasData ? 0 : -1"
+              role="button"
+              :aria-label="`${t('analytics.muscles.map.legend.filterByLevel')}: ${(level * 100).toFixed(0)}%`"
+              @click="handleLegendClick(level)"
+              @keydown.enter="handleLegendClick(level)"
+              @keydown.space.prevent="handleLegendClick(level)"
             />
           </div>
           <div
@@ -290,13 +398,15 @@ function handleMuscleClick(event) {
             <div
               data-tooltip-content="true"
               :style="{
-                background: 'oklch(0.35 0 0)',
-                border: '1px solid oklch(0.269 0 0)',
+                background: tooltipColors.background,
+                border: `1px solid ${tooltipColors.border}`,
                 borderRadius: '8px',
                 padding: '12px',
-                color: 'oklch(0.985 0 0)',
+                color: tooltipColors.text,
                 fontSize: '14px',
-                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
+                boxShadow: isDark
+                  ? '0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3)'
+                  : '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
                 margin: '0',
               }"
             >
@@ -306,7 +416,7 @@ function handleMuscleClick(event) {
                   fontWeight: '500',
                   marginBottom: '8px',
                   paddingBottom: '8px',
-                  borderBottom: '1px solid oklch(0.269 0 0)',
+                  borderBottom: `1px solid ${tooltipColors.border}`,
                 }"
               >
                 {{ t(`common.muscles.${activeMuscle.appGroup}`) }}
@@ -324,7 +434,7 @@ function handleMuscleClick(event) {
                       background: primaryHighlightColor,
                     }"
                   />
-                  <span :style="{ color: 'oklch(0.708 0 0)', flex: '1' }">
+                  <span :style="{ color: tooltipColors.muted, flex: '1' }">
                     {{ t('common.volume') }}:
                   </span>
                   <span :style="{ fontWeight: '600' }">
@@ -343,7 +453,7 @@ function handleMuscleClick(event) {
                       opacity: '0.6',
                     }"
                   />
-                  <span :style="{ color: 'oklch(0.708 0 0)', flex: '1' }">
+                  <span :style="{ color: tooltipColors.muted, flex: '1' }">
                     {{ t('analytics.muscles.percentage') }}:
                   </span>
                   <span :style="{ fontWeight: '600' }">
@@ -391,7 +501,9 @@ function handleMuscleClick(event) {
 .muscle-map-wrapper :deep(svg path[id]),
 .muscle-map-wrapper :deep(svg g[id] path) {
   cursor: pointer;
-  transition: opacity 150ms ease;
+  transition:
+    opacity 150ms ease,
+    fill 300ms ease;
   pointer-events: auto;
 }
 
@@ -423,12 +535,22 @@ function handleMuscleClick(event) {
 .legend-cell {
   transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid hsl(var(--border) / 0.3);
+  cursor: pointer;
 }
 
-.legend-cell:hover {
+.legend-cell:hover,
+.legend-cell:focus-visible {
   transform: scale(1.15);
   border-color: hsl(var(--border));
   box-shadow: 0 2px 4px -1px hsl(var(--primary) / 0.15);
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Active legend cell during animation */
+.legend-cell-active {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3);
 }
 
 /* Accessibility - reduced motion */
@@ -441,9 +563,19 @@ function handleMuscleClick(event) {
     transition: opacity 100ms ease;
   }
 
-  .legend-cell:hover {
+  .legend-cell:hover,
+  .legend-cell:focus-visible {
     transform: none;
     opacity: 0.8;
+  }
+
+  .legend-cell-active {
+    animation: none;
+  }
+
+  .muscle-map-wrapper :deep(svg path[id]),
+  .muscle-map-wrapper :deep(svg g[id] path) {
+    transition: none;
   }
 }
 </style>
