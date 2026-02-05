@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { useNavigation } from '@/composables/useNavigation'
@@ -26,6 +26,19 @@ const {
   navigateTo: baseNavigateTo,
   userInitials,
 } = useNavigation()
+
+// Inject onboarding highlight state (null if not in onboarding)
+const onboardingHighlight = inject('onboardingHighlight', null)
+
+// Check if Quick Log button should be highlighted
+const isQuickLogHighlighted = computed(() => {
+  return onboardingHighlight?.value === 'quick-log-button'
+})
+
+// Check if Settings nav should be highlighted
+const isSettingsHighlighted = computed(() => {
+  return onboardingHighlight?.value === 'settings-nav'
+})
 
 const isOpen = ref(false)
 
@@ -82,7 +95,10 @@ async function handleLogout() {
               <!-- Quick Log Button -->
               <Button
                 @click="quickLog"
-                class="mobile-nav-quick-log w-full justify-center gap-2 mb-6 h-10 px-4 bg-linear-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all"
+                :class="[
+                  'mobile-nav-quick-log w-full justify-center gap-2 mb-6 h-10 px-4 bg-linear-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all',
+                  isQuickLogHighlighted && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
+                ]"
               >
                 <Zap class="w-4 h-4 shrink-0" />
                 <span class="text-sm font-medium">{{ t('common.nav.quickLog') }}</span>
@@ -140,6 +156,7 @@ async function handleLogout() {
                 :class="[
                   'mobile-nav-item w-full justify-start gap-2.5 h-10 px-3 text-muted-foreground hover:bg-accent hover:text-foreground transition-all',
                   isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
+                  item.route === 'Settings' && isSettingsHighlighted && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
                 ]"
               >
                 <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />

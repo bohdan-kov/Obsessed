@@ -12,13 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import UserAvatar from '../shared/UserAvatar.vue'
+import UserAvatar from '@/pages/community/components/shared/UserAvatar.vue'
 import FollowButton from '../follow/FollowButton.vue'
 import WorkoutSummaryCard from './WorkoutSummaryCard.vue'
 import LikeButton from './LikeButton.vue'
 import CommentSection from '../interactions/CommentSection.vue'
-import ReportModal from '../shared/ReportModal.vue'
-import BlockConfirmDialog from '../shared/BlockConfirmDialog.vue'
+import ReportModal from '@/pages/community/components/shared/ReportModal.vue'
+import BlockConfirmDialog from '@/pages/community/components/shared/BlockConfirmDialog.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useFeedStore } from '@/stores/feedStore'
 import { useToast } from '@/components/ui/toast/use-toast'

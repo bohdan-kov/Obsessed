@@ -192,17 +192,6 @@
     "previous": "Previous",
     "next": "Next"
   },
-  "muscleGroups": {
-    "back": "Back",
-    "chest": "Chest",
-    "legs": "Legs",
-    "shoulders": "Shoulders",
-    "arms": "Arms",
-    "biceps": "Biceps",
-    "triceps": "Triceps",
-    "core": "Core",
-    "calves": "Calves"
-  },
   "muscles": {
     "back": "Back",
     "chest": "Chest",
@@ -212,6 +201,21 @@
     "biceps": "Biceps",
     "triceps": "Triceps",
     "core": "Core",
-    "calves": "Calves"
+    "calves": "Calves",
+    "hamstrings": "Hamstrings",
+    "glutes": "Glutes"
+  },
+  "muscleGroups": {
+    "back": "Back",
+    "chest": "Chest",
+    "legs": "Legs",
+    "shoulders": "Shoulders",
+    "arms": "Arms",
+    "biceps": "Biceps",
+    "triceps": "Triceps",
+    "core": "Core",
+    "calves": "Calves",
+    "hamstrings": "Hamstrings",
+    "glutes": "Glutes"
   }
 }

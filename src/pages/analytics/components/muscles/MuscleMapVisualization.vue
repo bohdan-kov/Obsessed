@@ -346,7 +346,6 @@ function handleLegendClick(level) {
         >
           <MuscleAnatomy
             :gender="userGender"
-            view="both"
             :muscle-data="muscleData"
             :default-color="defaultMuscleColor"
             :background-color="backgroundColor"

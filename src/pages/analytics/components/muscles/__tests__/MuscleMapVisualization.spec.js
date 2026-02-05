@@ -297,11 +297,6 @@ describe('MuscleMapVisualization', () => {
       }
     })
 
-    it('should pass view prop as "both"', () => {
-      const wrapper = createWrapper({ muscleDistribution: mockMuscleDistribution })
-      const anatomy = wrapper.findComponent({ name: 'MuscleAnatomy' })
-      expect(anatomy.props('view')).toBe('both')
-    })
   })
 
   describe('Tooltip Functionality', () => {

@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useSchedule } from '@/composables/useSchedule'
 import { isToday } from '@/utils/scheduleUtils'
 import { Card, CardContent } from '@/components/ui/card'
-import StatusBadge from '../shared/StatusBadge.vue'
-import MuscleGroupBadges from '../shared/MuscleGroupBadges.vue'
+import StatusBadge from '@/pages/schedule/components/shared/StatusBadge.vue'
+import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
 import { Calendar } from 'lucide-vue-next'
 
 const props = defineProps({

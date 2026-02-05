@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Target, Clock, Dumbbell, TrendingUp } from 'lucide-vue-next'
@@ -30,13 +30,28 @@ const workoutStore = useWorkoutStore()
 const analyticsStore = useAnalyticsStore()
 const { handleError } = useErrorHandler()
 
+// Inject onboarding tab control (if onboarding is active)
+const onboardingActiveTab = inject('onboardingActiveTab', null)
+
 // Valid tab values for validation
 const VALID_TABS = ['muscles', 'duration', 'volume', 'exercises']
 
-// Initialize active tab from URL query parameter or default to 'muscles'
-const activeTab = ref(
+// Local tab state (used when not in onboarding)
+const localActiveTab = ref(
   VALID_TABS.includes(route.query.tab) ? route.query.tab : 'muscles'
 )
+
+// Use onboarding tab if provided, otherwise use local tab
+const activeTab = computed({
+  get: () => onboardingActiveTab?.value || localActiveTab.value,
+  set: (value) => {
+    if (onboardingActiveTab) {
+      onboardingActiveTab.value = value
+    } else {
+      localActiveTab.value = value
+    }
+  },
+})
 
 /**
  * Map analytics period to workout store fetch period
@@ -126,7 +141,7 @@ watch(
  * Watch for tab changes and update URL query parameter
  * Use router.replace() to avoid creating history entries for tab switches
  */
-watch(activeTab, (newTab) => {
+watch(localActiveTab, (newTab) => {
   // Only update URL if tab actually changed to avoid unnecessary router calls
   if (route.query.tab !== newTab) {
     router.replace({
@@ -144,7 +159,7 @@ watch(
   (newTab) => {
     // Validate and update active tab if URL changed
     if (newTab && VALID_TABS.includes(newTab) && newTab !== activeTab.value) {
-      activeTab.value = newTab
+      localActiveTab.value = newTab
     }
   }
 )

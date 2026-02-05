@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import MuscleGroupBadges from '../shared/MuscleGroupBadges.vue'
-import QuickStartButton from '../shared/QuickStartButton.vue'
+import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
+import QuickStartButton from '@/pages/schedule/components/shared/QuickStartButton.vue'
 import { MoreVertical, Edit, Copy, Trash2, Dumbbell, Clock } from 'lucide-vue-next'
 
 const props = defineProps({

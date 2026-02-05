@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedule } from '@/composables/useSchedule'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import QuickStartButton from '../shared/QuickStartButton.vue'
-import MuscleGroupBadges from '../shared/MuscleGroupBadges.vue'
+import QuickStartButton from '@/pages/schedule/components/shared/QuickStartButton.vue'
+import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
 import { Calendar, Dumbbell } from 'lucide-vue-next'
 
 const emit = defineEmits(['quick-start'])

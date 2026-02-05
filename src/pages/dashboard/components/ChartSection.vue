@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, inject, computed } from 'vue'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BarChart3, Target, Calendar, TrendingUp } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
@@ -10,7 +10,24 @@ import FrequencyChart from './charts/FrequencyChart.vue'
 import ComparisonChart from './charts/ComparisonChart.vue'
 
 const { t } = useI18n()
-const activeTab = ref('volume')
+
+// Inject onboarding tab control (if onboarding is active)
+const onboardingActiveTab = inject('onboardingActiveTab', null)
+
+// Local tab state (used when not in onboarding)
+const localActiveTab = ref('volume')
+
+// Use onboarding tab if provided, otherwise use local tab
+const activeTab = computed({
+  get: () => onboardingActiveTab?.value || localActiveTab.value,
+  set: (value) => {
+    if (onboardingActiveTab) {
+      onboardingActiveTab.value = value
+    } else {
+      localActiveTab.value = value
+    }
+  },
+})
 </script>
 
 <template>

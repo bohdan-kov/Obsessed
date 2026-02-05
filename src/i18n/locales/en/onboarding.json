@@ -1,0 +1,39 @@
+{
+  "skip": "Skip",
+  "next": "Next",
+  "getStarted": "Start Tracking",
+  "progress": "{current} of {total}",
+  "welcome": {
+    "title": "Welcome to Obsessed",
+    "subtitle": "Here's what your progress will look like"
+  },
+  "steps": {
+    "welcome": {
+      "title": "Welcome to Obsessed",
+      "description": "In just a few seconds, we'll show you how the app helps you track your gym progress."
+    },
+    "quickLog": {
+      "title": "Quick Workout Logging",
+      "description": "This is where you'll log your sets during your workout. Add exercises, record weight and reps, then finish your session."
+    },
+    "dashboard": {
+      "title": "Dashboard — Your Stats",
+      "description": "Here you see all your stats: workout count, volume load, streak days, and progress charts."
+    },
+    "analytics": {
+      "title": "Analytics — Detailed Insights",
+      "description": "Detailed analytics on volume, muscle groups, training frequency, and personal records."
+    }
+  },
+  "sampleDataBanner": {
+    "title": "This is sample data",
+    "description": "Log your first workout to see real analytics",
+    "dismiss": "Got it"
+  },
+  "confirmExit": {
+    "title": "Exit tutorial?",
+    "description": "You can always review these tips later in settings.",
+    "continue": "Continue Tutorial",
+    "exit": "Exit"
+  }
+}

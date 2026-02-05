@@ -14,6 +14,7 @@ import goals from './goals.json'
 import schedule from './schedule.json'
 import more from './more.json'
 import charts from './charts.json'
+import onboarding from './onboarding.json'
 
 export default {
   common,
@@ -32,4 +33,5 @@ export default {
   schedule,
   more,
   charts,
+  onboarding,
 }

@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import MuscleGroupBadges from '../shared/MuscleGroupBadges.vue'
+import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
 import { Search, Dumbbell, Clock, X } from 'lucide-vue-next'
 
 const props = defineProps({

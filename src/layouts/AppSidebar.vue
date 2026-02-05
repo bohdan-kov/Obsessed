@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAuth } from '@/composables/useAuth'
@@ -16,7 +16,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Dumbbell, PanelLeft, Zap } from 'lucide-vue-next'
-import QuickLogSheet from '@/components/QuickLogSheet.vue'
 
 // Props - allow parent to force collapse state (for responsive behavior)
 const props = defineProps({
@@ -40,9 +39,37 @@ const {
 const goalsStore = useGoalsStore()
 const { activeGoals } = storeToRefs(goalsStore)
 
+// Inject onboarding highlight state (null if not in onboarding)
+const onboardingHighlight = inject('onboardingHighlight', null)
+
+// Inject onboarding QuickLog control (null if not in onboarding)
+const onboardingQuickLogOpen = inject('onboardingQuickLogOpen', null)
+
+// Check if Quick Log button should be highlighted
+const isQuickLogHighlighted = computed(() => {
+  return onboardingHighlight?.value === 'quick-log-button'
+})
+
+// Check if Settings nav should be highlighted
+const isSettingsHighlighted = computed(() => {
+  return onboardingHighlight?.value === 'settings-nav'
+})
+
 const STORAGE_KEY = 'obsessed_sidebar_collapsed'
 const userCollapsed = ref(false) // User's manual preference
-const quickLogOpen = ref(false)
+const localQuickLogOpen = ref(false)
+
+// QuickLog state: controlled by onboarding or local state
+const quickLogOpen = computed({
+  get: () => onboardingQuickLogOpen?.value ?? localQuickLogOpen.value,
+  set: (value) => {
+    if (onboardingQuickLogOpen) {
+      onboardingQuickLogOpen.value = value
+    } else {
+      localQuickLogOpen.value = value
+    }
+  },
+})
 
 // Actual collapsed state: forced (tablet) or user preference
 const collapsed = computed(() => props.forceCollapsed || userCollapsed.value)
@@ -130,6 +157,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                 :class="[
                   'w-full gap-2 mb-6 bg-linear-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_12px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all',
                   collapsed ? 'justify-center px-2.5 h-10' : 'justify-center px-4 h-10',
+                  isQuickLogHighlighted && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
                 ]"
               >
                 <Zap class="w-4 h-4 shrink-0" />
@@ -237,6 +265,7 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
                   'w-full gap-2.5 h-10 text-muted-foreground hover:bg-accent hover:text-foreground transition-all',
                   collapsed ? 'justify-center px-2.5' : 'justify-start px-3',
                   isActive(item.route) && 'bg-red-500/10 text-red-500 hover:bg-red-500/10 hover:text-red-500',
+                  item.route === 'Settings' && isSettingsHighlighted && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
                 ]"
               >
                 <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" />
@@ -281,8 +310,5 @@ watch(() => props.forceCollapsed, (newVal, oldVal) => {
         </div>
       </div>
     </aside>
-
-    <!-- Quick Log Sheet -->
-    <QuickLogSheet v-model:open="quickLogOpen" />
   </TooltipProvider>
 </template>

@@ -139,6 +139,11 @@ export const useAuthStore = defineStore('auth', () => {
           followingCount: 0,
           createdAt: new Date().toISOString(),
         },
+        // CRITICAL FIX: Mark existing users as having completed onboarding
+        settings: {
+          ...existingProfile.settings,
+          hasCompletedOnboarding: true,
+        },
       }
 
       await setDocument(COLLECTIONS.USERS, userId, updates, { merge: true })
@@ -178,6 +183,9 @@ export const useAuthStore = defineStore('auth', () => {
         notifications: true,
         autoStartTimer: true,
         soundEnabled: true,
+        favoriteExercises: [],
+        recentlyUsedExercises: [],
+        hasCompletedOnboarding: false, // New users should see onboarding
       },
       stats: {
         totalWorkouts: 0,
@@ -192,8 +200,20 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await setDocument(COLLECTIONS.USERS, userId, profileData)
       userProfile.value = profileData
-    } catch {
+
+      // DEBUG: Log profile creation
+      if (import.meta.env.DEV) {
+        console.log('[authStore] Profile created for new user:', {
+          userId,
+          hasCompletedOnboarding: profileData.settings.hasCompletedOnboarding,
+          totalWorkouts: profileData.stats.totalWorkouts,
+        })
+      }
+    } catch (err) {
       // Profile creation failed - will retry on next auth state change
+      if (import.meta.env.DEV) {
+        console.error('[authStore] Failed to create profile:', err)
+      }
     }
   }
 

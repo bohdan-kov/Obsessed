@@ -31,6 +31,8 @@
     "triceps": "Triceps",
     "core": "Core",
     "calves": "Calves",
+    "hamstrings": "Hamstrings",
+    "glutes": "Glutes",
     "unknown": "Unknown"
   },
   "equipment": {

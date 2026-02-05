@@ -182,5 +182,20 @@
     "description": "RPE and weight for selected period",
     "avgRpe": "Avg RPE",
     "weight": "Weight"
+  },
+  "topExercises": "Top Exercises",
+  "insights": {
+    "workouts": {
+      "onTrack": "On track"
+    },
+    "volume": {
+      "growing": "Volume growing"
+    },
+    "restDays": {
+      "optimal": "Optimal rest"
+    },
+    "streak": {
+      "keepGoing": "Keep going!"
+    }
   }
 }

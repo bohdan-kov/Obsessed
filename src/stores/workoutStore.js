@@ -13,6 +13,10 @@ import {
   Timestamp,
 } from '@/firebase/firestore'
 import { validateSetData } from '@/utils/setValidation'
+import {
+  createMockActiveWorkout as createMockActiveWorkoutData,
+  generateMockWorkouts,
+} from '@/utils/onboardingMockData'
 
 /**
  * @typedef {Object} WorkoutSet
@@ -1263,6 +1267,48 @@ export const useWorkoutStore = defineStore('workout', () => {
   }
 
   /**
+   * Create mock active workout for onboarding (step 2)
+   * Shows user how to log sets and complete workout
+   * Demonstrates a realistic in-progress chest workout
+   */
+  function createMockActiveWorkout() {
+    const mockActiveWorkout = createMockActiveWorkoutData(authStore.uid)
+
+    // Set as current workout
+    currentWorkout.value = mockActiveWorkout
+
+    // Also add to workouts array so it shows in active state
+    const existingIndex = workouts.value.findIndex(w => w.id === 'mock-active')
+    if (existingIndex >= 0) {
+      workouts.value[existingIndex] = mockActiveWorkout
+    } else {
+      workouts.value.unshift(mockActiveWorkout)
+    }
+
+    if (import.meta.env.DEV) {
+      console.log('[workoutStore] Created mock active workout for onboarding')
+    }
+  }
+
+  /**
+   * Load mock workout data for onboarding
+   * Generates realistic sample workouts to demonstrate app features
+   * Covers all muscle groups: chest, back, legs, shoulders, biceps, triceps, core, calves
+   */
+  function loadMockWorkoutsForOnboarding() {
+    const mockWorkouts = generateMockWorkouts(authStore.uid)
+
+    // Load mock data into store
+    workouts.value = mockWorkouts
+    dataState.value = {
+      status: 'loaded',
+      period: 'month',
+      lastFetched: Date.now(),
+      isSubscribed: false,
+    }
+  }
+
+  /**
    * Clear all workout data and unsubscribe from real-time updates
    * Should be called on logout
    */
@@ -1324,6 +1370,8 @@ export const useWorkoutStore = defineStore('workout', () => {
     clearError,
     ensureDataLoaded,
     clearData,
+    loadMockWorkoutsForOnboarding,
+    createMockActiveWorkout,
 
     // Helpers
     canDeleteExercise,

@@ -182,5 +182,20 @@
     "description": "RPE та вага за обраний період",
     "avgRpe": "Середній RPE",
     "weight": "Вага"
+  },
+  "topExercises": "Топові вправи",
+  "insights": {
+    "workouts": {
+      "onTrack": "За планом"
+    },
+    "volume": {
+      "growing": "Обсяг зростає"
+    },
+    "restDays": {
+      "optimal": "Оптимальний відпочинок"
+    },
+    "streak": {
+      "keepGoing": "Продовжуйте!"
+    }
   }
 }

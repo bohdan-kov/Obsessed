@@ -1,10 +1,11 @@
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { useAnalyticsStore } from '@/stores/analyticsStore'
 import { useWorkoutStore } from '@/stores/workoutStore'
+import { useUserStore } from '@/stores/userStore'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { useUnits } from '@/composables/useUnits'
 import { usePageMeta } from '@/composables/usePageMeta'
@@ -25,6 +26,7 @@ usePageMeta(
 
 const analyticsStore = useAnalyticsStore()
 const workoutStore = useWorkoutStore()
+const userStore = useUserStore()
 const { handleError } = useErrorHandler()
 const { formatWeight } = useUnits()
 

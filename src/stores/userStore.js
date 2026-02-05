@@ -32,6 +32,7 @@ import { CONFIG } from '@/constants/config'
  * @property {string[]} [favoriteExercises] - Array of favorite exercise IDs
  * @property {string[]} [recentlyUsedExercises] - Recently used exercise IDs
  * @property {TableSettings} [tableSettings] - Exercise table customization settings
+ * @property {boolean} [hasCompletedOnboarding] - Whether user has completed onboarding
  */
 
 /**
@@ -171,6 +172,7 @@ export const useUserStore = defineStore('user', () => {
     favoriteExercises: [],
     recentlyUsedExercises: [],
     tableSettings: DEFAULT_TABLE_SETTINGS,
+    hasCompletedOnboarding: undefined, // undefined = not set (for existing users), false = show onboarding, true = completed
   })
   const loading = ref(false)
   const error = ref(null)
@@ -328,6 +330,7 @@ export const useUserStore = defineStore('user', () => {
           favoriteExercises: [],
           recentlyUsedExercises: [],
           tableSettings: DEFAULT_TABLE_SETTINGS,
+          hasCompletedOnboarding: false, // New users should see onboarding
         },
         stats: {
           totalWorkouts: 0,
@@ -347,6 +350,7 @@ export const useUserStore = defineStore('user', () => {
       }
 
       settings.value = profileData.settings
+
     } catch (err) {
       if (import.meta.env.DEV) {
         console.error('[userStore] Error creating profile:', err)
@@ -757,6 +761,32 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
   }
 
+  /**
+   * Complete onboarding flow
+   * Sets hasCompletedOnboarding to true in Firestore and localStorage
+   * @returns {Promise<void>}
+   */
+  async function completeOnboarding() {
+    try {
+      // Update Firestore (optimistic UI - update local state first)
+      settings.value.hasCompletedOnboarding = true
+
+      // Cache to localStorage immediately
+      localStorage.setItem(CONFIG.storage.ONBOARDING_COMPLETED, 'true')
+
+      // Attempt Firestore update
+      if (authStore.uid) {
+        await updateSettings({ hasCompletedOnboarding: true })
+      }
+    } catch (error) {
+      // Silent fail - user experience is not blocked
+      // Firestore write will be retried on next app launch if offline
+      if (import.meta.env.DEV) {
+        console.error('[userStore] Failed to save onboarding completion:', error)
+      }
+    }
+  }
+
   // Track if theme has been initialized
   let themeInitialized = false
 
@@ -846,6 +876,7 @@ export const useUserStore = defineStore('user', () => {
                 : DEFAULT_TABLE_SETTINGS, // If no tableSettings in Firestore, use defaults
             }
 
+
             // Update cache with Firestore data (source of truth)
             if (migratedTableSettings) {
               cacheTableSettings(settings.value.tableSettings)
@@ -928,5 +959,6 @@ export const useUserStore = defineStore('user', () => {
     initializeUserStore,
     unsubscribe,
     clearError,
+    completeOnboarding,
   }
 })

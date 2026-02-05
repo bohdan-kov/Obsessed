@@ -399,17 +399,43 @@ export const useExerciseStore = defineStore('exercise', () => {
    * @returns {string} Localized exercise name
    */
   function getExerciseDisplayName(exercise) {
-    if (!exercise || !exercise.name) return ''
+    if (!exercise || !exercise.name) {
+      if (import.meta.env.DEV) {
+        console.warn('[exerciseStore] Exercise missing name:', exercise?.id || 'unknown')
+      }
+      return ''
+    }
 
     // Handle bilingual structure: { uk: '...', en: '...' }
     if (typeof exercise.name === 'object') {
       // Get current locale from localStorage or default to 'uk'
       const currentLocale = localStorage.getItem('obsessed_locale') || 'uk'
-      return exercise.name[currentLocale] || exercise.name.en || exercise.name.uk || ''
+      const name =
+        exercise.name[currentLocale] || exercise.name.en || exercise.name.uk || ''
+
+      if (!name && import.meta.env.DEV) {
+        console.warn(
+          '[exerciseStore] Missing translation for exercise:',
+          exercise.id,
+          'locale:',
+          currentLocale
+        )
+      }
+
+      return name
     }
 
     // Handle simple string (legacy support)
     return exercise.name
+  }
+
+  /**
+   * Load mock exercises for onboarding
+   * Populates exercises with mock data to demonstrate app features
+   * This should ONLY be called during onboarding
+   */
+  function loadMockExercisesForOnboarding(mockExercises) {
+    exercises.value = mockExercises
   }
 
   /**
@@ -455,5 +481,6 @@ export const useExerciseStore = defineStore('exercise', () => {
     filterByCategory,
     unsubscribe,
     clearError,
+    loadMockExercisesForOnboarding,
   }
 })

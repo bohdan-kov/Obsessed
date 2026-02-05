@@ -319,6 +319,7 @@ export const CONFIG = {
     TABLE_SETTINGS: 'obsessed_table_settings',
     PLANS_CACHE: 'obsessed_plans_cache',
     PLANS_SYNC_QUEUE: 'obsessed_plans_sync_queue',
+    ONBOARDING_COMPLETED: 'obsessed_onboarding_completed',
   },
 
   // Date/Time formats
@@ -344,6 +345,40 @@ export const CONFIG = {
     ENABLE_MEAL_TRACKING: false,
     ENABLE_SUPERSET_TRACKING: false,
     ENABLE_ADVANCED_ANALYTICS: true,
+  },
+
+  // Onboarding Configuration
+  onboarding: {
+    ANIMATION_DURATION: 300, // ms
+    DIALOG_MAX_WIDTH: 400, // px
+    DIALOG_MOBILE_WIDTH_PERCENT: 90, // %
+    DELAY_BEFORE_SHOW: 500, // ms - delay before showing onboarding
+    STEP_TRANSITION_DELAY: 100, // ms - delay between step transitions for smooth UX
+
+    // Sample data for onboarding preview
+    SAMPLE_DATA: {
+      WORKOUTS_COUNT: 8,
+      VOLUME_KG: 12500,
+      REST_DAYS: 2,
+      CURRENT_STREAK: 3,
+
+      // Sample exercises (intermediate lifter numbers)
+      EXERCISES: [
+        { name: 'Bench Press', weight: 80, reps: 8, sets: 4, muscle: 'chest' },
+        { name: 'Squat', weight: 100, reps: 6, sets: 4, muscle: 'legs' },
+        { name: 'Deadlift', weight: 120, reps: 5, sets: 3, muscle: 'back' },
+        { name: 'Overhead Press', weight: 50, reps: 8, sets: 3, muscle: 'shoulders' },
+      ],
+
+      // Sample muscle distribution (percentage-based)
+      MUSCLE_DISTRIBUTION: [
+        { muscle: 'chest', sets: 25, percentage: 25 },
+        { muscle: 'back', sets: 22, percentage: 22 },
+        { muscle: 'legs', sets: 20, percentage: 20 },
+        { muscle: 'shoulders', sets: 18, percentage: 18 },
+        { muscle: 'arms', sets: 15, percentage: 15 },
+      ],
+    },
   },
 }
 

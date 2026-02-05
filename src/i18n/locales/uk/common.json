@@ -192,17 +192,6 @@
     "previous": "Попередня",
     "next": "Наступна"
   },
-  "muscleGroups": {
-    "back": "Спина",
-    "chest": "Груди",
-    "legs": "Ноги",
-    "shoulders": "Плечі",
-    "arms": "Руки",
-    "biceps": "Біцепс",
-    "triceps": "Тріцепс",
-    "core": "Корпус",
-    "calves": "Литки"
-  },
   "muscles": {
     "back": "Спина",
     "chest": "Груди",
@@ -212,6 +201,21 @@
     "biceps": "Біцепс",
     "triceps": "Тріцепс",
     "core": "Корпус",
-    "calves": "Литки"
+    "calves": "Литки",
+    "hamstrings": "Біцепси стегна",
+    "glutes": "Сідниці"
+  },
+  "muscleGroups": {
+    "back": "Спина",
+    "chest": "Груди",
+    "legs": "Ноги",
+    "shoulders": "Плечі",
+    "arms": "Руки",
+    "biceps": "Біцепс",
+    "triceps": "Тріцепс",
+    "core": "Корпус",
+    "calves": "Литки",
+    "hamstrings": "Біцепси стегна",
+    "glutes": "Сідниці"
   }
 }

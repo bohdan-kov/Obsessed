@@ -429,6 +429,9 @@ describe('authStore', () => {
           notifications: true,
           autoStartTimer: true,
           soundEnabled: true,
+          favoriteExercises: [],
+          recentlyUsedExercises: [],
+          hasCompletedOnboarding: false,
         },
         stats: {
           totalWorkouts: 0,

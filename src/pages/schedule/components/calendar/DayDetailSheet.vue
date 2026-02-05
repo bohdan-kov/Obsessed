@@ -16,9 +16,9 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import StatusBadge from '../shared/StatusBadge.vue'
-import MuscleGroupBadges from '../shared/MuscleGroupBadges.vue'
-import QuickStartButton from '../shared/QuickStartButton.vue'
+import StatusBadge from '@/pages/schedule/components/shared/StatusBadge.vue'
+import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
+import QuickStartButton from '@/pages/schedule/components/shared/QuickStartButton.vue'
 import { Calendar, Edit, Dumbbell, CheckCircle, ExternalLink } from 'lucide-vue-next'
 
 const props = defineProps({

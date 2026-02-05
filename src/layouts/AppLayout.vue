@@ -1,13 +1,21 @@
 <script setup>
-import { computed, ref, provide } from 'vue'
+import { computed, ref, provide, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWindowSize } from '@vueuse/core'
 import { CONFIG } from '@/constants/config'
+import { useOnboarding } from '@/composables/useOnboarding'
+import { useWorkoutStore } from '@/stores/workoutStore'
 import AppSidebar from './AppSidebar.vue'
 import MobileNav from './MobileNav.vue'
+import QuickLogSheet from '@/components/QuickLogSheet.vue'
+
+// Lazy-load onboarding component (only loads when needed)
+const OnboardingFlow = defineAsyncComponent(() => import('@/components/onboarding/OnboardingFlow.vue'))
 
 const route = useRoute()
 const { width } = useWindowSize()
+const { shouldShowOnboarding } = useOnboarding()
+const workoutStore = useWorkoutStore()
 
 // Page metadata for mobile header (provided to child components via usePageMeta)
 const pageMeta = ref({ title: '', description: '' })
@@ -32,6 +40,23 @@ const isTablet = computed(() =>
 const showSidebar = computed(() => !isMobile.value) // Show sidebar on tablet and desktop
 const showMobileNav = computed(() => isMobile.value) // Show mobile nav only on mobile
 const sidebarCollapsed = computed(() => isTablet.value) // Auto-collapse on tablet
+
+// QuickLog control for onboarding (provided to AppSidebar)
+const onboardingQuickLogOpen = ref(false)
+provide('onboardingQuickLogOpen', onboardingQuickLogOpen)
+
+// Handle onboarding completion (clears mock data and fetches real data)
+async function handleOnboardingComplete() {
+  // Clear mock workout data
+  workoutStore.clearData()
+
+  // Fetch real workout data from Firestore
+  try {
+    await workoutStore.ensureDataLoaded({ force: true, subscribe: true })
+  } catch (error) {
+    // Silent fail - data will be loaded on next navigation or refresh
+  }
+}
 </script>
 
 <template>
@@ -78,6 +103,15 @@ const sidebarCollapsed = computed(() => isTablet.value) // Auto-collapse on tabl
         </router-view>
       </main>
     </div>
+
+    <!-- Quick Log Sheet (global - works on all devices) -->
+    <QuickLogSheet v-model:open="onboardingQuickLogOpen" />
+
+    <!-- Onboarding Flow (overlay on top of everything) -->
+    <OnboardingFlow
+      v-if="shouldShowOnboarding"
+      @complete="handleOnboardingComplete"
+    />
   </div>
 </template>
 
