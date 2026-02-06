@@ -764,23 +764,29 @@ export const useUserStore = defineStore('user', () => {
   /**
    * Complete onboarding flow
    * Sets hasCompletedOnboarding to true in Firestore and localStorage
-   * @returns {Promise<void>}
    */
   async function completeOnboarding() {
     try {
-      // Update Firestore (optimistic UI - update local state first)
-      settings.value.hasCompletedOnboarding = true
+      const currentValue = settings.value.hasCompletedOnboarding
 
-      // Cache to localStorage immediately
+      // Detect if existing user accidentally triggered onboarding
+      if (currentValue === undefined) {
+        if (import.meta.env.DEV) {
+          console.warn('[userStore] Onboarding called for existing user - this should not happen')
+        }
+      }
+
+      settings.value.hasCompletedOnboarding = true
       localStorage.setItem(CONFIG.storage.ONBOARDING_COMPLETED, 'true')
 
-      // Attempt Firestore update
       if (authStore.uid) {
         await updateSettings({ hasCompletedOnboarding: true })
+      } else {
+        if (import.meta.env.DEV) {
+          console.warn('[userStore] Cannot save onboarding - user not authenticated')
+        }
       }
     } catch (error) {
-      // Silent fail - user experience is not blocked
-      // Firestore write will be retried on next app launch if offline
       if (import.meta.env.DEV) {
         console.error('[userStore] Failed to save onboarding completion:', error)
       }

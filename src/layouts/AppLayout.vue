@@ -1,10 +1,11 @@
 <script setup>
-import { computed, ref, provide, onMounted, defineAsyncComponent } from 'vue'
+import { computed, ref, provide, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWindowSize } from '@vueuse/core'
 import { CONFIG } from '@/constants/config'
 import { useOnboarding } from '@/composables/useOnboarding'
 import { useWorkoutStore } from '@/stores/workoutStore'
+import { useUserStore } from '@/stores/userStore'
 import AppSidebar from './AppSidebar.vue'
 import MobileNav from './MobileNav.vue'
 import QuickLogSheet from '@/components/QuickLogSheet.vue'
@@ -16,6 +17,12 @@ const route = useRoute()
 const { width } = useWindowSize()
 const { shouldShowOnboarding } = useOnboarding()
 const workoutStore = useWorkoutStore()
+const userStore = useUserStore()
+
+// Only show onboarding when user data is fully loaded
+const canShowOnboarding = computed(() => {
+  return shouldShowOnboarding.value && !userStore.loading
+})
 
 // Page metadata for mobile header (provided to child components via usePageMeta)
 const pageMeta = ref({ title: '', description: '' })
@@ -45,15 +52,12 @@ const sidebarCollapsed = computed(() => isTablet.value) // Auto-collapse on tabl
 const onboardingQuickLogOpen = ref(false)
 provide('onboardingQuickLogOpen', onboardingQuickLogOpen)
 
-// Handle onboarding completion (clears mock data and fetches real data)
 async function handleOnboardingComplete() {
-  // Clear mock workout data
   workoutStore.clearData()
 
-  // Fetch real workout data from Firestore
   try {
     await workoutStore.ensureDataLoaded({ force: true, subscribe: true })
-  } catch (error) {
+  } catch (_error) {
     // Silent fail - data will be loaded on next navigation or refresh
   }
 }
@@ -109,7 +113,7 @@ async function handleOnboardingComplete() {
 
     <!-- Onboarding Flow (overlay on top of everything) -->
     <OnboardingFlow
-      v-if="shouldShowOnboarding"
+      v-if="canShowOnboarding"
       @complete="handleOnboardingComplete"
     />
   </div>

@@ -6,6 +6,9 @@ import { Zap, TrendingUp, HandHeart, BarChart3 } from 'lucide-vue-next'
 
 const { t } = useI18n()
 
+const TRANSITION_DURATION = 600 // ms - CSS animation duration
+const FOCUS_DELAY = 50 // ms - DOM update delay
+
 const props = defineProps({
   open: {
     type: Boolean,
@@ -37,15 +40,11 @@ const isTransitioning = ref(false)
 const isEnterTransitionActive = ref(false)
 const isConfirmEnterTransitionActive = ref(false)
 
-watch(() => props.currentStep, async (newStep, oldStep) => {
+watch(() => props.currentStep, async (_newStep, oldStep) => {
   if (oldStep === undefined) return
 
-  if (document.activeElement && document.activeElement.blur) {
-    document.activeElement.blur()
-  }
-
   isTransitioning.value = true
-  await new Promise(resolve => setTimeout(resolve, 600))
+  await new Promise(resolve => setTimeout(resolve, TRANSITION_DURATION))
   isTransitioning.value = false
 })
 
@@ -57,39 +56,48 @@ const iconMap = {
 }
 
 const currentIcon = computed(() => iconMap[props.stepKey] || Zap)
-
-const currentTitle = computed(() => {
-  return t(`onboarding.steps.${props.stepKey}.title`)
-})
-
-const currentDescription = computed(() => {
-  return t(`onboarding.steps.${props.stepKey}.description`)
-})
-
+const currentTitle = computed(() => t(`onboarding.steps.${props.stepKey}.title`))
+const currentDescription = computed(() => t(`onboarding.steps.${props.stepKey}.description`))
 const isLastStep = computed(() => props.currentStep === props.totalSteps - 1)
+const progressText = computed(() => t('onboarding.progress', {
+  current: props.currentStep + 1,
+  total: props.totalSteps,
+}))
 
-const progressText = computed(() => {
-  return t('onboarding.progress', {
-    current: props.currentStep + 1,
-    total: props.totalSteps,
-  })
-})
+/**
+ * Helper: Blur active element and schedule callback after DOM update
+ * Prevents aria-hidden conflict by ensuring focus is removed before state changes
+ * Solution from: https://github.com/shadcn-ui/ui/issues/5953
+ */
+function blurAndSchedule(callback) {
+  document.activeElement?.blur?.()
+  requestAnimationFrame(callback)
+}
 
 function handleNext() {
-  emit('next')
+  blurAndSchedule(() => emit('next'))
 }
 
 function handleSkip() {
-  showConfirm.value = true
+  blurAndSchedule(() => { showConfirm.value = true })
 }
 
 function confirmExit() {
-  showConfirm.value = false
-  emit('skip')
+  blurAndSchedule(() => {
+    showConfirm.value = false
+    emit('skip')
+  })
 }
 
 function cancelExit() {
-  showConfirm.value = false
+  blurAndSchedule(() => { showConfirm.value = false })
+}
+
+/**
+ * Helper: Restore focus to element if it exists
+ */
+function restoreFocus(elementRef) {
+  elementRef.value?.focus?.()
 }
 
 async function handleDialogEnter() {
@@ -100,12 +108,9 @@ async function handleDialogEnter() {
     isFirstMount.value = false
 
     await nextTick()
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await new Promise(resolve => setTimeout(resolve, FOCUS_DELAY))
 
-    const buttonEl = nextButtonRef.value?.$el
-    if (buttonEl) {
-      buttonEl.focus()
-    }
+    nextButtonRef.value?.$el?.focus()
   }
 }
 
@@ -114,9 +119,7 @@ function handleDialogBeforeEnter() {
 }
 
 function handleDialogLeave() {
-  if (previousActiveElement.value && previousActiveElement.value.focus) {
-    previousActiveElement.value.focus()
-  }
+  restoreFocus(previousActiveElement)
   previousActiveElement.value = null
 }
 
@@ -128,16 +131,12 @@ async function handleConfirmDialogEnter() {
   isConfirmEnterTransitionActive.value = false
   previousActiveElementBeforeConfirm.value = document.activeElement
   await nextTick()
-  await new Promise(resolve => setTimeout(resolve, 50))
-  if (confirmContinueButtonRef.value?.$el) {
-    confirmContinueButtonRef.value.$el.focus()
-  }
+  await new Promise(resolve => setTimeout(resolve, FOCUS_DELAY))
+  confirmContinueButtonRef.value?.$el?.focus()
 }
 
 function handleConfirmDialogLeave() {
-  if (previousActiveElementBeforeConfirm.value && previousActiveElementBeforeConfirm.value.focus) {
-    previousActiveElementBeforeConfirm.value.focus()
-  }
+  restoreFocus(previousActiveElementBeforeConfirm)
   previousActiveElementBeforeConfirm.value = null
 }
 
@@ -154,9 +153,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscKey)
-  if (previousActiveElement.value && previousActiveElement.value.focus) {
-    previousActiveElement.value.focus()
-  }
+  restoreFocus(previousActiveElement)
 })
 </script>
 
@@ -186,7 +183,7 @@ onUnmounted(() => {
       :aria-modal="currentStep === 0 ? 'true' : undefined"
       aria-labelledby="onboarding-title"
       aria-describedby="onboarding-description"
-      :inert="isTransitioning || isEnterTransitionActive"
+      :inert="isTransitioning || isEnterTransitionActive || showConfirm"
     >
       <div class="onboarding-dialog">
         <div class="flex items-center justify-between mb-4">
@@ -205,6 +202,7 @@ onUnmounted(() => {
             variant="ghost"
             size="sm"
             class="min-h-11 px-3 text-xs"
+            @mousedown.prevent
             @click="handleSkip"
           >
             {{ t('onboarding.skip') }}
@@ -223,6 +221,7 @@ onUnmounted(() => {
         <Button
           ref="nextButtonRef"
           class="w-full min-h-11"
+          @mousedown.prevent
           @click="handleNext"
         >
           {{ isLastStep ? t('onboarding.getStarted') : t('onboarding.next') }}
@@ -268,6 +267,7 @@ onUnmounted(() => {
           <Button
             variant="outline"
             class="flex-1"
+            @mousedown.prevent
             @click="confirmExit"
           >
             {{ t('onboarding.confirmExit.exit') }}
@@ -275,6 +275,7 @@ onUnmounted(() => {
           <Button
             ref="confirmContinueButtonRef"
             class="flex-1"
+            @mousedown.prevent
             @click="cancelExit"
           >
             {{ t('onboarding.confirmExit.continue') }}
