@@ -25,6 +25,14 @@ vi.mock('@/firebase/auth', () => ({
   signOutUser: vi.fn(),
 }))
 
+// Mock workoutStore for dynamic import in startWorkoutFromTemplate
+const mockStartWorkout = vi.fn()
+vi.mock('@/stores/workoutStore', () => ({
+  useWorkoutStore: () => ({
+    startWorkout: mockStartWorkout,
+  }),
+}))
+
 describe('scheduleStore', () => {
   let store
   let authStore
@@ -375,6 +383,144 @@ describe('scheduleStore', () => {
 
       expect(firestoreModule.updateDocument).toHaveBeenCalled()
       expect(store.currentSchedule.days.monday.templateId).toBeNull()
+    })
+  })
+
+  describe('Start Workout From Template', () => {
+    beforeEach(() => {
+      // Reset the mockStartWorkout mock before each test
+      mockStartWorkout.mockReset()
+
+      // Setup mock template
+      store.templates = [
+        {
+          id: 't1',
+          name: 'Push Day',
+          muscleGroups: ['chest', 'shoulders'],
+          exercises: [
+            {
+              exerciseId: 'bench-press',
+              exerciseName: 'Bench Press',
+              sets: 3,
+              reps: 10,
+              targetWeight: 80,
+              restTime: 90,
+              notes: 'Focus on form',
+            },
+            {
+              exerciseId: 'shoulder-press',
+              exerciseName: 'Shoulder Press',
+              sets: 3,
+              reps: 12,
+              targetWeight: 40,
+              restTime: 60,
+              notes: '',
+            },
+          ],
+          usageCount: 2,
+          lastUsedAt: new Date('2026-01-01'),
+        },
+      ]
+    })
+
+    it('should successfully start workout from template', async () => {
+      const mockWorkoutId = 'workout-123'
+
+      // Mock workoutStore.startWorkout to return workoutId
+      mockStartWorkout.mockResolvedValue(mockWorkoutId)
+
+      const workoutId = await store.startWorkoutFromTemplate('t1')
+
+      expect(workoutId).toBe(mockWorkoutId)
+
+      // Verify startWorkout was called with correct template data
+      expect(mockStartWorkout).toHaveBeenCalledTimes(1)
+      expect(mockStartWorkout).toHaveBeenCalledWith({
+        templateId: 't1',
+        templateName: 'Push Day',
+        exercises: expect.arrayContaining([
+          expect.objectContaining({
+            exerciseId: 'bench-press',
+            exerciseName: 'Bench Press',
+          }),
+        ]),
+      })
+
+      // Note: Usage tracking (usageCount, lastUsedAt) is updated when workout FINISHES,
+      // not when it starts. See scheduleStore.recordTemplateUsage().
+    })
+
+    it('should throw error if template not found', async () => {
+      await expect(store.startWorkoutFromTemplate('non-existent')).rejects.toThrow('Template not found')
+    })
+
+    it('should throw error if user not authenticated', async () => {
+      authStore.user = null
+
+      await expect(store.startWorkoutFromTemplate('t1')).rejects.toThrow(
+        'User must be authenticated to start workout',
+      )
+    })
+
+    it('should propagate workoutStore errors', async () => {
+      // Mock workoutStore.startWorkout to throw error
+      mockStartWorkout.mockRejectedValue(new Error('Cannot start a new workout while one is active'))
+
+      await expect(store.startWorkoutFromTemplate('t1')).rejects.toThrow(
+        'Cannot start a new workout while one is active',
+      )
+    })
+
+    it('should set loading and error state correctly on success', async () => {
+      const mockWorkoutId = 'workout-123'
+      mockStartWorkout.mockResolvedValue(mockWorkoutId)
+
+      // Verify loading state is set during operation
+      const promise = store.startWorkoutFromTemplate('t1')
+      expect(store.loading).toBe(true)
+
+      await promise
+
+      // Verify loading is reset after completion
+      expect(store.loading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should format template data correctly for workoutStore', async () => {
+      const mockWorkoutId = 'workout-123'
+
+      // Capture the templateData passed to startWorkout
+      mockStartWorkout.mockImplementation((templateData) => {
+        return Promise.resolve(mockWorkoutId)
+      })
+
+      await store.startWorkoutFromTemplate('t1')
+
+      // Verify the exact format of template data passed to workoutStore
+      expect(mockStartWorkout).toHaveBeenCalledWith({
+        templateId: 't1',
+        templateName: 'Push Day',
+        exercises: [
+          {
+            exerciseId: 'bench-press',
+            exerciseName: 'Bench Press',
+            sets: 3,
+            reps: 10,
+            targetWeight: 80,
+            restTime: 90,
+            notes: 'Focus on form',
+          },
+          {
+            exerciseId: 'shoulder-press',
+            exerciseName: 'Shoulder Press',
+            sets: 3,
+            reps: 12,
+            targetWeight: 40,
+            restTime: 60,
+            notes: '',
+          },
+        ],
+      })
     })
   })
 

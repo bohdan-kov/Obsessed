@@ -32,9 +32,11 @@
   "templates": {
     "title": "Шаблони тренувань",
     "create": "Створити шаблон",
-    "edit": "Редагувати шаблон",
-    "delete": "Видалити шаблон",
-    "duplicate": "Дублювати шаблон",
+    "view": "Деталі",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "duplicate": "Дублювати",
+    "actions": "Дії з шаблоном",
     "deleteConfirm": "Ви впевнені, що хочете видалити цей шаблон? Цю дію неможливо скасувати.",
     "noTemplates": "Немає шаблонів",
     "noTemplatesDescription": "Створіть свій перший шаблон тренування",
@@ -53,7 +55,9 @@
     "allTemplates": "Всі шаблони",
     "noResults": "Шаблони не знайдено",
     "tryDifferentSearch": "Спробуйте інший пошуковий запит",
-    "createFirst": "Створіть свій перший шаблон, щоб почати"
+    "createFirst": "Створіть свій перший шаблон, щоб почати",
+    "showExercises": "Показати вправи",
+    "hideExercises": "Сховати вправи"
   },
   "form": {
     "templateName": "Назва шаблону",
@@ -132,7 +136,15 @@
   },
   "daysAgo": "{count} днів тому",
   "quickStart": {
-    "button": "Почати"
+    "button": "Почати",
+    "started": "Тренування розпочато"
+  },
+  "activeProgram": {
+    "following": "Ви слідуєте програмі:",
+    "description": "{frequency} тренувань на тиждень",
+    "change": "Змінити",
+    "clear": "Скасувати програму",
+    "clearConfirm": "Ви впевнені, що хочете скасувати програму? Шаблони залишаться в розкладі."
   },
   "tabs": {
     "calendar": "Календар",
@@ -142,13 +154,24 @@
   "errors": {
     "failedToLoadTemplates": "Не вдалося завантажити шаблони",
     "failedToLoadSchedule": "Не вдалося завантажити розклад",
+    "failedToLoadExercises": "Не вдалося завантажити вправи",
     "failedToCreateTemplate": "Не вдалося створити шаблон",
     "failedToUpdateTemplate": "Не вдалося оновити шаблон",
     "failedToDeleteTemplate": "Не вдалося видалити шаблон",
     "failedToAssignTemplate": "Не вдалося призначити шаблон",
     "failedToMarkCompleted": "Не вдалося позначити як виконане",
     "failedToClearDay": "Не вдалося очистити день",
-    "failedToStartWorkout": "Не вдалося розпочати тренування"
+    "failedToStartWorkout": "Не вдалося розпочати тренування",
+    "failedToClearProgram": "Не вдалося скасувати програму"
+  },
+  "templateDetails": {
+    "title": "Деталі шаблону",
+    "exercises": "Вправи ({count})",
+    "estimatedDuration": "Приблизна тривалість",
+    "muscleGroups": "М'язові групи",
+    "startWorkout": "Почати тренування",
+    "edit": "Редагувати",
+    "close": "Закрити"
   },
   "success": {
     "templateCreated": "Шаблон створено",
@@ -156,7 +179,8 @@
     "templateDeleted": "Шаблон видалено",
     "templateAssigned": "Шаблон призначено",
     "dayCleared": "День очищено",
-    "workoutCompleted": "Тренування виконано"
+    "workoutCompleted": "Тренування виконано",
+    "programCleared": "Програму скасовано. Шаблони залишились в розкладі."
   },
   "dayDetail": {
     "restDayDescription": "На цей день не заплановано тренування",
@@ -164,7 +188,9 @@
     "workoutCompleted": "Тренування виконано",
     "wellDone": "Чудова робота! Продовжуйте в тому ж дусі!",
     "noWorkoutPlanned": "Використайте цей день для відпочинку та відновлення",
-    "assignTemplate": "Призначити шаблон"
+    "assignTemplate": "Призначити шаблон",
+    "removeCompletion": "Видалити виконання",
+    "removeCompletionConfirm": "Ви впевнені, що хочете видалити позначку виконання? Це не видалить тренування з історії, але прибере його з розкладу."
   },
   "achievements": {
     "title": "Досягнення",
@@ -220,6 +246,7 @@
     "frequency": "{count} тренувань на тиждень",
     "frequencyShort": "{count}x/тиждень",
     "selectPreset": "Вибрати програму",
+    "active": "Обрана",
     "viewDetails": "Детальніше",
     "applyPreset": "Застосувати програму",
     "fullBody3x": {

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useFirestoreDate } from '@/composables/useFirestoreDate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
 import QuickStartButton from '@/pages/schedule/components/shared/QuickStartButton.vue'
-import { MoreVertical, Edit, Copy, Trash2, Dumbbell, Clock } from 'lucide-vue-next'
+import { MoreVertical, Eye, Edit, Copy, Trash2, Dumbbell, Clock } from 'lucide-vue-next'
 
 const props = defineProps({
   template: {
@@ -30,27 +31,32 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['quick-start', 'edit', 'delete', 'duplicate'])
+const emit = defineEmits(['quick-start', 'view', 'edit', 'delete', 'duplicate'])
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const { formatRelativeDate, isServerTimestampPlaceholder } = useFirestoreDate()
 
 const lastUsedLabel = computed(() => {
-  if (!props.template.lastUsedAt) return t('schedule.templates.neverUsed')
+  // If template has been used but lastUsedAt hasn't synced yet, show "today"
+  if (!props.template.lastUsedAt && props.template.usageCount > 0) {
+    return t('schedule.calendar.today')
+  }
 
-  const lastUsed = new Date(props.template.lastUsedAt)
-  const now = new Date()
-  const diffMs = now - lastUsed
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  // If it's a serverTimestamp placeholder, show "today"
+  if (isServerTimestampPlaceholder(props.template.lastUsedAt)) {
+    return t('schedule.calendar.today')
+  }
 
-  if (diffDays === 0) return t('schedule.calendar.today')
-  if (diffDays === 1) return t('schedule.calendar.yesterday')
-  if (diffDays < 7) return t('schedule.daysAgo', { count: diffDays })
-
-  return lastUsed.toLocaleDateString(locale.value, { month: 'short', day: 'numeric' })
+  // Use the composable to format the date
+  return formatRelativeDate(props.template.lastUsedAt)
 })
 
 function handleQuickStart() {
   emit('quick-start', props.template.id)
+}
+
+function handleView() {
+  emit('view', props.template.id)
 }
 
 function handleEdit() {
@@ -89,12 +95,17 @@ function handleDelete() {
               <Button
                 variant="ghost"
                 size="icon"
-                class="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                class="h-8 w-8"
+                :aria-label="t('schedule.templates.actions')"
               >
                 <MoreVertical class="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="handleView">
+                <Eye class="mr-2 h-4 w-4" />
+                {{ t('schedule.templates.view') }}
+              </DropdownMenuItem>
               <DropdownMenuItem @click="handleEdit">
                 <Edit class="mr-2 h-4 w-4" />
                 {{ t('schedule.templates.edit') }}

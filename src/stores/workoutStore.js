@@ -913,6 +913,15 @@ export const useWorkoutStore = defineStore('workout', () => {
 
           // Mark the scheduled day as completed
           await scheduleStore.markDayCompleted(weekId, dayName, workoutId)
+
+          // Update template usage statistics (non-critical)
+          try {
+            await scheduleStore.recordTemplateUsage(sourceTemplateId)
+          } catch (usageErr) {
+            if (import.meta.env.DEV) {
+              console.warn('[workoutStore] Failed to update template usage:', usageErr)
+            }
+          }
         } catch (scheduleErr) {
           // Schedule sync is non-critical - log error but don't fail workout completion
           if (import.meta.env.DEV) {

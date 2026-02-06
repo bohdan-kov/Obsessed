@@ -38,7 +38,10 @@
   "weight": "Weight",
   "percentage": "Percentage",
   "sets": "sets",
+  "reps": "reps",
   "kg": "kg",
+  "sec": "s",
+  "rest": "rest",
   "week": "Week",
   "copied": "Copied",
   "min": "min",
@@ -60,6 +63,7 @@
   },
   "saving": "Saving...",
   "loading": "Loading...",
+  "applying": "Applying...",
   "units": {
     "kg": "kg",
     "lbs": "lbs",

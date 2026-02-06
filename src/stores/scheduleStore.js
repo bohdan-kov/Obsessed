@@ -63,6 +63,7 @@ import {
  * @property {string} userId - User ID
  * @property {Date} weekStart - Monday of the week
  * @property {Object} days - Days object with monday-sunday keys
+ * @property {string|null} activePresetId - ID of active preset program (e.g., "upper-lower-4x")
  * @property {Date} createdAt - Creation timestamp
  * @property {Date} updatedAt - Last update timestamp
  */
@@ -80,6 +81,24 @@ export const useScheduleStore = defineStore('schedule', () => {
   const scheduleCache = ref(new Map())
   const loading = ref(false)
   const error = ref(null)
+
+  // LRU cache limit to prevent memory leaks (12 weeks = ~3 months of navigation)
+  const CACHE_MAX_SIZE = 12
+
+  /**
+   * Add entry to cache with LRU eviction policy
+   * Removes oldest entry if cache is full
+   * @param {string} weekId - Week ID
+   * @param {WeeklySchedule} schedule - Schedule data
+   */
+  function addToCache(weekId, schedule) {
+    // Remove oldest entry if cache is full (Map maintains insertion order)
+    if (scheduleCache.value.size >= CACHE_MAX_SIZE) {
+      const firstKey = scheduleCache.value.keys().next().value
+      scheduleCache.value.delete(firstKey)
+    }
+    scheduleCache.value.set(weekId, schedule)
+  }
 
   // ============================================================
   // COMPUTED PROPERTIES
@@ -231,11 +250,18 @@ export const useScheduleStore = defineStore('schedule', () => {
   }
 
   /**
-   * Update existing template
+   * Update existing template with optimistic updates
+   * Updates local state immediately, then persists to Firestore
+   * Rolls back on error to maintain consistency
    */
   async function updateTemplate(templateId, updates) {
     loading.value = true
     error.value = null
+
+    // Store original for rollback
+    const index = templates.value.findIndex((t) => t.id === templateId)
+    const original = index !== -1 ? { ...templates.value[index] } : null
+
     try {
       if (!authStore.uid) {
         throw new Error('User not authenticated')
@@ -249,9 +275,22 @@ export const useScheduleStore = defineStore('schedule', () => {
         updates.estimatedDuration = estimateDuration(updates.exercises)
       }
 
+      // Optimistic update - apply changes immediately to local state
+      if (index !== -1) {
+        templates.value[index] = {
+          ...templates.value[index],
+          ...updates,
+          updatedAt: new Date(),
+        }
+      }
+
+      // Persist to Firestore
       await updateDocument(path, templateId, updates)
-      await fetchTemplates()
     } catch (err) {
+      // Rollback on error - restore original state
+      if (original && index !== -1) {
+        templates.value[index] = original
+      }
       error.value = err.message
       if (import.meta.env.DEV) {
         console.error('[scheduleStore] Failed to update template:', err)
@@ -297,11 +336,16 @@ export const useScheduleStore = defineStore('schedule', () => {
       throw new Error('Template not found')
     }
 
+    // Create duplicate with only defined fields (Firestore doesn't allow undefined)
     const duplicate = {
       name: `${original.name} (Copy)`,
-      description: original.description,
       exercises: [...original.exercises],
       sourcePresetId: null,
+    }
+
+    // Only add description if it exists
+    if (original.description) {
+      duplicate.description = original.description
     }
 
     return await createTemplate(duplicate)
@@ -338,7 +382,7 @@ export const useScheduleStore = defineStore('schedule', () => {
       }
 
       currentSchedule.value = schedule
-      scheduleCache.value.set(weekId, schedule)
+      addToCache(weekId, schedule) // Use LRU cache helper
 
       return schedule
     } catch (err) {
@@ -478,6 +522,148 @@ export const useScheduleStore = defineStore('schedule', () => {
   }
 
   /**
+   * Unmark day as completed (remove completion status)
+   * Used when user wants to delete a completed workout from schedule
+   */
+  async function unmarkDayCompleted(weekId, dayName) {
+    loading.value = true
+    error.value = null
+    try {
+      if (!authStore.uid) {
+        throw new Error('User not authenticated')
+      }
+
+      const path = `users/${authStore.uid}/schedules`
+
+      await updateDocument(path, weekId, {
+        [`days.${dayName}.completed`]: false,
+        [`days.${dayName}.workoutId`]: null,
+      })
+
+      // Update local state if this is the current schedule
+      if (currentSchedule.value && currentSchedule.value.id === weekId) {
+        currentSchedule.value.days[dayName].completed = false
+        currentSchedule.value.days[dayName].workoutId = null
+      }
+
+      // Invalidate cache
+      scheduleCache.value.delete(weekId)
+    } catch (err) {
+      error.value = err.message
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to unmark day completed:', err)
+      }
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Start a new workout from a template
+   * Creates a new active workout pre-populated with template exercises
+   * Updates template usage statistics (usageCount, lastUsedAt)
+   * @param {string} templateId - Template ID
+   * @returns {Promise<string>} Workout ID
+   * @throws {Error} If template not found, user not authenticated, or active workout exists
+   */
+  async function startWorkoutFromTemplate(templateId) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated to start workout')
+    }
+
+    const template = getTemplateById(templateId)
+    if (!template) {
+      throw new Error('Template not found')
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      // Dynamic import to avoid circular dependency
+      const { useWorkoutStore } = await import('./workoutStore')
+      const workoutStore = useWorkoutStore()
+
+      // Format template data for workoutStore
+      const templateData = {
+        templateId: template.id,
+        templateName: template.name,
+        exercises: template.exercises.map((ex) => ({
+          exerciseId: ex.exerciseId,
+          exerciseName: ex.exerciseName,
+          sets: ex.sets,
+          reps: ex.reps,
+          targetWeight: ex.targetWeight,
+          restTime: ex.restTime,
+          notes: ex.notes || '',
+        })),
+      }
+
+      // Start workout with template data
+      const workoutId = await workoutStore.startWorkout(templateData)
+
+      // Usage stats updated on workout finish (see workoutStore.finishWorkout)
+
+      return workoutId
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to start workout from template:', err)
+      }
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Record template usage - increment usageCount and update lastUsedAt
+   * Called when a workout is FINISHED (not when started)
+   * @param {string} templateId - Template ID
+   * @returns {Promise<void>}
+   */
+  async function recordTemplateUsage(templateId) {
+    if (!authStore.uid) {
+      throw new Error('User must be authenticated to record template usage')
+    }
+
+    const template = getTemplateById(templateId)
+    if (!template) {
+      if (import.meta.env.DEV) {
+        console.warn('[scheduleStore] Template not found for usage recording:', templateId)
+      }
+      return // Silently fail - usage tracking is not critical
+    }
+
+    try {
+      const path = `users/${authStore.uid}/workoutTemplates`
+      const currentUsageCount = template.usageCount || 0
+
+      // Optimistic update for immediate UI feedback
+      const index = templates.value.findIndex((t) => t.id === templateId)
+      if (index !== -1) {
+        templates.value[index] = {
+          ...templates.value[index],
+          usageCount: currentUsageCount + 1,
+          lastUsedAt: new Date(),
+        }
+      }
+
+      // Persist to Firestore
+      await updateDocument(path, templateId, {
+        usageCount: currentUsageCount + 1,
+        lastUsedAt: serverTimestamp(),
+      })
+    } catch (err) {
+      // Non-critical failure - don't propagate error
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to record template usage:', err)
+      }
+    }
+  }
+
+  /**
    * Batch assign template to multiple days
    */
   async function assignTemplateToMultipleDays(weekId, dayNames, templateId) {
@@ -523,7 +709,8 @@ export const useScheduleStore = defineStore('schedule', () => {
   // ============================================================
 
   /**
-   * Create templates from a preset split
+   * Create unique templates from preset (no duplicates)
+   * Returns array of template IDs indexed by preset template index
    */
   async function createTemplatesFromPreset(preset, locale = 'uk') {
     loading.value = true
@@ -533,17 +720,24 @@ export const useScheduleStore = defineStore('schedule', () => {
         throw new Error('User not authenticated')
       }
 
-      const templateIds = []
+      const createdTemplateIds = []
 
+      // Create only unique templates (one per preset.templates entry)
       for (const presetTemplate of preset.templates) {
         const templateData = {
           name: presetTemplate.name[locale] || presetTemplate.name.en,
           description: preset.description[locale] || preset.description.en,
           exercises: presetTemplate.exercises.map((ex) => {
             const exerciseData = exerciseStore.getExerciseById(ex.exerciseId)
+            // Store the full name object with translations, not just one locale
+            let exerciseName = ex.exerciseId
+            if (exerciseData?.name) {
+              // Keep the full object with translations if available
+              exerciseName = exerciseData.name
+            }
             return {
               exerciseId: ex.exerciseId,
-              exerciseName: exerciseData?.name || ex.exerciseId,
+              exerciseName,
               sets: ex.sets,
               reps: ex.reps,
               targetWeight: ex.targetWeight || null,
@@ -555,10 +749,10 @@ export const useScheduleStore = defineStore('schedule', () => {
         }
 
         const templateId = await createTemplate(templateData)
-        templateIds.push(templateId)
+        createdTemplateIds.push(templateId)
       }
 
-      return templateIds
+      return createdTemplateIds
     } catch (err) {
       error.value = err.message
       throw err
@@ -569,7 +763,7 @@ export const useScheduleStore = defineStore('schedule', () => {
 
   /**
    * Apply a preset split to current week's schedule
-   * Creates templates from preset and assigns them to days in a cycle
+   * Creates unique templates and assigns them to days using schedulePattern
    * @param {string} presetId - Preset ID from splitPresets
    * @param {string} weekId - Week ID to apply preset to
    * @param {string} locale - Locale for template names
@@ -590,24 +784,41 @@ export const useScheduleStore = defineStore('schedule', () => {
         throw new Error('Preset not found')
       }
 
-      // Step 1: Create templates from preset
-      const templateIds = await createTemplatesFromPreset(preset, locale)
+      // Step 1: Check if templates already exist for this preset
+      // If they do, reuse them. If not, create new ones.
+      let templateIds = []
+      const existingTemplates = templates.value.filter(t => t.sourcePresetId === presetId)
 
-      // Step 2: Assign templates to days using schedule pattern
+      if (existingTemplates.length === preset.templates.length) {
+        // Reuse existing templates - match by name to ensure correct order
+        templateIds = preset.templates.map(presetTemplate => {
+          const templateName = presetTemplate.name[locale] || presetTemplate.name.en
+          const existingTemplate = existingTemplates.find(t => t.name === templateName)
+          return existingTemplate?.id
+        }).filter(Boolean) // Remove any undefined values
+
+        // If we couldn't match all templates by name, create new ones
+        if (templateIds.length !== preset.templates.length) {
+          templateIds = await createTemplatesFromPreset(preset, locale)
+        }
+      } else {
+        // Create new templates (existing ones remain for other schedules)
+        templateIds = await createTemplatesFromPreset(preset, locale)
+      }
+
+      // Step 2: Assign templates to days using schedulePattern
       const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      const schedulePattern = preset.schedulePattern || []
       const path = `users/${authStore.uid}/schedules`
       const updates = {}
 
-      // Use schedulePattern if provided, otherwise fall back to sequential assignment
-      const schedulePattern = preset.schedulePattern || []
-
       for (let i = 0; i < dayOrder.length; i++) {
         const dayName = dayOrder[i]
-        const templateIndexForDay = schedulePattern[i]
+        const templateIndex = schedulePattern[i]
 
-        if (templateIndexForDay !== null && templateIndexForDay !== undefined) {
-          // Assign template based on pattern
-          const templateId = templateIds[templateIndexForDay]
+        if (templateIndex !== null && templateIndex !== undefined) {
+          // Workout day - use template at this index
+          const templateId = templateIds[templateIndex]
           const template = getTemplateById(templateId)
 
           if (template) {
@@ -631,6 +842,9 @@ export const useScheduleStore = defineStore('schedule', () => {
         }
       }
 
+      // Add activePresetId to track which preset is applied
+      updates.activePresetId = presetId
+
       // Step 3: Save to Firestore
       await updateDocument(path, weekId, updates)
 
@@ -643,6 +857,39 @@ export const useScheduleStore = defineStore('schedule', () => {
       error.value = err.message
       if (import.meta.env.DEV) {
         console.error('[scheduleStore] Failed to apply preset:', err)
+      }
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Clear active preset from week
+   * @param {string} weekId - Week ID
+   */
+  async function clearActivePreset(weekId) {
+    loading.value = true
+    error.value = null
+    try {
+      if (!authStore.uid) {
+        throw new Error('User not authenticated')
+      }
+
+      const path = `users/${authStore.uid}/schedules`
+
+      // Remove activePresetId
+      await updateDocument(path, weekId, {
+        activePresetId: null,
+      })
+
+      // Refresh cache and current schedule
+      scheduleCache.value.delete(weekId)
+      await fetchScheduleForWeek(weekId)
+    } catch (err) {
+      error.value = err.message
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to clear active preset:', err)
       }
       throw err
     } finally {
@@ -699,6 +946,8 @@ export const useScheduleStore = defineStore('schedule', () => {
     updateTemplate,
     deleteTemplate,
     duplicateTemplate,
+    startWorkoutFromTemplate,
+    recordTemplateUsage,
 
     // Schedule Actions
     fetchScheduleForWeek,
@@ -706,11 +955,13 @@ export const useScheduleStore = defineStore('schedule', () => {
     assignTemplateToDay,
     removeTemplateFromDay,
     markDayCompleted,
+    unmarkDayCompleted,
     assignTemplateToMultipleDays,
 
     // Preset Actions
     createTemplatesFromPreset,
     applyPreset,
+    clearActivePreset,
 
     // Utilities
     clearScheduleCache,

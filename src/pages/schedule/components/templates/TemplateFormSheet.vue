@@ -2,9 +2,12 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
+import { refDebounced } from '@vueuse/core'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { useExerciseStore } from '@/stores/exerciseStore'
 import { validateTemplate } from '@/utils/templateUtils'
+import { getLocalizedExerciseName } from '@/utils/exerciseUtils'
+import { CONFIG } from '@/constants/config'
 import {
   Sheet,
   SheetContent,
@@ -41,7 +44,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const scheduleStore = useScheduleStore()
 const exerciseStore = useExerciseStore()
 const { templates } = storeToRefs(scheduleStore)
@@ -58,7 +61,8 @@ const saving = ref(false)
 
 // Exercise selector state
 const showExerciseSelector = ref(false)
-const searchQuery = ref('')
+const searchInput = ref('')
+const searchQuery = refDebounced(searchInput, CONFIG.exercise.SEARCH_DEBOUNCE)
 
 const isEditMode = computed(() => !!props.templateId)
 
@@ -66,10 +70,11 @@ const filteredExercises = computed(() => {
   if (!searchQuery.value) return exercises.value
 
   const query = searchQuery.value.toLowerCase()
-  return exercises.value.filter(exercise =>
-    exercise.name.toLowerCase().includes(query) ||
-    exercise.muscleGroups?.some(muscle => muscle.toLowerCase().includes(query))
-  )
+  return exercises.value.filter(exercise => {
+    const exerciseName = getLocalizedExerciseName(exercise.name, locale.value).toLowerCase()
+    return exerciseName.includes(query) ||
+      exercise.muscleGroups?.some(muscle => muscle.toLowerCase().includes(query))
+  })
 })
 
 // Load template for editing
@@ -80,7 +85,11 @@ watch(() => props.open, (isOpen) => {
       if (template) {
         formData.value = {
           name: template.name,
-          exercises: JSON.parse(JSON.stringify(template.exercises))
+          exercises: template.exercises.map(ex => ({
+            ...ex,
+            // Preserve full name object for locale switching support
+            exerciseName: ex.exerciseName
+          }))
         }
       }
     } else {
@@ -95,21 +104,21 @@ function resetForm() {
     name: '',
     exercises: []
   }
-  searchQuery.value = ''
+  searchInput.value = ''
   showExerciseSelector.value = false
 }
 
 function addExercise(exercise) {
   formData.value.exercises.push({
     exerciseId: exercise.id,
-    exerciseName: exercise.name,
+    exerciseName: exercise.name, // Store full object { uk: "...", en: "..." } for locale support
     sets: 3,
     reps: 10,
     targetWeight: null,
     restTime: 90,
     notes: ''
   })
-  searchQuery.value = ''
+  searchInput.value = ''
   showExerciseSelector.value = false
 }
 
@@ -136,7 +145,9 @@ async function handleSave() {
     emit('close')
     resetForm()
   } catch (error) {
-    console.error('Failed to save template:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to save template:', error)
+    }
     errors.value = [t('schedule.errors.failedToCreateTemplate')]
   } finally {
     saving.value = false
@@ -151,7 +162,14 @@ function handleClose() {
 onMounted(async () => {
   // Ensure exercises are loaded
   if (exercises.value.length === 0) {
-    await exerciseStore.fetchExercises()
+    try {
+      await exerciseStore.fetchExercises()
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Failed to load exercises:', error)
+      }
+      errors.value = [t('schedule.errors.failedToLoadExercises')]
+    }
   }
 })
 </script>
@@ -212,7 +230,7 @@ onMounted(async () => {
             <Card v-if="showExerciseSelector" class="border-primary">
               <CardContent class="p-4 space-y-3">
                 <Input
-                  v-model="searchQuery"
+                  v-model="searchInput"
                   :placeholder="t('schedule.form.searchExercises')"
                   autofocus
                 />
@@ -224,7 +242,7 @@ onMounted(async () => {
                       class="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors"
                       @click="addExercise(exercise)"
                     >
-                      <div class="font-medium">{{ exercise.name }}</div>
+                      <div class="font-medium">{{ getLocalizedExerciseName(exercise.name, locale) }}</div>
                       <div class="text-xs text-muted-foreground">
                         {{ exercise.muscleGroups?.join(', ') }}
                       </div>
@@ -251,7 +269,7 @@ onMounted(async () => {
                     <div class="flex-1 space-y-4">
                       <!-- Exercise Name -->
                       <div class="flex items-center justify-between">
-                        <div class="font-semibold">{{ exercise.exerciseName }}</div>
+                        <div class="font-semibold">{{ getLocalizedExerciseName(exercise.exerciseName, locale) }}</div>
                         <Button
                           variant="ghost"
                           size="icon"

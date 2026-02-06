@@ -12,14 +12,26 @@ import {
   SheetHeader,
   SheetTitle
 } from '@/components/ui/sheet'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { useToast } from '@/components/ui/toast'
 import StatusBadge from '@/pages/schedule/components/shared/StatusBadge.vue'
 import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
 import QuickStartButton from '@/pages/schedule/components/shared/QuickStartButton.vue'
-import { Calendar, Edit, Dumbbell, CheckCircle, ExternalLink } from 'lucide-vue-next'
+import { Calendar, Edit, Dumbbell, CheckCircle, ExternalLink, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   open: {
@@ -45,6 +57,7 @@ const emit = defineEmits(['close', 'change-template', 'quick-start'])
 const { t, locale } = useI18n()
 const router = useRouter()
 const scheduleStore = useScheduleStore()
+const { toast } = useToast()
 const { isDayInPast, getDayStatus } = useSchedule()
 const { currentWeekId } = useWeekNavigation()
 
@@ -89,6 +102,24 @@ function viewWorkout() {
   if (props.dayData.workoutId) {
     router.push(`/workouts/${props.dayData.workoutId}`)
     emit('close')
+  }
+}
+
+async function handleRemoveCompletion() {
+  try {
+    await scheduleStore.unmarkDayCompleted(currentWeekId.value, props.dayName)
+    toast({
+      title: t('schedule.success.dayCleared'),
+      variant: 'default'
+    })
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('Failed to remove completion:', error)
+    }
+    toast({
+      title: t('schedule.errors.failedToClearDay'),
+      variant: 'destructive'
+    })
   }
 }
 </script>
@@ -172,6 +203,42 @@ function viewWorkout() {
               <Edit class="w-4 h-4 mr-2" />
               {{ t('schedule.calendar.changeTemplate') }}
             </Button>
+
+            <!-- Remove Completion (only if completed) -->
+            <AlertDialog v-if="isCompleted">
+              <AlertDialogTrigger as-child>
+                <Button
+                  variant="outline"
+                  class="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 class="w-4 h-4 mr-2" />
+                  {{ t('schedule.dayDetail.removeCompletion') }}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{{ t('schedule.dayDetail.removeCompletion') }}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {{ t('schedule.dayDetail.removeCompletionConfirm') }}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel as-child>
+                    <Button variant="outline">
+                      {{ t('common.cancel') }}
+                    </Button>
+                  </AlertDialogCancel>
+                  <AlertDialogAction as-child>
+                    <Button
+                      variant="destructive"
+                      @click="handleRemoveCompletion"
+                    >
+                      {{ t('schedule.dayDetail.removeCompletion') }}
+                    </Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           <!-- Completed Badge -->

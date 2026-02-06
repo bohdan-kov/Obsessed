@@ -1,13 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { useSchedule } from '@/composables/useSchedule'
+import { usePageMeta } from '@/composables/usePageMeta'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '@/components/ui/toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Trophy } from 'lucide-vue-next'
+import { Badge } from '@/components/ui/badge'
+import { Trophy, X } from 'lucide-vue-next'
 import WeeklyCalendar from './components/calendar/WeeklyCalendar.vue'
 import TodayWorkoutCard from './components/calendar/TodayWorkoutCard.vue'
 import WeekNavigator from './components/calendar/WeekNavigator.vue'
@@ -18,14 +21,34 @@ import AdherenceStatsCard from './components/adherence/AdherenceStatsCard.vue'
 import AdherenceChart from './components/adherence/AdherenceChart.vue'
 import AchievementBadges from './components/adherence/AchievementBadges.vue'
 import PresetPickerSheet from './components/presets/PresetPickerSheet.vue'
+import { getPresetById, getPresetName } from '@/constants/splitPresets'
 
 const { t, locale } = useI18n()
+
+// Set page metadata for mobile header
+usePageMeta(
+  computed(() => t('schedule.title')),
+  computed(() => t('schedule.subtitle'))
+)
+
 const router = useRouter()
 const scheduleStore = useScheduleStore()
+const { currentSchedule } = storeToRefs(scheduleStore)
 const { currentWeekId } = useSchedule()
 const { toast } = useToast()
 
 const activeTab = ref('calendar')
+
+// Active preset computed
+const activePreset = computed(() => {
+  if (!currentSchedule.value?.activePresetId) return null
+  return getPresetById(currentSchedule.value.activePresetId)
+})
+
+const activePresetName = computed(() => {
+  if (!activePreset.value) return ''
+  return getPresetName(activePreset.value, locale.value)
+})
 
 // Template form sheet state
 const templateFormOpen = ref(false)
@@ -37,6 +60,7 @@ const selectedDayName = ref(null)
 
 // Preset picker sheet state
 const presetPickerOpen = ref(false)
+const applyingPreset = ref(false)
 
 onMounted(async () => {
   await scheduleStore.fetchTemplates()
@@ -87,7 +111,9 @@ async function handleTemplateSelected(templateId) {
       })
     }
   } catch (error) {
-    console.error('Failed to assign template:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to assign template:', error)
+    }
     toast({
       title: t('schedule.errors.failedToAssignTemplate'),
       variant: 'destructive'
@@ -103,9 +129,11 @@ async function handleQuickStart(templateId) {
       title: t('schedule.quickStart.started'),
       variant: 'default'
     })
-    router.push('/workout-active')
+    router.push('/workouts')
   } catch (error) {
-    console.error('Failed to start workout:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to start workout:', error)
+    }
     toast({
       title: t('schedule.errors.failedToStartWorkout'),
       variant: 'destructive'
@@ -119,16 +147,50 @@ function handleOpenPresetPicker() {
 }
 
 async function handleApplyPreset(presetId) {
+  applyingPreset.value = true
   try {
+    // Get preset info for display
+    const preset = getPresetById(presetId)
+    const presetName = preset ? getPresetName(preset, locale.value) : presetId
+
     await scheduleStore.applyPreset(presetId, currentWeekId.value, locale.value)
+
+    // Close the preset picker modal
+    presetPickerOpen.value = false
+
+    // Show success message
     toast({
-      title: t('schedule.presets.applySuccess', { presetName: presetId }),
+      title: t('schedule.presets.applySuccess', { presetName }),
       variant: 'default'
     })
   } catch (error) {
-    console.error('Failed to apply preset:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to apply preset:', error)
+    }
     toast({
       title: t('schedule.presets.applyError'),
+      variant: 'destructive'
+    })
+  } finally {
+    applyingPreset.value = false
+  }
+}
+
+async function handleClearProgram() {
+  try {
+    // Clear activePresetId from current week
+    await scheduleStore.clearActivePreset(currentWeekId.value)
+
+    toast({
+      title: t('schedule.success.programCleared'),
+      variant: 'default'
+    })
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('Failed to clear program:', error)
+    }
+    toast({
+      title: t('schedule.errors.failedToClearProgram'),
       variant: 'destructive'
     })
   }
@@ -136,8 +198,14 @@ async function handleApplyPreset(presetId) {
 </script>
 
 <template>
-  <div class="container mx-auto p-4 max-w-7xl">
-    <h1 class="text-3xl font-bold mb-6">{{ t('schedule.title') }}</h1>
+  <div class="container mx-auto p-4 max-w-7xl space-y-6">
+    <!-- Page Header - Title hidden on mobile, shown on desktop -->
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div class="hidden md:block">
+        <h1 class="text-3xl font-bold sm:text-4xl">{{ t('schedule.title') }}</h1>
+        <p class="text-muted-foreground mt-1">{{ t('schedule.subtitle') }}</p>
+      </div>
+    </div>
 
     <Tabs v-model="activeTab" class="w-full">
       <TabsList class="grid w-full grid-cols-3">
@@ -147,8 +215,34 @@ async function handleApplyPreset(presetId) {
       </TabsList>
 
       <TabsContent value="calendar" class="mt-6 space-y-6">
-        <!-- Preset Picker Button -->
-        <Button variant="outline" class="w-full" @click="handleOpenPresetPicker">
+        <!-- Preset Picker Button / Active Program Display -->
+        <div v-if="activePreset" class="w-full border rounded-md p-3 bg-primary/5 border-primary/30">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <Trophy class="w-5 h-5 text-primary flex-shrink-0" />
+              <div class="flex flex-col gap-1 flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm font-medium">{{ t('schedule.activeProgram.following') }}</span>
+                  <Badge variant="default" class="font-semibold">
+                    {{ activePresetName }}
+                  </Badge>
+                </div>
+                <p class="text-xs text-muted-foreground">
+                  {{ t('schedule.activeProgram.description', { frequency: activePreset.frequency }) }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <Button variant="ghost" size="sm" @click="handleOpenPresetPicker">
+                {{ t('schedule.activeProgram.change') }}
+              </Button>
+              <Button variant="ghost" size="icon" @click="handleClearProgram" :aria-label="t('schedule.activeProgram.clear')">
+                <X class="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Button v-else variant="outline" class="w-full" @click="handleOpenPresetPicker">
           <Trophy class="w-4 h-4 mr-2" />
           {{ t('schedule.presets.selectPreset') }}
         </Button>
@@ -200,6 +294,8 @@ async function handleApplyPreset(presetId) {
     <!-- Preset Picker Sheet (Apply Pre-built Program) -->
     <PresetPickerSheet
       :open="presetPickerOpen"
+      :loading="applyingPreset"
+      :active-preset-id="currentSchedule?.activePresetId"
       @close="presetPickerOpen = false"
       @select="handleApplyPreset"
     />

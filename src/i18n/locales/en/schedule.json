@@ -32,9 +32,11 @@
   "templates": {
     "title": "Workout Templates",
     "create": "Create Template",
-    "edit": "Edit Template",
-    "delete": "Delete Template",
-    "duplicate": "Duplicate Template",
+    "view": "Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "duplicate": "Duplicate",
+    "actions": "Template actions",
     "deleteConfirm": "Are you sure you want to delete this template? This action cannot be undone.",
     "noTemplates": "No Templates",
     "noTemplatesDescription": "Create your first workout template",
@@ -53,7 +55,9 @@
     "allTemplates": "All Templates",
     "noResults": "No templates found",
     "tryDifferentSearch": "Try a different search term",
-    "createFirst": "Create your first template to get started"
+    "createFirst": "Create your first template to get started",
+    "showExercises": "Show exercises",
+    "hideExercises": "Hide exercises"
   },
   "form": {
     "templateName": "Template Name",
@@ -132,7 +136,15 @@
   },
   "daysAgo": "{count} days ago",
   "quickStart": {
-    "button": "Start"
+    "button": "Start",
+    "started": "Workout started"
+  },
+  "activeProgram": {
+    "following": "Following program:",
+    "description": "{frequency} workouts per week",
+    "change": "Change",
+    "clear": "Cancel program",
+    "clearConfirm": "Are you sure you want to cancel the program? Templates will remain in the schedule."
   },
   "tabs": {
     "calendar": "Calendar",
@@ -142,13 +154,24 @@
   "errors": {
     "failedToLoadTemplates": "Failed to load templates",
     "failedToLoadSchedule": "Failed to load schedule",
+    "failedToLoadExercises": "Failed to load exercises",
     "failedToCreateTemplate": "Failed to create template",
     "failedToUpdateTemplate": "Failed to update template",
     "failedToDeleteTemplate": "Failed to delete template",
     "failedToAssignTemplate": "Failed to assign template",
     "failedToMarkCompleted": "Failed to mark as completed",
     "failedToClearDay": "Failed to clear day",
-    "failedToStartWorkout": "Failed to start workout"
+    "failedToStartWorkout": "Failed to start workout",
+    "failedToClearProgram": "Failed to cancel program"
+  },
+  "templateDetails": {
+    "title": "Template Details",
+    "exercises": "Exercises ({count})",
+    "estimatedDuration": "Estimated Duration",
+    "muscleGroups": "Muscle Groups",
+    "startWorkout": "Start Workout",
+    "edit": "Edit",
+    "close": "Close"
   },
   "success": {
     "templateCreated": "Template created",
@@ -156,7 +179,8 @@
     "templateDeleted": "Template deleted",
     "templateAssigned": "Template assigned",
     "dayCleared": "Day cleared",
-    "workoutCompleted": "Workout completed"
+    "workoutCompleted": "Workout completed",
+    "programCleared": "Program cancelled. Templates remain in the schedule."
   },
   "dayDetail": {
     "restDayDescription": "No workout planned for this day",
@@ -164,7 +188,9 @@
     "workoutCompleted": "Workout Completed",
     "wellDone": "Great job! Keep up the good work!",
     "noWorkoutPlanned": "Take this day to rest and recover",
-    "assignTemplate": "Assign Template"
+    "assignTemplate": "Assign Template",
+    "removeCompletion": "Remove Completion",
+    "removeCompletionConfirm": "Are you sure you want to remove the completion mark? This won't delete the workout from history, but will remove it from the schedule."
   },
   "achievements": {
     "title": "Achievements",
@@ -220,6 +246,7 @@
     "frequency": "{count} workouts per week",
     "frequencyShort": "{count}x/week",
     "selectPreset": "Select Program",
+    "active": "Active",
     "viewDetails": "View Details",
     "applyPreset": "Apply Program",
     "fullBody3x": {

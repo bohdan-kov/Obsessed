@@ -20,6 +20,14 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  activePresetId: {
+    type: String,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['close', 'select'])
@@ -33,7 +41,7 @@ const advancedPresets = computed(() => SPLIT_PRESETS.advanced)
 
 function handleSelectPreset(presetId) {
   emit('select', presetId)
-  emit('close')
+  // Don't close immediately - let parent handle closing after successful apply
 }
 
 function handleClose() {
@@ -83,6 +91,8 @@ function handleClose() {
                 v-for="preset in beginnerPresets"
                 :key="preset.id"
                 :preset="preset"
+                :loading="loading"
+                :active-preset-id="activePresetId"
                 @select="handleSelectPreset"
               />
             </TabsContent>
@@ -93,6 +103,8 @@ function handleClose() {
                 v-for="preset in intermediatePresets"
                 :key="preset.id"
                 :preset="preset"
+                :loading="loading"
+                :active-preset-id="activePresetId"
                 @select="handleSelectPreset"
               />
             </TabsContent>
@@ -103,6 +115,8 @@ function handleClose() {
                 v-for="preset in advancedPresets"
                 :key="preset.id"
                 :preset="preset"
+                :loading="loading"
+                :active-preset-id="activePresetId"
                 @select="handleSelectPreset"
               />
             </TabsContent>

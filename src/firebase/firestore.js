@@ -58,6 +58,11 @@ function removeUndefinedValues(obj) {
     return obj
   }
 
+  // Preserve Firestore special types (Timestamp, FieldValue, etc.) with their methods
+  if (obj.constructor && obj.constructor.name !== 'Object' && obj.constructor.name !== 'Array') {
+    return obj
+  }
+
   // Handle arrays
   if (Array.isArray(obj)) {
     return obj.map(removeUndefinedValues)
@@ -195,8 +200,9 @@ export async function fetchCollection(collectionName, options = {}) {
 export async function createDocument(collectionName, data) {
   try {
     const colRef = getCollection(collectionName)
+    const cleanedData = removeUndefinedValues(data)
     const docRef = await addDoc(colRef, {
-      ...data,
+      ...cleanedData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -220,10 +226,11 @@ export async function createDocument(collectionName, data) {
 export async function setDocument(collectionName, docId, data, options = {}) {
   try {
     const docRef = getDocRef(collectionName, docId)
+    const cleanedData = removeUndefinedValues(data)
     await setDoc(
       docRef,
       {
-        ...data,
+        ...cleanedData,
         updatedAt: serverTimestamp(),
       },
       options
