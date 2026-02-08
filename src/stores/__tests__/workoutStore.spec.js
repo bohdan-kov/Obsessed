@@ -1272,6 +1272,7 @@ describe('workoutStore', () => {
           useScheduleStore: vi.fn(() => ({
             getWeekId: vi.fn((date) => '2024-W01'),
             markDayCompleted: vi.fn().mockResolvedValue(),
+            recordTemplateUsage: vi.fn().mockResolvedValue(),
           })),
         }))
       })

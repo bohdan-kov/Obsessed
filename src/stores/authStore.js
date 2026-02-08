@@ -201,8 +201,8 @@ export const useAuthStore = defineStore('auth', () => {
       await setDocument(COLLECTIONS.USERS, userId, profileData)
       userProfile.value = profileData
 
-      // DEBUG: Log profile creation
-      if (import.meta.env.DEV) {
+      // DEBUG: Log profile creation (not in test environment)
+      if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
         console.log('[authStore] Profile created for new user:', {
           userId,
           hasCompletedOnboarding: profileData.settings.hasCompletedOnboarding,
@@ -211,7 +211,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (err) {
       // Profile creation failed - will retry on next auth state change
-      if (import.meta.env.DEV) {
+      if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
         console.error('[authStore] Failed to create profile:', err)
       }
     }

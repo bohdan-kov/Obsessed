@@ -387,9 +387,14 @@ describe('scheduleStore', () => {
   })
 
   describe('Start Workout From Template', () => {
+    let consoleErrorSpy
+
     beforeEach(() => {
       // Reset the mockStartWorkout mock before each test
       mockStartWorkout.mockReset()
+
+      // Suppress console.error for error propagation tests
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       // Setup mock template
       store.templates = [
@@ -421,6 +426,11 @@ describe('scheduleStore', () => {
           lastUsedAt: new Date('2026-01-01'),
         },
       ]
+    })
+
+    afterEach(() => {
+      // Restore console.error after each test
+      consoleErrorSpy?.mockRestore()
     })
 
     it('should successfully start workout from template', async () => {
@@ -538,6 +548,18 @@ describe('scheduleStore', () => {
   })
 
   describe('Error Handling', () => {
+    let consoleErrorSpy
+
+    beforeEach(() => {
+      // Suppress console.error for error tests
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      // Restore console.error after each test
+      consoleErrorSpy?.mockRestore()
+    })
+
     it('should handle validation errors in createTemplate', async () => {
       // Missing exercises - should fail validation
       await expect(store.createTemplate({ name: 'Test' })).rejects.toThrow(
