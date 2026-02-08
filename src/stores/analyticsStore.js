@@ -81,7 +81,6 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   // Computed analytics from workout store
   /**
    * Completed workouts (single source of truth)
-   * All other computed properties use this to avoid repeated filtering
    */
   const completedWorkouts = computed(() => {
     if (!workoutStore.workouts || !Array.isArray(workoutStore.workouts)) {

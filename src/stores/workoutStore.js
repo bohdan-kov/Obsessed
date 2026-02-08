@@ -70,6 +70,10 @@ export const useWorkoutStore = defineStore('workout', () => {
   let unsubscribeActive = null
   let unsubscribeWorkouts = null
 
+  // Subscription locks to prevent duplicate listeners
+  let subscriptionLockActive = false
+  let subscriptionLockWorkouts = false
+
   // Request coalescing
   let pendingRequest = null
   const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
@@ -331,10 +335,10 @@ export const useWorkoutStore = defineStore('workout', () => {
 
   /**
    * Check if an exercise can be deleted
-   * @param {string} exerciseId - Exercise ID to check
+   * @param {string} _exerciseId - Exercise ID to check (unused - check is global)
    * @returns {boolean} True if exercise can be deleted
    */
-  function canDeleteExercise(exerciseId) {
+  function canDeleteExercise(_exerciseId) {
     if (!activeWorkout.value) return false
 
     // Cannot delete the last exercise
@@ -1034,15 +1038,21 @@ export const useWorkoutStore = defineStore('workout', () => {
 
   /**
    * Subscribe to active workout real-time updates
-   * @returns {Function|null} Unsubscribe function
+   * @returns {Function} Unsubscribe function
    */
   function subscribeToActive() {
-    if (!authStore.uid) return null
+    if (!authStore.uid) return () => {}
 
-    // Cleanup existing subscription
+    if (subscriptionLockActive) {
+      return unsubscribeActive || (() => {})
+    }
+
     if (unsubscribeActive) {
       unsubscribeActive()
+      unsubscribeActive = null
     }
+
+    subscriptionLockActive = true
 
     const workoutPath = `users/${authStore.uid}/workouts`
 
@@ -1067,21 +1077,30 @@ export const useWorkoutStore = defineStore('workout', () => {
       }
     )
 
+    // Release lock after subscription is created
+    subscriptionLockActive = false
+
     return unsubscribeActive
   }
 
   /**
    * Subscribe to all workouts real-time updates
    * @param {'week'|'month'|'quarter'|'year'|'all'} period - Time period
-   * @returns {Function|null} Unsubscribe function
+   * @returns {Function} Unsubscribe function
    */
   function subscribeToWorkouts(period = 'month') {
-    if (!authStore.uid) return null
+    if (!authStore.uid) return () => {}
 
-    // Cleanup existing subscription
+    if (subscriptionLockWorkouts) {
+      return unsubscribeWorkouts || (() => {})
+    }
+
     if (unsubscribeWorkouts) {
       unsubscribeWorkouts()
+      unsubscribeWorkouts = null
     }
+
+    subscriptionLockWorkouts = true
 
     const now = new Date()
     let startDate = null
@@ -1133,6 +1152,9 @@ export const useWorkoutStore = defineStore('workout', () => {
         error.value = err.message
       }
     )
+
+    // Release lock after subscription is created
+    subscriptionLockWorkouts = false
 
     return unsubscribeWorkouts
   }

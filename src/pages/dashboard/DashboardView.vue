@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
@@ -44,9 +44,6 @@ const {
   workoutsInsight,
   volumeInsight,
 } = storeToRefs(analyticsStore)
-
-// Track Firebase subscription for cleanup
-let unsubscribeWorkouts = null
 
 // Stat cards configuration
 const stats = computed(() => {
@@ -124,17 +121,11 @@ async function loadWorkoutData(force = false) {
   const fetchPeriod = getWorkoutFetchPeriod(analyticsStore.period)
 
   try {
-    // ensureDataLoaded returns the unsubscribe function when subscribe: true
-    const unsubscribe = await workoutStore.ensureDataLoaded({
+    await workoutStore.ensureDataLoaded({
       period: fetchPeriod,
-      subscribe: true,
-      force, // Force reload when period changes
+      subscribe: false,
+      force,
     })
-
-    // Store unsubscribe function for cleanup
-    if (typeof unsubscribe === 'function') {
-      unsubscribeWorkouts = unsubscribe
-    }
   } catch (error) {
     handleError(error, t('dashboard.errors.loadFailed'), {
       context: 'DashboardView.loadWorkoutData',
@@ -142,14 +133,8 @@ async function loadWorkoutData(force = false) {
   }
 }
 
-/**
- * Fetch workout data and subscribe to real-time updates
- */
 onMounted(async () => {
-  // Initialize period from localStorage first
   analyticsStore.initializePeriod()
-
-  // Load workout data for the selected period
   await loadWorkoutData()
 })
 
@@ -164,16 +149,6 @@ watch(
     await loadWorkoutData(true) // Force reload to ensure fresh data
   }
 )
-
-/**
- * Clean up Firebase subscriptions to prevent memory leaks
- */
-onUnmounted(() => {
-  if (unsubscribeWorkouts) {
-    unsubscribeWorkouts()
-    unsubscribeWorkouts = null
-  }
-})
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Target, Clock, Dumbbell, TrendingUp } from 'lucide-vue-next'
@@ -93,8 +93,8 @@ async function loadWorkoutData(force = false) {
   try {
     await workoutStore.ensureDataLoaded({
       period: fetchPeriod,
-      subscribe: true,
-      force, // Force reload when period changes
+      subscribe: false,
+      force,
     })
   } catch (error) {
     handleError(error, t('analytics.errors.loadFailed'), {
@@ -103,26 +103,9 @@ async function loadWorkoutData(force = false) {
   }
 }
 
-/**
- * Fetch workout data when Analytics page is accessed directly
- * CRITICAL: Must await workout loading before rendering charts
- * to ensure firstWorkoutDate is calculated for "All time" period
- */
 onMounted(async () => {
-  // Initialize period from localStorage first
   analyticsStore.initializePeriod()
-
-  // CRITICAL: Load workout data before charts render
-  // This ensures completedWorkouts is populated for firstWorkoutDate calculation
   await loadWorkoutData()
-})
-
-/**
- * Cleanup Firebase subscriptions when component is unmounted
- * CRITICAL: Prevents memory leaks by unsubscribing from real-time listeners
- */
-onUnmounted(() => {
-  workoutStore.unsubscribe()
 })
 
 /**

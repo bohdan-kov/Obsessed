@@ -961,15 +961,14 @@ describe('workoutStore', () => {
 
       const result = store.subscribeToActive()
 
-      expect(result).toBeNull()
+      // CRITICAL FIX: subscribeToActive now returns a no-op function instead of null to prevent crashes
+      expect(typeof result).toBe('function')
       expect(subscribeToCollection).not.toHaveBeenCalled()
     })
   })
 
   describe('unsubscribe', () => {
     it('should cleanup all subscriptions', () => {
-      const authStore = useAuthStore()
-
       const store = useWorkoutStore()
       const unsubscribeActive = vi.fn()
       const unsubscribeWorkouts = vi.fn()
@@ -995,8 +994,6 @@ describe('workoutStore', () => {
 
       // Set an error first
       createDocument.mockRejectedValue(new Error('Test error'))
-
-      const authStore = useAuthStore()
 
       await expect(store.startWorkout()).rejects.toThrow()
 
@@ -1270,7 +1267,7 @@ describe('workoutStore', () => {
         // Mock dynamic import of scheduleStore
         vi.doMock('@/stores/scheduleStore', () => ({
           useScheduleStore: vi.fn(() => ({
-            getWeekId: vi.fn((date) => '2024-W01'),
+            getWeekId: vi.fn((_date) => '2024-W01'),
             markDayCompleted: vi.fn().mockResolvedValue(),
             recordTemplateUsage: vi.fn().mockResolvedValue(),
           })),

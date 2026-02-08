@@ -86,7 +86,18 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Subscribe to user profile changes in Firestore
    */
+  let profileUpdateDebounce = null
+
+  function clearProfileDebounce() {
+    if (profileUpdateDebounce) {
+      clearTimeout(profileUpdateDebounce)
+      profileUpdateDebounce = null
+    }
+  }
+
   async function subscribeToUserProfile(userId) {
+    clearProfileDebounce()
+
     // Clean up existing subscription
     if (unsubscribeProfile) {
       unsubscribeProfile()
@@ -107,12 +118,14 @@ export const useAuthStore = defineStore('auth', () => {
       }
     }
 
-    // Subscribe to real-time updates
     unsubscribeProfile = subscribeToDocument(
       COLLECTIONS.USERS,
       userId,
       (profileData) => {
-        userProfile.value = profileData
+        if (profileUpdateDebounce) clearTimeout(profileUpdateDebounce)
+        profileUpdateDebounce = setTimeout(() => {
+          userProfile.value = profileData
+        }, 100)
       },
       () => {
         // Profile subscription error - silent fail, profile already loaded
@@ -299,6 +312,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Clear workout data and unsubscribe from real-time updates
       workoutStore.clearData()
+
+      clearProfileDebounce()
 
       await firebaseSignOut()
       user.value = null

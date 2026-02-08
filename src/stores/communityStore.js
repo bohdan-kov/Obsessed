@@ -437,20 +437,54 @@ export const useCommunityStore = defineStore('community', () => {
   /**
    * Subscribe to real-time followers/following updates for current user
    */
+  let followerUpdateDebounce = null
+  let followingUpdateDebounce = null
+
+  function clearDebounces() {
+    if (followerUpdateDebounce) {
+      clearTimeout(followerUpdateDebounce)
+      followerUpdateDebounce = null
+    }
+    if (followingUpdateDebounce) {
+      clearTimeout(followingUpdateDebounce)
+      followingUpdateDebounce = null
+    }
+  }
+
   function subscribeToFollowData() {
     if (!authStore.uid) return
 
-    // Clean up existing subscriptions
     cleanupSubscriptions()
-
-    // Subscribe to followers
     const followersColl = collection(db, COLLECTIONS.USERS, authStore.uid, 'followers')
     unsubscribeFollowers = subscribeToCollection(
       `${COLLECTIONS.USERS}/${authStore.uid}/followers`,
       {},
-      (docs) => {
-        // Real-time update - refetch full profiles
-        fetchFollowers(authStore.uid)
+      async (followerDocs) => {
+        if (followerUpdateDebounce) clearTimeout(followerUpdateDebounce)
+        followerUpdateDebounce = setTimeout(async () => {
+          const followerIds = followerDocs.map((doc) => doc.id)
+
+          if (followerIds.length === 0) {
+            followers.value = []
+            return
+          }
+
+          const followerProfiles = await Promise.all(
+            followerIds.map(async (followerId) => {
+              const userDoc = await fetchDocument(COLLECTIONS.USERS, followerId)
+              return userDoc
+                ? {
+                    id: followerId,
+                    displayName: userDoc.profile?.displayName || 'Anonymous',
+                    photoURL: userDoc.profile?.photoURL || '',
+                    bio: userDoc.profile?.bio || '',
+                  }
+                : null
+            })
+          )
+
+          followers.value = followerProfiles.filter(Boolean)
+        }, 100)
       },
       (err) => {
         if (import.meta.env.DEV) {
@@ -459,14 +493,36 @@ export const useCommunityStore = defineStore('community', () => {
       }
     )
 
-    // Subscribe to following
     const followingColl = collection(db, COLLECTIONS.USERS, authStore.uid, 'following')
     unsubscribeFollowing = subscribeToCollection(
       `${COLLECTIONS.USERS}/${authStore.uid}/following`,
       {},
-      (docs) => {
-        // Real-time update - refetch full profiles
-        fetchFollowing(authStore.uid)
+      async (followingDocs) => {
+        if (followingUpdateDebounce) clearTimeout(followingUpdateDebounce)
+        followingUpdateDebounce = setTimeout(async () => {
+          const followingIds = followingDocs.map((doc) => doc.id)
+
+          if (followingIds.length === 0) {
+            following.value = []
+            return
+          }
+
+          const followingProfiles = await Promise.all(
+            followingIds.map(async (followingId) => {
+              const userDoc = await fetchDocument(COLLECTIONS.USERS, followingId)
+              return userDoc
+                ? {
+                    id: followingId,
+                    displayName: userDoc.profile?.displayName || 'Anonymous',
+                    photoURL: userDoc.profile?.photoURL || '',
+                    bio: userDoc.profile?.bio || '',
+                  }
+                : null
+            })
+          )
+
+          following.value = followingProfiles.filter(Boolean)
+        }, 100)
       },
       (err) => {
         if (import.meta.env.DEV) {
@@ -659,6 +715,8 @@ export const useCommunityStore = defineStore('community', () => {
   // ============================================================================
 
   function cleanupSubscriptions() {
+    clearDebounces()
+
     if (unsubscribeFollowers) {
       unsubscribeFollowers()
       unsubscribeFollowers = null
@@ -670,6 +728,8 @@ export const useCommunityStore = defineStore('community', () => {
   }
 
   function clearData() {
+    clearDebounces()
+
     currentProfile.value = null
     followers.value = []
     following.value = []

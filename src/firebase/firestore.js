@@ -48,6 +48,27 @@ export const COLLECTIONS = {
 }
 
 /**
+ * Operation counters for Firestore monitoring
+ */
+let readCount = 0
+let writeCount = 0
+let subscriptionCount = 0
+
+export function resetOperationCounters() {
+  readCount = 0
+  writeCount = 0
+  subscriptionCount = 0
+}
+
+export function getOperationCounters() {
+  return {
+    reads: readCount,
+    writes: writeCount,
+    subscriptions: subscriptionCount,
+  }
+}
+
+/**
  * Remove undefined values from an object recursively
  * Firestore's updateDoc does NOT accept undefined values - they must be removed or set to null
  * @param {Object} obj - Object to clean
@@ -129,6 +150,8 @@ export function getNestedDocRef(...pathSegments) {
  */
 export async function fetchDocument(collectionName, docId) {
   try {
+    readCount++
+
     const docRef = getDocRef(collectionName, docId)
     const docSnap = await getDoc(docRef)
 
@@ -179,6 +202,9 @@ export async function fetchCollection(collectionName, options = {}) {
     }
 
     const querySnapshot = await getDocs(q)
+    const docCount = querySnapshot.docs.length
+    readCount += docCount
+
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -199,6 +225,8 @@ export async function fetchCollection(collectionName, options = {}) {
  */
 export async function createDocument(collectionName, data) {
   try {
+    writeCount++
+
     const colRef = getCollection(collectionName)
     const cleanedData = removeUndefinedValues(data)
     const docRef = await addDoc(colRef, {
@@ -225,6 +253,8 @@ export async function createDocument(collectionName, data) {
  */
 export async function setDocument(collectionName, docId, data, options = {}) {
   try {
+    writeCount++
+
     const docRef = getDocRef(collectionName, docId)
     const cleanedData = removeUndefinedValues(data)
     await setDoc(
@@ -252,6 +282,8 @@ export async function setDocument(collectionName, docId, data, options = {}) {
  */
 export async function updateDocument(collectionName, docId, data) {
   try {
+    writeCount++
+
     const docRef = getDocRef(collectionName, docId)
 
     // Remove undefined values from data to prevent Firestore errors
@@ -283,14 +315,13 @@ export async function updateDocument(collectionName, docId, data) {
  */
 export async function deleteDocument(collectionName, docId) {
   try {
+    writeCount++
+
     const docRef = getDocRef(collectionName, docId)
     await deleteDoc(docRef)
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error(
-        `[firebase/firestore] Error deleting document ${collectionName}/${docId}:`,
-        error
-      )
+      console.error(`[firebase/firestore] Error deleting document ${collectionName}/${docId}:`, error)
     }
     throw new Error(`Failed to delete document ${collectionName}/${docId}: ${error.message}`)
   }
@@ -314,11 +345,14 @@ export function subscribeToDocument(
     }
   }
 ) {
+  subscriptionCount++
   const docRef = getDocRef(collectionName, docId)
 
-  return onSnapshot(
+  const unsubscribe = onSnapshot(
     docRef,
     (docSnap) => {
+      readCount++
+
       if (docSnap.exists()) {
         callback({
           id: docSnap.id,
@@ -330,6 +364,10 @@ export function subscribeToDocument(
     },
     errorCallback
   )
+
+  return () => {
+    unsubscribe()
+  }
 }
 
 /**
@@ -350,6 +388,7 @@ export function subscribeToCollection(
     }
   }
 ) {
+  subscriptionCount++
   const colRef = getCollection(collectionName)
   let q = colRef
 
@@ -372,9 +411,12 @@ export function subscribeToCollection(
     q = query(q, limit(options.limit))
   }
 
-  return onSnapshot(
+  const unsubscribe = onSnapshot(
     q,
     (querySnapshot) => {
+      const docCount = querySnapshot.docs.length
+      readCount += docCount
+
       const documents = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -383,6 +425,10 @@ export function subscribeToCollection(
     },
     errorCallback
   )
+
+  return () => {
+    unsubscribe()
+  }
 }
 
 /**

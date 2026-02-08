@@ -828,10 +828,16 @@ export const useFeedStore = defineStore('feed', () => {
    * Fetch user profile data (cached for performance)
    */
   const userProfileCache = new Map()
+  const MAX_PROFILE_CACHE_SIZE = 100
 
   async function fetchUserProfile(userId) {
     if (userProfileCache.has(userId)) {
       return userProfileCache.get(userId)
+    }
+
+    if (userProfileCache.size >= MAX_PROFILE_CACHE_SIZE) {
+      const firstKey = userProfileCache.keys().next().value
+      userProfileCache.delete(firstKey)
     }
 
     try {
