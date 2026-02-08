@@ -84,14 +84,14 @@ function getAnimationDelay(index) {
 
 <template>
   <Card>
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('workout.muscleDistribution.title') }}</CardTitle>
       <CardDescription>
         {{ t('workout.muscleDistribution.description') }}
       </CardDescription>
     </CardHeader>
 
-    <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
+    <CardContent class="px-2 sm:px-6 pb-6">
       <!-- Empty state -->
       <div
         v-if="muscleDistribution.length === 0"

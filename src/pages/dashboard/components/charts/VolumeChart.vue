@@ -144,7 +144,7 @@ onMounted(async () => {
 
 <template>
   <Card class="pt-0">
-    <CardHeader class="flex flex-row items-center gap-2 space-y-0 border-b py-5">
+    <CardHeader class="flex flex-row items-center gap-2 space-y-0 pb-4">
       <div class="grid flex-1 gap-1">
         <CardTitle>{{ t('dashboard.volumeChart.title') }}</CardTitle>
         <CardDescription>
@@ -165,7 +165,7 @@ onMounted(async () => {
     </CardHeader>
 
     <!-- Normal view -->
-    <CardContent v-if="!isFullscreen" class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
+    <CardContent v-if="!isFullscreen" class="px-2 sm:px-6 pb-6">
       <ChartContainer :config="chartConfig" class="w-full" :cursor="false">
         <!-- Scroll wrapper for mobile -->
         <div

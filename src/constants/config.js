@@ -268,6 +268,11 @@ export const CONFIG = {
     RECENT_PLANS_COUNT: 5, // Number of recent plans to show
   },
 
+  // Schedule Configuration
+  schedule: {
+    ADHERENCE_WEEKS_TO_TRACK: 12, // Number of weeks to analyze adherence history
+  },
+
   // Performance Configuration
   performance: {
     // Debounce delays

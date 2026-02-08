@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { estimateDuration } from '@/utils/templateUtils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Play, MoreVertical, Eye, Edit, Copy, Trash2, ArrowRight } from 'lucide-vue-next'
+import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
+import { Play, MoreVertical, Eye, Edit, Copy, Trash2, ArrowRight, Dumbbell, Clock } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -122,26 +125,23 @@ const lastUsedText = computed(() => {
   return t('plans.list.lastUsed', { date: relativeTime })
 })
 
-// Exercise count text
-const exerciseCountText = computed(() => {
-  const count = props.plan.exercises?.length || 0
-  if (count === 1) {
-    return t('plans.list.exerciseCountOne')
-  }
-  return t('plans.list.exerciseCount', { count })
-})
-
-// Get first 3 exercise names for preview
-const exercisePreview = computed(() => {
+// Extract muscle groups from exercises
+const muscleGroups = computed(() => {
   if (!props.plan.exercises || props.plan.exercises.length === 0) {
     return []
   }
-  return props.plan.exercises.slice(0, 3).map((ex) => ex.exerciseName)
+  const groups = new Set()
+  props.plan.exercises.forEach(exercise => {
+    if (exercise.muscleGroup) {
+      groups.add(exercise.muscleGroup)
+    }
+  })
+  return Array.from(groups)
 })
 
-const moreExercisesCount = computed(() => {
-  const total = props.plan.exercises?.length || 0
-  return total > 3 ? total - 3 : 0
+// Calculate estimated duration using the same logic as templates
+const estimatedDurationValue = computed(() => {
+  return estimateDuration(props.plan.exercises || [])
 })
 
 // Dropdown actions based on variant
@@ -190,69 +190,70 @@ const dropdownActions = computed(() => {
 </script>
 
 <template>
-  <Card class="hover:border-primary/50 transition-colors">
+  <Card class="group hover:shadow-lg transition-all duration-200">
     <CardHeader class="pb-3">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex-1 min-w-0">
-          <CardTitle class="text-lg truncate">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0 mr-2">
+          <CardTitle class="text-lg line-clamp-1 mb-1">
             {{ plan.name }}
           </CardTitle>
-          <p v-if="plan.description" class="text-sm text-muted-foreground mt-1 line-clamp-2">
-            {{ plan.description }}
+          <p class="text-xs text-muted-foreground">
+            {{ lastUsedText }}
           </p>
         </div>
 
-        <!-- Actions Dropdown -->
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="h-8 w-8 -mr-2"
-              :aria-label="t('plans.card.moreActions')"
-            >
-              <MoreVertical class="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              v-for="(action, index) in dropdownActions"
-              :key="index"
-              @click="action.onClick"
-              :class="{ 'text-destructive': action.isDestructive }"
-            >
-              <component :is="action.icon" class="mr-2 h-4 w-4" />
-              {{ action.label }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div class="flex items-center gap-2">
+          <Badge v-if="plan.usageCount > 0" variant="secondary" class="shrink-0">
+            {{ plan.usageCount }}x
+          </Badge>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="h-8 w-8"
+                :aria-label="t('plans.card.moreActions')"
+              >
+                <MoreVertical class="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                v-for="(action, index) in dropdownActions"
+                :key="index"
+                @click="action.onClick"
+                :class="{ 'text-destructive': action.isDestructive }"
+              >
+                <component :is="action.icon" class="mr-2 h-4 w-4" />
+                {{ action.label }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </CardHeader>
 
     <CardContent class="space-y-4">
-      <!-- Exercise Preview -->
-      <div class="space-y-1">
-        <p class="text-xs text-muted-foreground font-medium">
-          {{ exerciseCountText }}
-        </p>
-        <div class="flex flex-wrap gap-1">
-          <span
-            v-for="(exercise, index) in exercisePreview"
-            :key="index"
-            class="text-xs bg-muted px-2 py-1 rounded"
-          >
-            {{ exercise }}
-          </span>
-          <span v-if="moreExercisesCount > 0" class="text-xs text-muted-foreground px-2 py-1">
-            +{{ moreExercisesCount }}
-          </span>
+      <!-- Muscle Groups -->
+      <MuscleGroupBadges :muscle-groups="muscleGroups" :max="3" />
+
+      <!-- Plan Stats -->
+      <div class="flex items-center gap-4 text-sm text-muted-foreground">
+        <div class="flex items-center gap-1">
+          <Dumbbell class="w-4 h-4" />
+          <span>{{ plan.exercises.length }}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <Clock class="w-4 h-4" />
+          <span>~{{ estimatedDurationValue }} {{ t('common.min') }}</span>
         </div>
       </div>
 
-      <!-- Footer - horizontal layout with flex sizing -->
+      <!-- Footer - horizontal layout with Start button -->
       <div class="flex items-center justify-between gap-3 pt-2 border-t">
         <!-- Last used text - takes natural width, doesn't shrink -->
-        <p class="text-xs text-muted-foreground flex-shrink-0">
+        <p class="text-xs text-muted-foreground shrink-0">
           {{ lastUsedText }}
         </p>
 

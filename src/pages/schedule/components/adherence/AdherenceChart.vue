@@ -1,11 +1,13 @@
 <script setup>
 import { computed, ref, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useMediaQuery } from '@vueuse/core'
 import { useAdherence } from '@/composables/useAdherence'
 import { VisAxis, VisGroupedBar, VisXYContainer, VisTooltip } from '@unovis/vue'
 import {
   ChartContainer,
   ChartCrosshair,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   componentToString,
@@ -17,7 +19,7 @@ const { t, locale } = useI18n()
 const { weeklyAdherence } = useAdherence()
 
 const chartScrollRef = ref(null)
-const isMobile = computed(() => window.innerWidth < 768)
+const isMobile = useMediaQuery('(max-width: 768px)')
 
 // Transform data for chart
 const chartData = computed(() => {
@@ -35,11 +37,11 @@ const chartData = computed(() => {
 const chartConfig = {
   completed: {
     label: t('schedule.adherence.completed'),
-    color: 'hsl(var(--chart-1))', // Primary green
+    color: 'var(--chart-1)', // Primary green
   },
   missed: {
     label: t('schedule.adherence.missed'),
-    color: 'hsl(var(--chart-5))', // Red/destructive
+    color: 'var(--chart-5)', // Red/destructive
   },
 }
 
@@ -57,10 +59,13 @@ const chartMinWidth = computed(() => {
   return `${chartData.value.length * minSpacing}px`
 })
 
-// Color mapping function for crosshair
+// Color mapping function for crosshair dots
+// Index mapping: 0 = crosshair line, 1 = first series (completed), 2 = second series (missed)
 function getCrosshairColor(_d, i) {
-  const colorMap = [null, chartConfig.completed.color, chartConfig.missed.color]
-  return colorMap[i] || 'currentColor'
+  if (i === 0) return 'hsl(var(--border))' // Crosshair line color
+  if (i === 1) return chartConfig.completed.color // Blue dot
+  if (i === 2) return chartConfig.missed.color // Red dot
+  return 'currentColor'
 }
 
 // Auto-scroll to latest on mount (mobile)
@@ -86,88 +91,83 @@ onMounted(async () => {
     <CardContent>
       <div v-if="chartData.length > 0">
         <ChartContainer :config="chartConfig" class="w-full">
-          <div ref="chartScrollRef" class="overflow-x-auto mobile-scroll">
-            <div class="aspect-auto h-[300px] w-full" :style="{ minWidth: chartMinWidth }">
-              <VisXYContainer
-                :data="chartData"
-                :y-domain="yDomain"
-                :padding="{ top: 10, right: 10, bottom: 40, left: 40 }"
-              >
-                <!-- X-Axis -->
-                <VisAxis
-                  type="x"
-                  :x="(d) => d.weekIndex"
-                  :tick-line="false"
-                  :domain-line="false"
-                  :grid-line="false"
-                  :num-ticks="chartData.length"
-                  :tick-format="(index) => {
-                    const dataPoint = chartData[Math.round(index)]
-                    return dataPoint?.weekLabel || ''
-                  }"
-                />
-
-                <!-- Y-Axis -->
-                <VisAxis
-                  type="y"
-                  :num-ticks="5"
-                  :tick-line="false"
-                  :domain-line="false"
-                  :grid-line="true"
-                  :tick-format="(value) => Math.round(value).toString()"
-                />
-
-                <!-- Stacked Bars: Completed + Missed -->
-                <VisGroupedBar
-                  :x="(d) => d.weekIndex"
-                  :y="[(d) => d.completed, (d) => d.missed]"
-                  :color="[chartConfig.completed.color, chartConfig.missed.color]"
-                  :rounded-corners="4"
-                  :bar-padding="0.3"
-                  :group-padding="0.1"
-                />
-
-                <!-- Tooltip -->
-                <ChartTooltip />
-                <ChartCrosshair
-                  :template="componentToString(chartConfig, ChartTooltipContent, {
-                    indicator: 'line',
-                    labelFormatter: (index) => {
+          <div class="chart-scroll-wrapper" :class="{ 'mobile-scroll': isMobile && chartMinWidth !== 'auto' }">
+            <div ref="chartScrollRef">
+              <div class="aspect-auto h-[300px] w-full" :style="{ minWidth: chartMinWidth }">
+                <VisXYContainer
+                  :data="chartData"
+                  :y-domain="yDomain"
+                  :padding="{ top: 10, right: 10, bottom: 40, left: 40 }"
+                >
+                  <!-- X-Axis -->
+                  <VisAxis
+                    type="x"
+                    :x="(d) => d.weekIndex"
+                    :tick-line="false"
+                    :domain-line="false"
+                    :grid-line="false"
+                    :num-ticks="chartData.length"
+                    :tick-format="(index) => {
                       const dataPoint = chartData[Math.round(index)]
                       return dataPoint?.weekLabel || ''
-                    },
-                    valueFormatter: (value, key) => {
-                      return `${value} ${t('schedule.adherence.workouts')}`
-                    },
-                  })"
-                  :color="getCrosshairColor"
-                />
-              </VisXYContainer>
-            </div>
-          </div>
-        </ChartContainer>
+                    }"
+                  />
 
-        <!-- Legend -->
-        <div class="flex items-center justify-center gap-6 mt-4 pt-4 border-t">
-          <div class="flex items-center gap-2">
+                  <!-- Y-Axis -->
+                  <VisAxis
+                    type="y"
+                    :num-ticks="5"
+                    :tick-line="false"
+                    :domain-line="false"
+                    :grid-line="false"
+                    :tick-format="(value) => Math.round(value).toString()"
+                  />
+
+                  <!-- Stacked Bars: Completed + Missed -->
+                  <VisGroupedBar
+                    :x="(d) => d.weekIndex"
+                    :y="[(d) => d.completed, (d) => d.missed]"
+                    :color="[chartConfig.completed.color, chartConfig.missed.color]"
+                    :rounded-corners="4"
+                    :bar-padding="0.3"
+                    :group-padding="0.1"
+                  />
+
+                  <!-- Tooltip -->
+                  <ChartTooltip />
+                  <ChartCrosshair
+                    :template="componentToString(chartConfig, ChartTooltipContent, {
+                      indicator: 'line',
+                      labelFormatter: (index) => {
+                        const dataPoint = chartData[Math.round(index)]
+                        return dataPoint?.weekLabel || ''
+                      },
+                      valueFormatter: (value, key) => {
+                        if (typeof value !== 'number') return String(value)
+
+                        // Форматування з locale-aware розділювачами
+                        const formatted = value.toLocaleString(locale.value, {
+                          maximumFractionDigits: 0
+                        })
+                        return `${formatted} ${t('schedule.adherence.workouts')}`
+                      },
+                    })"
+                    :color="getCrosshairColor"
+                  />
+                </VisXYContainer>
+              </div>
+            </div>
+
+            <!-- Градієнтний overlay для індикації прокрутки -->
             <div
-              class="w-3 h-3 rounded"
-              :style="{ backgroundColor: chartConfig.completed.color }"
+              v-if="isMobile && chartMinWidth !== 'auto'"
+              class="scroll-gradient"
             />
-            <span class="text-sm text-muted-foreground">
-              {{ chartConfig.completed.label }}
-            </span>
           </div>
-          <div class="flex items-center gap-2">
-            <div
-              class="w-3 h-3 rounded"
-              :style="{ backgroundColor: chartConfig.missed.color }"
-            />
-            <span class="text-sm text-muted-foreground">
-              {{ chartConfig.missed.label }}
-            </span>
-          </div>
-        </div>
+
+          <!-- Legend -->
+          <ChartLegendContent class="mt-4 pt-4 border-t justify-center" />
+        </ChartContainer>
       </div>
 
       <!-- Empty State -->
@@ -180,13 +180,49 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.mobile-scroll {
+/* Chart scroll wrapper */
+.chart-scroll-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Mobile scroll mode */
+.chart-scroll-wrapper.mobile-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Smooth touch scrolling on iOS/Android */
   -webkit-overflow-scrolling: touch;
+  /* Allow horizontal pan */
   touch-action: pan-x;
 }
 
-.mobile-scroll::-webkit-scrollbar {
+.chart-scroll-wrapper.mobile-scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* Gradient overlay to indicate scrollability */
+.scroll-gradient {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60px;
+  background: linear-gradient(
+    to left,
+    hsl(var(--background)) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Ensure gradient doesn't show on desktop */
+@media (min-width: 768px) {
+  .scroll-gradient {
+    display: none;
+  }
 }
 </style>

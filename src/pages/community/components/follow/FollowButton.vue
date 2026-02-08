@@ -202,9 +202,15 @@ const confirmUnfollow = async () => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{{ t('community.share.cancel') }}</AlertDialogCancel>
-          <AlertDialogAction @click="confirmUnfollow">
-            {{ t('community.follow.unfollow') }}
+          <AlertDialogCancel as-child>
+            <Button variant="outline" class="min-h-11 min-w-11">
+              {{ t('community.share.cancel') }}
+            </Button>
+          </AlertDialogCancel>
+          <AlertDialogAction as-child>
+            <Button variant="destructive" class="min-h-11 min-w-11" @click="confirmUnfollow">
+              {{ t('community.follow.unfollow') }}
+            </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

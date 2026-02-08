@@ -407,17 +407,20 @@ export const usePlanStore = defineStore('plan', () => {
     try {
       const collectionPath = `users/${authStore.uid}/${COLLECTIONS.WORKOUT_PLANS}`
 
+      // CRITICAL: Save old value BEFORE optimistic update to avoid double increment
+      const oldUsageCount = plan.usageCount || 0
+
       // Optimistic update
       const index = plans.value.findIndex((p) => p.id === planId)
       if (index !== -1) {
-        plans.value[index].usageCount = (plans.value[index].usageCount || 0) + 1
+        plans.value[index].usageCount = oldUsageCount + 1
         // Use current timestamp for optimistic UI update
         // This will be replaced by the actual Firestore Timestamp from the real-time listener
         plans.value[index].lastUsedAt = new Date()
       }
 
       await updateDocument(collectionPath, planId, {
-        usageCount: (plan.usageCount || 0) + 1,
+        usageCount: oldUsageCount + 1,
         lastUsedAt: serverTimestamp(),
       })
     } catch (err) {

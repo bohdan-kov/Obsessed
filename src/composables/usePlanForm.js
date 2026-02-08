@@ -3,10 +3,13 @@
  * Manages form state for creating and editing workout plans
  */
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CONFIG } from '@/constants/config'
 import { validatePlan } from '@/utils/planValidation'
 
 export function usePlanForm(initialPlan = null, mode = 'create') {
+  const { locale } = useI18n()
+
   // Form state
   const name = ref(initialPlan?.name || '')
   const description = ref(initialPlan?.description || '')
@@ -56,9 +59,19 @@ export function usePlanForm(initialPlan = null, mode = 'create') {
       return
     }
 
+    // Extract localized string for current locale (prevent storing translation objects)
+    let exerciseName = exercise.id
+    if (exercise.name) {
+      if (typeof exercise.name === 'string') {
+        exerciseName = exercise.name
+      } else {
+        exerciseName = exercise.name[locale.value] || exercise.name.en || exercise.name.uk || exercise.id
+      }
+    }
+
     const newExercise = {
       exerciseId: exercise.id,
-      exerciseName: exercise.name,
+      exerciseName,
       order: exercises.value.length,
       suggestedSets: null,
       suggestedWeight: null,

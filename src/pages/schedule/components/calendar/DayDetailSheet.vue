@@ -224,13 +224,14 @@ async function handleRemoveCompletion() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel as-child>
-                    <Button variant="outline">
+                    <Button variant="outline" class="min-h-11 min-w-11">
                       {{ t('common.cancel') }}
                     </Button>
                   </AlertDialogCancel>
                   <AlertDialogAction as-child>
                     <Button
                       variant="destructive"
+                      class="min-h-11 min-w-11"
                       @click="handleRemoveCompletion"
                     >
                       {{ t('schedule.dayDetail.removeCompletion') }}

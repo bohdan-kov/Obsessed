@@ -232,7 +232,7 @@ onUnmounted(() => {
 
 <template>
   <Card data-testid="volume-heatmap">
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('analytics.volume.heatmap.title') }}</CardTitle>
       <CardDescription>
         {{ t('analytics.volume.heatmap.description') }}

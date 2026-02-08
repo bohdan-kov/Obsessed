@@ -57,7 +57,8 @@
     "tryDifferentSearch": "Try a different search term",
     "createFirst": "Create your first template to get started",
     "showExercises": "Show exercises",
-    "hideExercises": "Hide exercises"
+    "hideExercises": "Hide exercises",
+    "startWorkout": "Start workout {name}"
   },
   "form": {
     "templateName": "Template Name",

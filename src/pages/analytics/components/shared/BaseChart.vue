@@ -80,10 +80,10 @@ const computedEmptyDescription = computed(() => {
 
 <template>
   <Card class="base-chart">
-    <CardHeader v-if="title || description || $slots.header || $slots.actions">
+    <CardHeader v-if="title || description || $slots.header || $slots.actions" class="pb-4">
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1 min-w-0">
-          <CardTitle v-if="title" class="text-lg md:text-xl">
+          <CardTitle v-if="title">
             {{ title }}
           </CardTitle>
           <CardDescription v-if="description" class="mt-1.5">

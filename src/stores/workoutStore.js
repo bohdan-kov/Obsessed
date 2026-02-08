@@ -269,8 +269,7 @@ export const useWorkoutStore = defineStore('workout', () => {
         currentWorkout.value.sourcePlanId = planId
       }
 
-      // Record plan usage
-      await planStore.recordPlanUsage(planId)
+      // Plan usage will be recorded on workout finish (see finishWorkout)
 
       return workoutId
     } catch (err) {
@@ -887,8 +886,9 @@ export const useWorkoutStore = defineStore('workout', () => {
       const workoutPath = `users/${authStore.uid}/workouts`
       const workoutId = activeWorkout.value.id
 
-      // Store sourceTemplateId before update (in case listener clears activeWorkout)
+      // Store sourceTemplateId and sourcePlanId before update (in case listener clears activeWorkout)
       const sourceTemplateId = activeWorkout.value?.sourceTemplateId
+      const sourcePlanId = activeWorkout.value?.sourcePlanId
 
       await updateDocument(workoutPath, workoutId, {
         status: 'completed',
@@ -929,6 +929,23 @@ export const useWorkoutStore = defineStore('workout', () => {
               '[workoutStore] Failed to sync workout with schedule:',
               scheduleErr
             )
+          }
+        }
+      }
+
+      // If workout was started from a plan, record plan usage
+      if (sourcePlanId) {
+        try {
+          // Import planStore dynamically to avoid circular dependency
+          const { usePlanStore } = await import('./planStore')
+          const planStore = usePlanStore()
+
+          // Update plan usage statistics (non-critical)
+          await planStore.recordPlanUsage(sourcePlanId)
+        } catch (planErr) {
+          // Plan usage tracking is non-critical - log error but don't fail workout completion
+          if (import.meta.env.DEV) {
+            console.warn('[workoutStore] Failed to update plan usage:', planErr)
           }
         }
       }

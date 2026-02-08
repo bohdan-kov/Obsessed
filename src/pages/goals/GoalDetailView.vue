@@ -818,13 +818,14 @@ async function handleDeleteConfirm() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel as-child>
-            <Button variant="outline" :disabled="loading">
+            <Button variant="outline" class="min-h-11 min-w-11" :disabled="loading">
               {{ t('common.actions.cancel') }}
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction as-child>
             <Button
               variant="destructive"
+              class="min-h-11 min-w-11"
               @click="handleDeleteConfirm"
               :disabled="loading"
             >
@@ -846,12 +847,12 @@ async function handleDeleteConfirm() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel as-child>
-            <Button variant="outline" :disabled="loading">
+            <Button variant="outline" class="min-h-11 min-w-11" :disabled="loading">
               {{ t('common.actions.cancel') }}
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction as-child>
-            <Button @click="handlePauseConfirm" :disabled="loading">
+            <Button class="min-h-11 min-w-11" @click="handlePauseConfirm" :disabled="loading">
               {{ loading ? t('common.loading') : t('goals.detail.pause') }}
             </Button>
           </AlertDialogAction>
@@ -870,12 +871,12 @@ async function handleDeleteConfirm() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel as-child>
-            <Button variant="outline" :disabled="loading">
+            <Button variant="outline" class="min-h-11 min-w-11" :disabled="loading">
               {{ t('common.actions.cancel') }}
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction as-child>
-            <Button @click="handleResumeConfirm" :disabled="loading">
+            <Button class="min-h-11 min-w-11" @click="handleResumeConfirm" :disabled="loading">
               {{ loading ? t('common.loading') : t('goals.detail.resume') }}
             </Button>
           </AlertDialogAction>

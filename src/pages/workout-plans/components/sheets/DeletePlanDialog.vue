@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 
 const { t } = useI18n()
 
@@ -54,14 +55,19 @@ function handleConfirm() {
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel>
-          {{ t('plans.delete.cancel') }}
+        <AlertDialogCancel as-child>
+          <Button variant="outline" class="min-h-11 min-w-11">
+            {{ t('plans.delete.cancel') }}
+          </Button>
         </AlertDialogCancel>
-        <AlertDialogAction
-          @click="handleConfirm"
-          class="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/60"
-        >
-          {{ t('plans.delete.confirm') }}
+        <AlertDialogAction as-child>
+          <Button
+            variant="destructive"
+            class="min-h-11 min-w-11"
+            @click="handleConfirm"
+          >
+            {{ t('plans.delete.confirm') }}
+          </Button>
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

@@ -161,12 +161,6 @@ describe('ExerciseProgressTable', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('should render title and description', () => {
-      const wrapper = createWrapper()
-      expect(wrapper.text()).toContain('analytics.exerciseProgress.title')
-      expect(wrapper.text()).toContain('analytics.exerciseProgress.description')
-    })
-
     it('should render all exercises', () => {
       const wrapper = createWrapper()
       const rows = wrapper.findAll('[data-testid="exercise-row"]')

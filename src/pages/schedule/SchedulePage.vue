@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Trophy, X } from 'lucide-vue-next'
+import { Trophy, X, Plus } from 'lucide-vue-next'
 import WeeklyCalendar from './components/calendar/WeeklyCalendar.vue'
 import TodayWorkoutCard from './components/calendar/TodayWorkoutCard.vue'
 import WeekNavigator from './components/calendar/WeekNavigator.vue'
@@ -204,6 +204,13 @@ async function handleClearProgram() {
       <div class="hidden md:block">
         <h1 class="text-3xl font-bold sm:text-4xl">{{ t('schedule.title') }}</h1>
         <p class="text-muted-foreground mt-1">{{ t('schedule.subtitle') }}</p>
+      </div>
+      <!-- Create Template Button - shown only on templates tab -->
+      <div v-if="activeTab === 'templates'">
+        <Button @click="handleCreateTemplate" size="lg" class="min-h-11">
+          <Plus class="mr-2 h-5 w-5" />
+          {{ t('schedule.templates.create') }}
+        </Button>
       </div>
     </div>
 

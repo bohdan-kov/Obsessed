@@ -10,9 +10,9 @@
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      <AlertDialogFooter class="flex-col gap-2 sm:flex-col">
+      <AlertDialogFooter>
         <AlertDialogCancel as-child>
-          <Button variant="outline" class="h-11 w-full">
+          <Button variant="outline" class="min-h-11 min-w-11">
             {{ t('workout.activeWorkout.cancel.keepGoing') }}
           </Button>
         </AlertDialogCancel>
@@ -20,7 +20,7 @@
         <AlertDialogAction as-child>
           <Button
             variant="destructive"
-            class="h-11 w-full"
+            class="min-h-11 min-w-11"
             @click="$emit('confirm')"
           >
             {{ t('workout.activeWorkout.cancel.confirm') }}

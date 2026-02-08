@@ -87,7 +87,7 @@ const yDomain = computed(() => {
 
 <template>
   <Card data-testid="progressive-overload-chart">
-    <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+    <CardHeader class="flex items-center gap-2 space-y-0 sm:flex-row pb-4">
       <div class="grid flex-1 gap-1">
         <CardTitle>{{ t('analytics.volume.progressiveOverload.title') }}</CardTitle>
         <CardDescription>

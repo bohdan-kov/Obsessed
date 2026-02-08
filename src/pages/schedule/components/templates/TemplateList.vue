@@ -158,22 +158,6 @@ function cancelDelete() {
 
 <template>
   <div class="space-y-6">
-    <!-- Header with Create Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight">
-          {{ t('schedule.templates.title') }}
-        </h2>
-        <p class="text-muted-foreground">
-          {{ t('schedule.templates.noTemplatesDescription') }}
-        </p>
-      </div>
-      <Button @click="handleCreateTemplate">
-        <Plus class="w-4 h-4 mr-2" />
-        {{ t('schedule.templates.create') }}
-      </Button>
-    </div>
-
     <!-- Filters & Search -->
     <div class="flex flex-col sm:flex-row gap-3">
       <!-- Search -->
@@ -260,12 +244,12 @@ function cancelDelete() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel as-child>
-            <Button variant="outline" @click="cancelDelete">
+            <Button variant="outline" class="min-h-11 min-w-11" @click="cancelDelete">
               {{ t('common.cancel') }}
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction as-child>
-            <Button variant="destructive" @click="confirmDelete">
+            <Button variant="destructive" class="min-h-11 min-w-11" @click="confirmDelete">
               {{ t('common.delete') }}
             </Button>
           </AlertDialogAction>

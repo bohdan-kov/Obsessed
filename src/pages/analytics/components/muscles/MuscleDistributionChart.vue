@@ -89,14 +89,14 @@ function formatTooltipValue(value, key) {
 
 <template>
   <Card>
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('analytics.muscles.distribution.title') }}</CardTitle>
       <CardDescription>
         {{ t('analytics.muscles.distribution.description') }}
       </CardDescription>
     </CardHeader>
 
-    <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-6">
+    <CardContent class="px-2 sm:px-6 pb-6">
       <!-- Loading state -->
       <div v-if="loading" class="flex items-center justify-center h-[300px]">
         <div class="text-muted-foreground">{{ t('common.loading') }}</div>

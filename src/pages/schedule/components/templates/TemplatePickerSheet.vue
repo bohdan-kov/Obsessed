@@ -40,21 +40,35 @@ const emit = defineEmits(['close', 'select'])
 const { t, locale } = useI18n()
 const { formatRelativeDate } = useFirestoreDate()
 const scheduleStore = useScheduleStore()
-const { templates } = storeToRefs(scheduleStore)
+const { templates, currentSchedule } = storeToRefs(scheduleStore)
 
 const searchInput = ref('')
 const searchQuery = refDebounced(searchInput, CONFIG.exercise.SEARCH_DEBOUNCE)
 const selectedTemplateId = ref(null)
 const expandedTemplates = ref(new Set())
 
-// Filter templates by search query (uses debounced search)
-const filteredTemplates = computed(() => {
+// Get active preset ID to automatically filter templates
+const activePresetId = computed(() => currentSchedule.value?.activePresetId || null)
+
+// Base filtering by search query (uses debounced search)
+const baseFilteredTemplates = computed(() => {
   if (!searchQuery.value) return templates.value
 
   const query = searchQuery.value.toLowerCase()
   return templates.value.filter(template =>
     template.name.toLowerCase().includes(query) ||
     template.muscleGroups.some(muscle => muscle.toLowerCase().includes(query))
+  )
+})
+
+// Automatically filter by active program + always show custom templates
+const filteredTemplates = computed(() => {
+  if (!activePresetId.value) {
+    return baseFilteredTemplates.value
+  }
+  // Show templates from active program + custom templates (no sourcePresetId)
+  return baseFilteredTemplates.value.filter(t =>
+    t.sourcePresetId === activePresetId.value || !t.sourcePresetId
   )
 })
 

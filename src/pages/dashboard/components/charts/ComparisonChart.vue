@@ -88,7 +88,7 @@ const previousPeriodLabel = computed(() => {
 
 <template>
   <Card>
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('dashboard.charts.comparisonTitle') }}</CardTitle>
       <CardDescription>
         {{ t('dashboard.charts.comparisonDescription') }}

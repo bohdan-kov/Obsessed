@@ -316,7 +316,7 @@ function handleLegendClick(level) {
 
 <template>
   <Card class="muscle-map-card">
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('analytics.muscles.map.title') }}</CardTitle>
       <CardDescription>{{ t('analytics.muscles.map.description') }}</CardDescription>
     </CardHeader>

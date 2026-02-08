@@ -1,6 +1,8 @@
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { getWeekId, getWeekStartDate } from '@/utils/scheduleUtils'
+import { CONFIG } from '@/constants/config'
 
 /**
  * Composable for schedule adherence tracking
@@ -8,14 +10,14 @@ import { getWeekId, getWeekStartDate } from '@/utils/scheduleUtils'
  */
 export function useAdherence() {
   const scheduleStore = useScheduleStore()
+  const { locale } = useI18n()
 
   /**
    * Calculate adherence for the last N weeks
-   * @param {number} weeks - Number of weeks to look back (default: 12)
    * @returns {Array} Array of adherence data points
    */
   const weeklyAdherence = computed(() => {
-    const weeks = 12
+    const weeks = CONFIG.schedule.ADHERENCE_WEEKS_TO_TRACK
     const result = []
     const today = new Date()
 
@@ -36,7 +38,7 @@ export function useAdherence() {
       result.push({
         weekId,
         weekStart,
-        weekLabel: formatWeekLabel(weekStart),
+        weekLabel: formatWeekLabel(weekStart, locale.value),
         planned,
         completed,
         missed: planned - completed,
@@ -221,10 +223,11 @@ export function useAdherence() {
 /**
  * Helper: Format week label for display
  * @param {Date} weekStart - Start of week (Monday)
+ * @param {string} locale - Current locale (e.g., 'uk', 'en')
  * @returns {string} Formatted label
  */
-function formatWeekLabel(weekStart) {
-  const month = weekStart.toLocaleDateString('en-US', { month: 'short' })
+function formatWeekLabel(weekStart, locale) {
+  const month = weekStart.toLocaleDateString(locale, { month: 'short' })
   const day = weekStart.getDate()
   return `${month} ${day}`
 }

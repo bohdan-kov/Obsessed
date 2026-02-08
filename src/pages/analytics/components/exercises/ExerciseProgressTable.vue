@@ -116,14 +116,6 @@ const filterOptions = computed(() => [
 
 <template>
   <div data-testid="exercise-table" class="exercise-progress-table space-y-4">
-    <!-- Header -->
-    <div class="space-y-2">
-      <h2 class="text-2xl font-bold">{{ t('analytics.exerciseProgress.title') }}</h2>
-      <p class="text-sm text-muted-foreground">
-        {{ t('analytics.exerciseProgress.description') }}
-      </p>
-    </div>
-
     <!-- Loading State -->
     <LoadingSkeleton v-if="isLoading" type="table" />
 

@@ -200,9 +200,15 @@ const onReportSubmitted = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{{ t('community.share.cancel') }}</AlertDialogCancel>
-            <AlertDialogAction @click="handleDelete">
-              {{ t('community.comment.delete') }}
+            <AlertDialogCancel as-child>
+              <Button variant="outline" class="min-h-11 min-w-11">
+                {{ t('community.share.cancel') }}
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction as-child>
+              <Button variant="destructive" class="min-h-11 min-w-11" @click="handleDelete">
+                {{ t('community.comment.delete') }}
+              </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

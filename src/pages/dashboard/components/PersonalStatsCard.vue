@@ -34,7 +34,7 @@ const rpeColorClasses = computed(() => {
 
 <template>
   <Card>
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('dashboard.personalStats.title') }}</CardTitle>
       <CardDescription>
         {{ t('dashboard.personalStats.description') }}

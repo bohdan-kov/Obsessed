@@ -14,7 +14,7 @@
     "stats": {
       "sets": "Підходи",
       "volume": "Обсяг",
-      "exercises": "Вправи"
+      "exercises": "К-ть вправ"
     },
 
     "status": {
@@ -130,6 +130,7 @@
     "exercises": "Вправи",
     "plans": "Плани",
     "exercise": "Вправа",
+    "exerciseCount": "К-ть вправ",
     "type": "Тип",
     "status": "Статус",
     "sets": "Підходи",

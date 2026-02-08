@@ -57,7 +57,8 @@
     "tryDifferentSearch": "Спробуйте інший пошуковий запит",
     "createFirst": "Створіть свій перший шаблон, щоб почати",
     "showExercises": "Показати вправи",
-    "hideExercises": "Сховати вправи"
+    "hideExercises": "Сховати вправи",
+    "startWorkout": "Почати тренування {name}"
   },
   "form": {
     "templateName": "Назва шаблону",

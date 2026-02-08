@@ -12,9 +12,9 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
-import QuickStartButton from '@/pages/schedule/components/shared/QuickStartButton.vue'
-import { MoreVertical, Eye, Edit, Copy, Trash2, Dumbbell, Clock } from 'lucide-vue-next'
+import { MoreVertical, Eye, Edit, Copy, Trash2, Dumbbell, Clock, Play } from 'lucide-vue-next'
 
 const props = defineProps({
   template: {
@@ -128,7 +128,7 @@ function handleDelete() {
       </div>
     </CardHeader>
 
-    <CardContent class="space-y-3">
+    <CardContent class="space-y-4">
       <!-- Muscle Groups -->
       <MuscleGroupBadges :muscle-groups="template.muscleGroups" :max="3" />
 
@@ -144,14 +144,33 @@ function handleDelete() {
         </div>
       </div>
 
-      <!-- Quick Start Button -->
-      <QuickStartButton
-        v-if="showQuickStart"
-        :template-id="template.id"
-        :template-name="template.name"
-        class="w-full"
-        @click="handleQuickStart"
-      />
+      <!-- Footer - horizontal layout with Start button -->
+      <div v-if="showQuickStart" class="flex items-center justify-between gap-3 pt-2 border-t">
+        <!-- Last used text - takes natural width, doesn't shrink -->
+        <p class="text-xs text-muted-foreground shrink-0">
+          {{ lastUsedLabel }}
+        </p>
+
+        <!-- Start Workout button - icon only with tooltip -->
+        <TooltipProvider :delay-duration="300">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                @click="handleQuickStart"
+                variant="ghost"
+                size="icon"
+                class="h-11 w-11 shrink-0"
+                :aria-label="t('schedule.templates.startWorkout', { name: template.name })"
+              >
+                <Play class="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>{{ t('schedule.templateDetails.startWorkout') }}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     </CardContent>
   </Card>
 </template>

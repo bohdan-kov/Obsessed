@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { ShieldAlert, X, EyeOff, MessageCircleOff, UserMinus } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -136,16 +137,20 @@ function handleCancel() {
       </AlertDialogHeader>
 
       <AlertDialogFooter>
-        <AlertDialogCancel @click="handleCancel" :disabled="isBlocking">
-          {{ t('common.cancel') }}
+        <AlertDialogCancel as-child>
+          <Button variant="outline" class="min-h-11 min-w-11" :disabled="isBlocking" @click="handleCancel">
+            {{ t('common.cancel') }}
+          </Button>
         </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          @click="handleBlock"
-          :disabled="isBlocking"
-          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-        >
-          {{ isBlocking ? t('community.block.blocking') : t('community.block.confirm') }}
+        <AlertDialogAction as-child>
+          <Button
+            variant="destructive"
+            class="min-h-11 min-w-11"
+            :disabled="isBlocking"
+            @click="handleBlock"
+          >
+            {{ isBlocking ? t('community.block.blocking') : t('community.block.confirm') }}
+          </Button>
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

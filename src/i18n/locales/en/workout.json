@@ -14,7 +14,7 @@
     "stats": {
       "sets": "Sets",
       "volume": "Volume",
-      "exercises": "Exercises"
+      "exercises": "Ex. Count"
     },
 
     "status": {
@@ -130,6 +130,7 @@
     "exercises": "Exercises",
     "plans": "Plans",
     "exercise": "Exercise",
+    "exerciseCount": "Ex. Count",
     "type": "Type",
     "status": "Status",
     "sets": "Sets",

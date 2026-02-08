@@ -864,7 +864,7 @@ onUnmounted(() => {
           <TableHeader>
             <TableRow>
               <TableHead>{{ t('workout.exerciseTable.date') }}</TableHead>
-              <TableHead>{{ t('workout.exerciseTable.exercises') }}</TableHead>
+              <TableHead>{{ t('workout.exerciseTable.exerciseCount') }}</TableHead>
               <TableHead>{{ t('workout.exerciseTable.duration') }}</TableHead>
               <TableHead>{{ t('workout.exerciseTable.volume') }}</TableHead>
               <TableHead>{{ t('workout.exerciseTable.status') }}</TableHead>

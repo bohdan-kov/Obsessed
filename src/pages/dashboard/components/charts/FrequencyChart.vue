@@ -149,7 +149,7 @@ onUnmounted(() => {
 
 <template>
   <Card>
-    <CardHeader>
+    <CardHeader class="pb-4">
       <CardTitle>{{ t('dashboard.charts.heatmap.title') }}</CardTitle>
       <CardDescription>
         {{ t('dashboard.charts.heatmap.description') }}

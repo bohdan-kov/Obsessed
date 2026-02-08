@@ -729,11 +729,15 @@ export const useScheduleStore = defineStore('schedule', () => {
           description: preset.description[locale] || preset.description.en,
           exercises: presetTemplate.exercises.map((ex) => {
             const exerciseData = exerciseStore.getExerciseById(ex.exerciseId)
-            // Store the full name object with translations, not just one locale
+            // Extract localized string for current locale (prevent storing translation objects)
             let exerciseName = ex.exerciseId
             if (exerciseData?.name) {
-              // Keep the full object with translations if available
-              exerciseName = exerciseData.name
+              if (typeof exerciseData.name === 'string') {
+                exerciseName = exerciseData.name
+              } else {
+                // Extract string for current locale with fallback chain
+                exerciseName = exerciseData.name[locale] || exerciseData.name.en || exerciseData.name.uk || ex.exerciseId
+              }
             }
             return {
               exerciseId: ex.exerciseId,
