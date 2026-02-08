@@ -209,6 +209,21 @@ export const defaultExercises = [
     createdBy: null,
     deleted: false
   },
+  {
+    name: { uk: 'Гіперекстензія', en: 'Hyperextension' },
+    slug: 'hyperextension',
+    muscleGroup: 'back',
+    secondaryMuscles: ['glutes'],
+    equipment: 'machine',
+    type: 'isolation',
+    isDefault: true,
+    createdBy: null,
+    description: {
+      uk: 'Вправа для зміцнення нижньої частини спини та сідниць',
+      en: 'Exercise for strengthening lower back and glutes'
+    },
+    deleted: false
+  },
 
   // ==================== SHOULDER EXERCISES ====================
   {
@@ -797,11 +812,11 @@ export const defaultExercises = [
 /**
  * Exercise Statistics Summary:
  *
- * Total Exercises: 68
+ * Total Exercises: 69
  *
  * By Muscle Group:
  * - Chest: 9 exercises
- * - Back: 10 exercises
+ * - Back: 11 exercises
  * - Shoulders: 8 exercises
  * - Biceps: 7 exercises
  * - Triceps: 6 exercises
@@ -813,11 +828,11 @@ export const defaultExercises = [
  * - Barbell: 18 exercises
  * - Dumbbell: 19 exercises
  * - Cable: 8 exercises
- * - Machine: 9 exercises
+ * - Machine: 10 exercises
  * - Bodyweight: 13 exercises
  * - Other: 1 exercise
  *
  * By Type:
  * - Compound: 35 exercises
- * - Isolation: 33 exercises
+ * - Isolation: 34 exercises
  */
