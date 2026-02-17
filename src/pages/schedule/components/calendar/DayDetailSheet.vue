@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { useSchedule } from '@/composables/useSchedule'
-import { useWeekNavigation } from '@/composables/useWeekNavigation'
+import { getWeekId } from '@/utils/scheduleUtils'
 import {
   Sheet,
   SheetContent,
@@ -24,9 +24,6 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import StatusBadge from '@/pages/schedule/components/shared/StatusBadge.vue'
 import MuscleGroupBadges from '@/pages/schedule/components/shared/MuscleGroupBadges.vue'
@@ -59,9 +56,9 @@ const router = useRouter()
 const scheduleStore = useScheduleStore()
 const { toast } = useToast()
 const { isDayInPast, getDayStatus } = useSchedule()
-const { currentWeekId } = useWeekNavigation()
 
-const status = computed(() => getDayStatus(props.dayData, isDayInPast(props.dayName)))
+const weekId = computed(() => getWeekId(props.date))
+const status = computed(() => getDayStatus(props.dayData, isDayInPast(props.dayName, weekId.value)))
 
 const dayLabel = computed(() => {
   return props.date.toLocaleDateString(locale.value, { weekday: 'long' })
@@ -75,20 +72,10 @@ const dateLabel = computed(() => {
   })
 })
 
-const isRestDay = computed({
-  get: () => !props.dayData.templateId,
-  set: async (value) => {
-    if (value) {
-      // Mark as rest day (remove template)
-      await scheduleStore.removeTemplateFromDay(currentWeekId.value, props.dayName)
-    }
-  }
-})
-
 const hasTemplate = computed(() => !!props.dayData.templateId)
 const isCompleted = computed(() => props.dayData.completed)
 
-async function handleChangeTemplate() {
+function handleChangeTemplate() {
   emit('change-template', props.dayName)
 }
 
@@ -107,7 +94,7 @@ function viewWorkout() {
 
 async function handleRemoveCompletion() {
   try {
-    await scheduleStore.unmarkDayCompleted(currentWeekId.value, props.dayName)
+    await scheduleStore.unmarkDayCompleted(weekId.value, props.dayName)
     toast({
       title: t('schedule.success.dayCleared'),
       variant: 'default'
@@ -136,28 +123,6 @@ async function handleRemoveCompletion() {
       </SheetHeader>
 
       <div class="mt-6 space-y-6">
-        <!-- Rest Day Toggle -->
-        <div class="flex items-center justify-between p-4 border rounded-lg">
-          <div class="flex items-center gap-3">
-            <Calendar class="w-5 h-5 text-muted-foreground" />
-            <div>
-              <Label for="rest-day-toggle" class="font-medium">
-                {{ t('schedule.calendar.markRestDay') }}
-              </Label>
-              <p class="text-sm text-muted-foreground">
-                {{ t('schedule.dayDetail.restDayDescription') }}
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="rest-day-toggle"
-            v-model:checked="isRestDay"
-            :disabled="isCompleted"
-          />
-        </div>
-
-        <Separator />
-
         <!-- Template Section -->
         <div v-if="hasTemplate" class="space-y-4">
           <div class="flex items-start justify-between">

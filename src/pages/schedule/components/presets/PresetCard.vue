@@ -3,9 +3,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getPresetName, getPresetDescription } from '@/constants/splitPresets'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dumbbell, Zap, Trophy, Loader2, CheckCircle2 } from 'lucide-vue-next'
+import { Dumbbell, Zap, Trophy, CheckCircle2 } from 'lucide-vue-next'
 
 const props = defineProps({
   preset: {
@@ -19,6 +18,10 @@ const props = defineProps({
   activePresetId: {
     type: String,
     default: null,
+  },
+  selected: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -63,15 +66,22 @@ function handleSelect() {
 </script>
 
 <template>
-  <Card :class="[
-    'group hover:shadow-lg transition-all duration-200',
-    isActive ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
-  ]">
+  <Card
+    :class="[
+      'group hover:shadow-lg transition-all duration-200 cursor-pointer',
+      {
+        'border-primary bg-primary/10 ring-2 ring-primary/20': selected,
+        'border-border bg-muted/30': isActive && !selected,
+        'hover:border-primary/50': !selected && !isActive
+      }
+    ]"
+    @click="handleSelect"
+  >
     <CardHeader class="pb-3">
       <div class="flex items-start justify-between mb-2">
         <Badge :class="difficultyColor" class="px-2 py-1">
           <component :is="difficultyIcon" class="w-3 h-3 mr-1" />
-          {{ $t(`schedule.presets.categories.${preset.difficulty}`) }}
+          {{ t(`schedule.presets.categories.${preset.difficulty}`) }}
         </Badge>
         <div class="flex items-center gap-2">
           <Badge v-if="isActive" variant="default" class="px-2 py-1">
@@ -79,7 +89,7 @@ function handleSelect() {
             {{ t('schedule.presets.active') }}
           </Badge>
           <Badge variant="outline" class="px-2 py-1">
-            {{ $t('schedule.presets.frequencyShort', { count: preset.frequency }) }}
+            {{ t('schedule.presets.frequencyShort', { count: preset.frequency }) }}
           </Badge>
         </div>
       </div>
@@ -95,7 +105,7 @@ function handleSelect() {
       <!-- Template Preview -->
       <div class="space-y-1">
         <p class="text-xs font-medium text-muted-foreground uppercase">
-          {{ $t('schedule.presets.workouts') }}
+          {{ t('schedule.presets.workouts') }}
         </p>
         <div class="flex flex-wrap gap-1.5">
           <Badge
@@ -108,27 +118,6 @@ function handleSelect() {
           </Badge>
         </div>
       </div>
-
-      <!-- Apply Button -->
-      <Button
-        v-if="isActive"
-        variant="default"
-        class="w-full"
-        disabled
-      >
-        <CheckCircle2 class="w-4 h-4 mr-2" />
-        {{ t('schedule.presets.active') }}
-      </Button>
-      <Button
-        v-else
-        variant="outline"
-        class="w-full transition-all duration-200 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
-        :disabled="loading"
-        @click="handleSelect"
-      >
-        <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
-        {{ loading ? $t('common.applying') : $t('schedule.presets.selectPreset') }}
-      </Button>
     </CardContent>
   </Card>
 </template>

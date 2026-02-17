@@ -10,7 +10,7 @@ import { CONFIG } from '@/constants/config'
  */
 export function useAdherence() {
   const scheduleStore = useScheduleStore()
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
 
   /**
    * Calculate adherence for the last N weeks
@@ -28,7 +28,7 @@ export function useAdherence() {
       const weekStart = getWeekStartDate(weekId)
 
       // Get schedule from cache or use empty schedule
-      const schedule = scheduleStore.scheduleCache.get(weekId) || createEmptyWeekSchedule(weekId)
+      const schedule = scheduleStore.getScheduleFromCache(weekId) || createEmptyWeekSchedule(weekId)
 
       const days = Object.values(schedule.days || {})
       const planned = days.filter((d) => d.templateId).length
@@ -164,18 +164,18 @@ export function useAdherence() {
     const unlocked = []
 
     // Streak achievements
-    if (streak >= 2) unlocked.push({ id: 'on-fire', name: 'On Fire', description: '2 week streak', icon: '🔥' })
-    if (streak >= 4) unlocked.push({ id: 'unstoppable', name: 'Unstoppable', description: '4 week streak', icon: '💪' })
-    if (streak >= 8) unlocked.push({ id: 'legendary', name: 'Legendary', description: '8 week streak', icon: '👑' })
-    if (streak >= 12) unlocked.push({ id: 'obsessed', name: 'Obsessed', description: '12 week streak', icon: '🏆' })
+    if (streak >= 2) unlocked.push({ id: 'on-fire', name: t('schedule.achievements.on-fire.name'), description: t('schedule.achievements.on-fire.description'), icon: '🔥' })
+    if (streak >= 4) unlocked.push({ id: 'unstoppable', name: t('schedule.achievements.unstoppable.name'), description: t('schedule.achievements.unstoppable.description'), icon: '💪' })
+    if (streak >= 8) unlocked.push({ id: 'legendary', name: t('schedule.achievements.legendary.name'), description: t('schedule.achievements.legendary.description'), icon: '👑' })
+    if (streak >= 12) unlocked.push({ id: 'obsessed', name: t('schedule.achievements.obsessed.name'), description: t('schedule.achievements.obsessed.description'), icon: '🏆' })
 
     // Adherence achievements
-    if (adherence >= 80) unlocked.push({ id: 'consistent', name: 'Consistent', description: '80%+ adherence', icon: '✅' })
-    if (adherence >= 90) unlocked.push({ id: 'dedicated', name: 'Dedicated', description: '90%+ adherence', icon: '⭐' })
-    if (adherence === 100) unlocked.push({ id: 'perfect', name: 'Perfect', description: '100% adherence', icon: '💎' })
+    if (adherence >= 80) unlocked.push({ id: 'consistent', name: t('schedule.achievements.consistent.name'), description: t('schedule.achievements.consistent.description'), icon: '✅' })
+    if (adherence >= 90) unlocked.push({ id: 'dedicated', name: t('schedule.achievements.dedicated.name'), description: t('schedule.achievements.dedicated.description'), icon: '⭐' })
+    if (adherence === 100) unlocked.push({ id: 'perfect', name: t('schedule.achievements.perfect.name'), description: t('schedule.achievements.perfect.description'), icon: '💎' })
 
     // Longest streak achievement
-    if (longest >= 4) unlocked.push({ id: 'streak-master', name: 'Streak Master', description: `Best: ${longest} weeks`, icon: '🎯' })
+    if (longest >= 4) unlocked.push({ id: 'streak-master', name: t('schedule.achievements.streak-master.name'), description: t('schedule.achievements.streak-master.description'), icon: '🎯' })
 
     return unlocked
   })

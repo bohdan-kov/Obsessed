@@ -33,18 +33,9 @@ service cloud.firestore {
              workout.exercises.size() <= 20; // Max 20 exercises per workout (reasonable limit)
     }
 
-    // Validate that all exercises in the workout have the required structure
-    function areExercisesValid(exercises) {
-      // Empty array is always valid (new workouts start empty)
-      return exercises.size() == 0 ||
-             // Check each exercise has required fields
-             exercises.hasAll(['exerciseId', 'sets']);
-    }
-
     // Users collection - users can read/write their own data
     match /users/{userId} {
-      // CRITICAL FIX: Allow authenticated users to read basic profile data for community features
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId);
 
       // Allow owner to write/update their own document
       allow create, delete: if isOwner(userId);
@@ -143,6 +134,26 @@ service cloud.firestore {
 
         allow create: if isOwner(userId) && isValidSchedule(request.resource.data);
         allow update: if isOwner(userId) && isValidSchedule(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Nested activeProgram subcollection (for active training program)
+      match /activeProgram/{programId} {
+        allow read: if isOwner(userId);
+
+        // Validation helper for active program
+        function isValidActiveProgram(program) {
+          return program.keys().hasAll(['presetId', 'startDate', 'status', 'customDayNames', 'templateIds']) &&
+                 program.presetId is string &&
+                 program.status is string &&
+                 program.status in ['active', 'paused', 'completed'] &&
+                 program.customDayNames is list &&
+                 program.templateIds is list &&
+                 program.templateIds.size() <= 10;
+        }
+
+        allow create: if isOwner(userId) && isValidActiveProgram(request.resource.data);
+        allow update: if isOwner(userId) && isValidActiveProgram(request.resource.data);
         allow delete: if isOwner(userId);
       }
 

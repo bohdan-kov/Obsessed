@@ -2,6 +2,7 @@
  * Schedule utility functions
  * Used for week ID generation, date calculations, and schedule management
  */
+import { CONFIG } from '@/constants/config'
 
 /**
  * Get ISO week ID for a given date (e.g., "2026-W02")
@@ -20,7 +21,7 @@ export function getWeekId(date = new Date()) {
   const yearStart = new Date(d.getFullYear(), 0, 1)
 
   // Calculate week number
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+  const weekNo = Math.ceil((((d - yearStart) / CONFIG.schedule.MS_PER_DAY) + 1) / 7)
 
   return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`
 }
@@ -66,6 +67,8 @@ export function getWeekEndDate(weekId) {
  * Get all days of a week with dates and metadata
  * @param {string} weekId - Week ID in format "YYYY-Www"
  * @returns {Array<Object>} Array of day objects with name, date, label, dayOfMonth
+ * @note `label` is an internal English shorthand (e.g., "Mon") for debugging only.
+ *       Components must format `date` directly using locale-aware APIs.
  */
 export function getWeekDays(weekId) {
   const weekStart = getWeekStartDate(weekId)
@@ -232,4 +235,41 @@ export function getDayStatus(dayData, isPast) {
   }
 
   return 'planned'
+}
+
+/**
+ * Get smart day pattern for a given training frequency
+ * Returns optimal day indices (0=Monday, 6=Sunday) for evenly distributed workouts
+ * @param {number} frequency - Number of workout days per week (2-6)
+ * @returns {number[]} Array of day indices (e.g., [0,2,4] for Mon/Wed/Fri)
+ */
+export function getSmartDayPattern(frequency) {
+  const patterns = {
+    2: [0, 3], // Mon, Thu
+    3: [0, 2, 4], // Mon, Wed, Fri
+    4: [0, 2, 4, 6], // Mon, Wed, Fri, Sun
+    5: [0, 1, 3, 4, 6], // Mon, Tue, Thu, Fri, Sun
+    6: [0, 1, 2, 3, 4, 5], // Mon-Sat
+  }
+  return patterns[frequency] || []
+}
+
+/**
+ * Get day name from index (0=Monday, 6=Sunday)
+ * @param {number} dayIndex - Day index (0-6)
+ * @returns {string} Day name (e.g., "monday")
+ */
+export function getDayNameFromIndex(dayIndex) {
+  const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  return dayNames[dayIndex] || null
+}
+
+/**
+ * Get day index from day name (0=Monday, 6=Sunday)
+ * @param {string} dayName - Day name (e.g., "monday")
+ * @returns {number} Day index (0-6)
+ */
+export function getDayIndexFromName(dayName) {
+  const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  return dayNames.indexOf(dayName.toLowerCase())
 }

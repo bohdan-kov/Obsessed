@@ -21,6 +21,7 @@ import {
   getWeekStartDate,
   createEmptyWeekSchedule,
 } from '@/utils/scheduleUtils'
+import { CONFIG } from '@/constants/config'
 
 /**
  * @typedef {Object} TemplateExercise
@@ -79,11 +80,11 @@ export const useScheduleStore = defineStore('schedule', () => {
   const templates = ref([])
   const currentSchedule = ref(null)
   const scheduleCache = ref(new Map())
+  const activeProgram = ref(null) // Current active program configuration
   const loading = ref(false)
   const error = ref(null)
 
-  // LRU cache limit to prevent memory leaks (12 weeks = ~3 months of navigation)
-  const CACHE_MAX_SIZE = 12
+  const CACHE_MAX_SIZE = CONFIG.schedule.SCHEDULE_CACHE_MAX_WEEKS
 
   /**
    * Add entry to cache with LRU eviction policy
@@ -98,6 +99,15 @@ export const useScheduleStore = defineStore('schedule', () => {
       scheduleCache.value.delete(firstKey)
     }
     scheduleCache.value.set(weekId, schedule)
+  }
+
+  /**
+   * Get schedule from cache without triggering a fetch
+   * @param {string} weekId - Week ID
+   * @returns {WeeklySchedule|null} Cached schedule or null
+   */
+  function getScheduleFromCache(weekId) {
+    return scheduleCache.value.get(weekId) ?? null
   }
 
   // ============================================================
@@ -357,6 +367,7 @@ export const useScheduleStore = defineStore('schedule', () => {
 
   /**
    * Fetch schedule for a given week
+   * Auto-fills from active program if schedule is empty or has no workouts planned
    */
   async function fetchScheduleForWeek(weekId) {
     loading.value = true
@@ -379,6 +390,23 @@ export const useScheduleStore = defineStore('schedule', () => {
       if (!schedule) {
         // Create empty schedule for this week
         schedule = await createEmptySchedule(weekId)
+
+        // Auto-fill from active program if it exists
+        if (activeProgram.value) {
+          await autoFillWeekFromProgram(weekId)
+          // Refetch the schedule after auto-fill
+          schedule = await fetchDocument(path, weekId)
+        }
+      } else if (activeProgram.value) {
+        // Check if schedule is empty (no workouts planned)
+        const hasWorkouts = Object.values(schedule.days).some((day) => day.templateId)
+
+        if (!hasWorkouts) {
+          // Auto-fill empty schedule from active program
+          await autoFillWeekFromProgram(weekId)
+          // Refetch the schedule after auto-fill
+          schedule = await fetchDocument(path, weekId)
+        }
       }
 
       currentSchedule.value = schedule
@@ -414,6 +442,7 @@ export const useScheduleStore = defineStore('schedule', () => {
 
   /**
    * Assign template to a specific day
+   * Tracks modification if there's an active program
    */
   async function assignTemplateToDay(weekId, dayName, templateId) {
     loading.value = true
@@ -428,6 +457,9 @@ export const useScheduleStore = defineStore('schedule', () => {
         throw new Error('Template not found')
       }
 
+      // Check if this is a modification (user manually changed a day)
+      const originalTemplateId = currentSchedule.value?.days[dayName]?.templateId
+
       const path = `users/${authStore.uid}/schedules`
 
       await updateDocument(path, weekId, {
@@ -439,6 +471,11 @@ export const useScheduleStore = defineStore('schedule', () => {
           workoutId: null,
         },
       })
+
+      // Track modification if active program exists and template changed
+      if (activeProgram.value && originalTemplateId !== template.id) {
+        await trackModification(weekId, dayName, originalTemplateId)
+      }
 
       // Invalidate cache for this week
       scheduleCache.value.delete(weekId)
@@ -455,6 +492,7 @@ export const useScheduleStore = defineStore('schedule', () => {
 
   /**
    * Remove template from day (make it a rest day)
+   * Tracks modification if there's an active program
    */
   async function removeTemplateFromDay(weekId, dayName) {
     loading.value = true
@@ -463,6 +501,9 @@ export const useScheduleStore = defineStore('schedule', () => {
       if (!authStore.uid) {
         throw new Error('User not authenticated')
       }
+
+      // Check if this is a modification (user manually removed a planned day)
+      const originalTemplateId = currentSchedule.value?.days[dayName]?.templateId
 
       const path = `users/${authStore.uid}/schedules`
 
@@ -475,6 +516,11 @@ export const useScheduleStore = defineStore('schedule', () => {
           workoutId: null,
         },
       })
+
+      // Track modification if active program exists and there was a template
+      if (activeProgram.value && originalTemplateId) {
+        await trackModification(weekId, dayName, originalTemplateId)
+      }
 
       scheduleCache.value.delete(weekId)
       await fetchScheduleForWeek(weekId)
@@ -804,10 +850,12 @@ export const useScheduleStore = defineStore('schedule', () => {
         // If we couldn't match all templates by name, create new ones
         if (templateIds.length !== preset.templates.length) {
           templateIds = await createTemplatesFromPreset(preset, locale)
+          await fetchTemplates()
         }
       } else {
         // Create new templates (existing ones remain for other schedules)
         templateIds = await createTemplatesFromPreset(preset, locale)
+        await fetchTemplates()
       }
 
       // Step 2: Assign templates to days using schedulePattern
@@ -902,6 +950,305 @@ export const useScheduleStore = defineStore('schedule', () => {
   }
 
   // ============================================================
+  // ACTIVE PROGRAM ACTIONS
+  // ============================================================
+
+  /**
+   * Fetch active program configuration from Firestore
+   * @returns {Promise<Object|null>} Active program or null if none exists
+   */
+  async function fetchActiveProgram() {
+    try {
+      if (!authStore.uid) {
+        throw new Error('User not authenticated')
+      }
+
+      const path = `users/${authStore.uid}/activeProgram`
+      const programDoc = await fetchDocument(path, 'current')
+
+      activeProgram.value = programDoc
+      return programDoc
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to fetch active program:', err)
+      }
+      activeProgram.value = null
+      return null
+    }
+  }
+
+  /**
+   * Apply a program to all future weeks
+   * Creates activeProgram document and applies to current week
+   * @param {string} presetId - Preset ID
+   * @param {number[]|null} customDays - Custom day indices (0-6) or null for auto
+   * @param {string} locale - Locale for template names
+   * @returns {Promise<void>}
+   */
+  async function applyProgramToFuture(presetId, customDays = null, locale = 'uk') {
+    loading.value = true
+    error.value = null
+    try {
+      if (!authStore.uid) {
+        throw new Error('User not authenticated')
+      }
+
+      // Import preset data and schedule utils
+      const { getPresetById } = await import('@/constants/splitPresets')
+      const { getDayNameFromIndex } = await import('@/utils/scheduleUtils')
+      const preset = getPresetById(presetId)
+
+      if (!preset) {
+        throw new Error('Preset not found')
+      }
+
+      // Step 1: Create or reuse templates for this preset
+      let templateIds = []
+      const existingTemplates = templates.value.filter((t) => t.sourcePresetId === presetId)
+
+      if (existingTemplates.length === preset.templates.length) {
+        // Reuse existing templates - match by name to ensure correct order
+        templateIds = preset.templates
+          .map((presetTemplate) => {
+            const templateName = presetTemplate.name[locale] || presetTemplate.name.en
+            const existingTemplate = existingTemplates.find((t) => t.name === templateName)
+            return existingTemplate?.id
+          })
+          .filter(Boolean)
+
+        // If we couldn't match all templates by name, create new ones
+        if (templateIds.length !== preset.templates.length) {
+          templateIds = await createTemplatesFromPreset(preset, locale)
+        }
+      } else {
+        // Create new templates
+        templateIds = await createTemplatesFromPreset(preset, locale)
+      }
+
+      // Step 2: Determine which days to use (custom or auto)
+      const { getSmartDayPattern } = await import('@/utils/scheduleUtils')
+      const dayIndices = customDays || getSmartDayPattern(preset.frequency)
+
+      // Convert day indices to day names
+      const customDayNames = dayIndices.map((idx) => getDayNameFromIndex(idx)).filter(Boolean)
+
+      // Step 3: Save active program configuration to Firestore
+      const activeProgramPath = `users/${authStore.uid}/activeProgram`
+      const activeProgramData = {
+        presetId,
+        startDate: new Date(),
+        status: 'active',
+        customDays: customDays || null,
+        customDayNames,
+        templateIds, // Store template IDs for quick reference
+        modifications: {}, // Track modifications per week
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      await setDocument(activeProgramPath, 'current', activeProgramData)
+      activeProgram.value = activeProgramData
+
+      // Step 4: Apply program to current week
+      const currentWeekId = getWeekId()
+      await applyProgramToWeek(currentWeekId, presetId, customDayNames, templateIds)
+
+      return templateIds
+    } catch (err) {
+      error.value = err.message
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to apply program to future:', err)
+      }
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Apply program to a specific week
+   * Internal helper used by applyProgramToFuture and autoFillWeekFromProgram
+   * @param {string} weekId - Week ID
+   * @param {string} presetId - Preset ID
+   * @param {string[]} dayNames - Day names to assign templates to
+   * @param {string[]} templateIds - Template IDs (ordered by preset.templates)
+   * @returns {Promise<void>}
+   */
+  async function applyProgramToWeek(weekId, presetId, dayNames, templateIds) {
+    if (!authStore.uid) {
+      throw new Error('User not authenticated')
+    }
+
+    // Get preset to access schedulePattern
+    const { getPresetById } = await import('@/constants/splitPresets')
+    const preset = getPresetById(presetId)
+
+    if (!preset) {
+      throw new Error('Preset not found')
+    }
+
+    const path = `users/${authStore.uid}/schedules`
+    const dayOrder = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ]
+    const updates = {}
+
+    // Build updates object - assign templates to selected days, rest to others
+    for (let i = 0; i < dayOrder.length; i++) {
+      const dayName = dayOrder[i]
+
+      if (dayNames.includes(dayName)) {
+        // Workout day - figure out which template to use
+        const dayIndex = dayNames.indexOf(dayName)
+        // Cycle through templates in order: e.g. for PPL (3 templates, 6 days):
+        // day 0 → Push, day 1 → Pull, day 2 → Legs, day 3 → Push, day 4 → Pull, day 5 → Legs
+        const templateIndex = dayIndex % templateIds.length
+        const templateId = templateIds[templateIndex]
+        const template = getTemplateById(templateId)
+
+        if (template) {
+          updates[`days.${dayName}`] = {
+            templateId: template.id,
+            templateName: template.name,
+            muscleGroups: template.muscleGroups,
+            completed: false,
+            workoutId: null,
+          }
+        }
+      } else {
+        // Rest day
+        updates[`days.${dayName}`] = {
+          templateId: null,
+          templateName: null,
+          muscleGroups: [],
+          completed: false,
+          workoutId: null,
+        }
+      }
+    }
+
+    // Add activePresetId to track which preset is applied
+    updates.activePresetId = presetId
+
+    // Save to Firestore
+    await updateDocument(path, weekId, updates)
+
+    // Invalidate cache
+    scheduleCache.value.delete(weekId)
+  }
+
+  /**
+   * Auto-fill a week's schedule from active program
+   * Called when navigating to a new week with an active program
+   * @param {string} weekId - Week ID to auto-fill
+   * @returns {Promise<void>}
+   */
+  async function autoFillWeekFromProgram(weekId) {
+    if (!activeProgram.value) return
+    if (!authStore.uid) {
+      throw new Error('User not authenticated')
+    }
+
+    try {
+      const { presetId, customDayNames, templateIds } = activeProgram.value
+
+      // Check if this week has any modifications tracked
+      const hasModifications = activeProgram.value.modifications?.[weekId]
+
+      // Only auto-fill if the week has no tracked modifications
+      if (!hasModifications) {
+        await applyProgramToWeek(weekId, presetId, customDayNames, templateIds)
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to auto-fill week from program:', err)
+      }
+      // Don't throw - auto-fill is not critical
+    }
+  }
+
+  /**
+   * Track that a day in a week was manually modified
+   * Stores the original template ID so we can show "modified" indicator
+   * @param {string} weekId - Week ID
+   * @param {string} dayName - Day name
+   * @param {string|null} originalTemplateId - Original template ID from program
+   * @returns {Promise<void>}
+   */
+  async function trackModification(weekId, dayName, originalTemplateId) {
+    if (!activeProgram.value) return
+    if (!authStore.uid) {
+      throw new Error('User not authenticated')
+    }
+
+    try {
+      const activeProgramPath = `users/${authStore.uid}/activeProgram`
+
+      // Update modifications object
+      const modifications = activeProgram.value.modifications || {}
+      if (!modifications[weekId]) {
+        modifications[weekId] = {}
+      }
+
+      modifications[weekId][dayName] = {
+        modified: true,
+        originalTemplateId,
+        modifiedAt: new Date(),
+      }
+
+      await updateDocument(activeProgramPath, 'current', {
+        modifications,
+        updatedAt: new Date(),
+      })
+
+      // Update local state
+      activeProgram.value.modifications = modifications
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to track modification:', err)
+      }
+      // Don't throw - tracking is not critical
+    }
+  }
+
+  /**
+   * Clear active program (cancel program)
+   * Removes activeProgram document but keeps schedules intact
+   * @returns {Promise<void>}
+   */
+  async function clearActiveProgram() {
+    loading.value = true
+    error.value = null
+    try {
+      if (!authStore.uid) {
+        throw new Error('User not authenticated')
+      }
+
+      const activeProgramPath = `users/${authStore.uid}/activeProgram`
+
+      // Delete the active program document
+      await deleteDocument(activeProgramPath, 'current')
+
+      // Clear local state
+      activeProgram.value = null
+    } catch (err) {
+      error.value = err.message
+      if (import.meta.env.DEV) {
+        console.error('[scheduleStore] Failed to clear active program:', err)
+      }
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // ============================================================
   // UTILITY FUNCTIONS
   // ============================================================
 
@@ -919,6 +1266,7 @@ export const useScheduleStore = defineStore('schedule', () => {
   function clearStore() {
     templates.value = []
     currentSchedule.value = null
+    activeProgram.value = null
     scheduleCache.value.clear()
     loading.value = false
     error.value = null
@@ -932,7 +1280,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     // State
     templates,
     currentSchedule,
-    scheduleCache,
+    activeProgram,
     loading,
     error,
 
@@ -967,7 +1315,15 @@ export const useScheduleStore = defineStore('schedule', () => {
     applyPreset,
     clearActivePreset,
 
+    // Active Program Actions
+    fetchActiveProgram,
+    applyProgramToFuture,
+    autoFillWeekFromProgram,
+    trackModification,
+    clearActiveProgram,
+
     // Utilities
+    getScheduleFromCache,
     clearScheduleCache,
     clearStore,
     getWeekId,

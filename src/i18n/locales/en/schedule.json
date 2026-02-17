@@ -132,7 +132,6 @@
     "next": "Next",
     "restDay": "Rest Day",
     "changeTemplate": "Change Template",
-    "markRestDay": "Rest Day",
     "yesterday": "Yesterday"
   },
   "daysAgo": "{count} days ago",
@@ -184,7 +183,6 @@
     "programCleared": "Program cancelled. Templates remain in the schedule."
   },
   "dayDetail": {
-    "restDayDescription": "No workout planned for this day",
     "viewWorkout": "View Workout",
     "workoutCompleted": "Workout Completed",
     "wellDone": "Great job! Keep up the good work!",
@@ -250,6 +248,9 @@
     "active": "Active",
     "viewDetails": "View Details",
     "applyPreset": "Apply Program",
+    "next": "Next",
+    "back": "Back",
+    "setupProgram": "Setup Program",
     "fullBody3x": {
       "name": "Full Body 3x/week",
       "description": "Perfect for beginners. Train all major muscle groups 3 times per week.",
@@ -280,6 +281,20 @@
       "legs": "Legs"
     },
     "applySuccess": "Program {presetName} successfully applied to your schedule",
-    "applyError": "Failed to apply program"
+    "applyError": "Failed to apply program",
+    "configureDays": "Configure training days",
+    "selectDays": "Select training days",
+    "daysPerWeek": "days/week",
+    "autoSchedule": "Auto",
+    "customSchedule": "Custom",
+    "autoDescription": "Days will be automatically scheduled with optimal rest intervals",
+    "applying": "Applying...",
+    "apply": "Apply Program",
+    "selected": "Selected",
+    "daysSelected": "days selected"
+  },
+  "dayModified": {
+    "badge": "Modified",
+    "tooltip": "This day was modified manually"
   }
 }

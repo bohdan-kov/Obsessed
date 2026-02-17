@@ -11,6 +11,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Trophy, X, Plus } from 'lucide-vue-next'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import WeeklyCalendar from './components/calendar/WeeklyCalendar.vue'
 import TodayWorkoutCard from './components/calendar/TodayWorkoutCard.vue'
 import WeekNavigator from './components/calendar/WeekNavigator.vue'
@@ -64,6 +75,7 @@ const applyingPreset = ref(false)
 
 onMounted(async () => {
   await scheduleStore.fetchTemplates()
+  await scheduleStore.fetchActiveProgram() // Fetch active program on mount
   await scheduleStore.fetchScheduleForWeek(currentWeekId.value)
 })
 
@@ -80,7 +92,9 @@ function handleEditTemplate(templateId) {
 
 function handleTemplateSaved() {
   toast({
-    title: t('schedule.success.templateCreated'),
+    title: editingTemplateId.value
+      ? t('schedule.success.templateUpdated')
+      : t('schedule.success.templateCreated'),
     variant: 'default'
   })
 }
@@ -110,6 +124,9 @@ async function handleTemplateSelected(templateId) {
         variant: 'default'
       })
     }
+
+    // Close template picker after selection
+    templatePickerOpen.value = false
   } catch (error) {
     if (import.meta.env.DEV) {
       console.error('Failed to assign template:', error)
@@ -146,14 +163,21 @@ function handleOpenPresetPicker() {
   presetPickerOpen.value = true
 }
 
-async function handleApplyPreset(presetId) {
+async function handleApplyPreset({ presetId, customDays }) {
   applyingPreset.value = true
   try {
     // Get preset info for display
     const preset = getPresetById(presetId)
     const presetName = preset ? getPresetName(preset, locale.value) : presetId
 
-    await scheduleStore.applyPreset(presetId, currentWeekId.value, locale.value)
+    // Apply program to all future weeks (customDays = null for auto, or array of day indices)
+    await scheduleStore.applyProgramToFuture(presetId, customDays, locale.value)
+
+    // Reload active program and current week schedule to show updated days
+    await Promise.all([
+      scheduleStore.fetchActiveProgram(),
+      scheduleStore.fetchScheduleForWeek(currentWeekId.value)
+    ])
 
     // Close the preset picker modal
     presetPickerOpen.value = false
@@ -178,8 +202,17 @@ async function handleApplyPreset(presetId) {
 
 async function handleClearProgram() {
   try {
-    // Clear activePresetId from current week
+    // Clear active program (affects all future weeks)
+    await scheduleStore.clearActiveProgram()
+
+    // Also clear activePresetId from current week schedule
     await scheduleStore.clearActivePreset(currentWeekId.value)
+
+    // Reload active program and current week schedule to reflect changes
+    await Promise.all([
+      scheduleStore.fetchActiveProgram(),
+      scheduleStore.fetchScheduleForWeek(currentWeekId.value)
+    ])
 
     toast({
       title: t('schedule.success.programCleared'),
@@ -226,7 +259,7 @@ async function handleClearProgram() {
         <div v-if="activePreset" class="w-full border rounded-md p-3 bg-primary/5 border-primary/30">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2 flex-1 min-w-0">
-              <Trophy class="w-5 h-5 text-primary flex-shrink-0" />
+              <Trophy class="w-5 h-5 text-primary shrink-0" />
               <div class="flex flex-col gap-1 flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-sm font-medium">{{ t('schedule.activeProgram.following') }}</span>
@@ -239,13 +272,27 @@ async function handleClearProgram() {
                 </p>
               </div>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
               <Button variant="ghost" size="sm" @click="handleOpenPresetPicker">
                 {{ t('schedule.activeProgram.change') }}
               </Button>
-              <Button variant="ghost" size="icon" @click="handleClearProgram" :aria-label="t('schedule.activeProgram.clear')">
-                <X class="w-4 h-4" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger as-child>
+                  <Button variant="ghost" size="icon" :aria-label="t('schedule.activeProgram.clear')">
+                    <X class="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{{ t('schedule.activeProgram.clear') }}</AlertDialogTitle>
+                    <AlertDialogDescription>{{ t('schedule.activeProgram.clearConfirm') }}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{{ t('common.cancel') }}</AlertDialogCancel>
+                    <AlertDialogAction @click="handleClearProgram">{{ t('schedule.activeProgram.clear') }}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

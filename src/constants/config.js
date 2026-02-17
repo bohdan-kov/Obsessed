@@ -271,6 +271,8 @@ export const CONFIG = {
   // Schedule Configuration
   schedule: {
     ADHERENCE_WEEKS_TO_TRACK: 12, // Number of weeks to analyze adherence history
+    SCHEDULE_CACHE_MAX_WEEKS: 12, // LRU cache size (~3 months of week navigation)
+    MS_PER_DAY: 86400000, // Milliseconds in one day (24 * 60 * 60 * 1000)
   },
 
   // Performance Configuration
